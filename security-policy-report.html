@@ -1,0 +1,2469 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Security Policy & Vulnerability Report</title>
+  <meta name="description" content="Comprehensive security scanning and policy compliance report dashboard">
+  <style>
+    :root {
+      --bg: #0e1116;
+      --panel: #161b22;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --border: #30363d;
+      --crit: #b60205;
+      --high: #d73a49;
+      --med: #fbca04;
+      --low: #0e8a16;
+      --unk: #6e7681;
+      --accent: #58a6ff;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, Cantarell, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      background: linear-gradient(135deg, rgba(88, 166, 255, 0.05) 0%, rgba(88, 166, 255, 0.02) 100%);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      letter-spacing: -0.3px;
+    }
+
+    #site-logo {
+      height: 28px;
+      width: auto;
+      margin-right: 10px;
+      display: block;
+    }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      min-height: calc(100vh - 64px);
+    }
+
+    .sidebar {
+      width: 192px;
+      border-right: 1px solid var(--border);
+      padding: 16px;
+      background: #0b0f14;
+    }
+
+    .main {
+      flex: 1;
+      padding: 8px 12px;
+      min-width: 0;
+    }
+
+    .no-inner-scroll {
+      overflow: visible !important;
+      height: auto !important;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav button {
+      all: unset;
+      display: block;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text);
+      background: var(--panel);
+    }
+
+    .nav button:hover {
+      border-color: #446;
+    }
+
+    .nav button.active {
+      outline: 2px solid #4b5560;
+    }
+
+    /* Unified gradient style for all left panel nav buttons (dark grey) */
+    #nav-image,
+    #nav-cluster,
+    #nav-kube,
+    #nav-kyverno,
+    #nav-ansible,
+    #nav-ssl,
+    #nav-sbom {
+      background: linear-gradient(180deg, rgba(75, 85, 96, 0.12) 0%, rgba(75, 85, 96, 0.06) 100%);
+      border-color: #4b5560;
+    }
+
+    #nav-image:hover,
+    #nav-cluster:hover,
+    #nav-kube:hover,
+    #nav-kyverno:hover,
+    #nav-ansible:hover,
+    #nav-ssl:hover,
+    #nav-sbom:hover {
+      background: linear-gradient(180deg, rgba(75, 85, 96, 0.50) 0%, rgba(75, 85, 96, 0.25) 100%);
+      border-color: #8da2b8;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.55) inset, 0 0 0 2px rgba(88, 166, 255, 0.30), 0 6px 12px rgba(0, 0, 0, 0.35);
+      transform: translateY(-2px) scale(1.015);
+      transition: background 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+    }
+
+    #nav-image.active,
+    #nav-cluster.active,
+    #nav-kube.active,
+    #nav-kyverno.active,
+    #nav-ansible.active,
+    #nav-ssl.active,
+    #nav-sbom.active {
+      background: linear-gradient(180deg, rgba(75, 85, 96, 0.22) 0%, rgba(75, 85, 96, 0.12) 100%);
+    }
+
+    /* SSL table no-wrap for cipher columns */
+    .ssl-table td:nth-child(5),
+    .ssl-table td:nth-child(6),
+    .ssl-table td:nth-child(7) {
+      white-space: nowrap;
+    }
+
+    /* Scroll long ciphers within cell instead of full-page horizontal scroll */
+    .ssl-table td:nth-child(5) ul,
+    .ssl-table td:nth-child(6) ul,
+    .ssl-table td:nth-child(7) ul {
+      display: block;
+      overflow-x: auto;
+      max-width: 100%;
+      white-space: nowrap;
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .ssl-table tbody td:nth-child(5) li,
+    .ssl-table tbody td:nth-child(6) li,
+    .ssl-table tbody td:nth-child(7) li {
+      margin: 0;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .wrap {
+      max-width: none;
+      margin: 0;
+    }
+
+    .controls {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .upload {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .upload label {
+      font-weight: 600;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .subsection {
+      margin-left: 8px;
+      padding: 6px 8px;
+      background: rgba(75, 85, 96, 0.08);
+      border-left: 3px solid #4b5560;
+      border-radius: 8px;
+    }
+
+    .subnav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .subnav button {
+      all: unset;
+      display: block;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(75, 85, 96, 0.10) 0%, rgba(75, 85, 96, 0.05) 100%);
+      border-color: #4b5560;
+      transition: all 150ms ease;
+    }
+
+    .subnav button:hover {
+      border-color: #58a6ff;
+      background: linear-gradient(180deg, rgba(88, 166, 255, 0.25) 0%, rgba(88, 166, 255, 0.12) 100%);
+      color: #79c0ff;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.35) inset, 0 0 8px rgba(88, 166, 255, 0.25);
+      transform: translateX(4px);
+      font-weight: 500;
+    }
+
+    .subnav button.active {
+      border-color: #58a6ff;
+      background: linear-gradient(180deg, rgba(88, 166, 255, 0.35) 0%, rgba(88, 166, 255, 0.20) 100%);
+      color: #79c0ff;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.45) inset, 0 4px 12px rgba(88, 166, 255, 0.30);
+      outline: 2px solid #58a6ff;
+      font-weight: 600;
+    }
+
+    /* Polished subsection header and list visuals */
+    .subheader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 6px 0 8px;
+    }
+
+    .subheader .title {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: .2px;
+    }
+
+    .count-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border: 1px solid #4b5560;
+      color: #c9d1d9;
+      background: rgba(75, 85, 96, 0.12);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .subnav button {
+      position: relative;
+      padding-left: 14px;
+    }
+
+    .subnav button::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #4b5560;
+      border-radius: 2px 0 0 2px;
+      opacity: .6;
+      transition: all 150ms ease;
+    }
+
+    .subnav button:hover::before {
+      opacity: 1;
+      background: #58a6ff;
+      width: 4px;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.6);
+    }
+
+    .subnav button.active::before {
+      opacity: 1;
+      background: #58a6ff;
+      width: 4px;
+      box-shadow: 0 0 12px rgba(88, 166, 255, 0.8);
+    }
+
+    .sort {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    .sort select {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px;
+    }
+
+    .subcontrols {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    /* Unified dropdown styling for namespace and cluster selects */
+    .subcontrols select {
+      width: 100%;
+      background: rgba(88, 166, 255, 0.08);
+      color: var(--text);
+      border: 1px solid #58a6ff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.18);
+      transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .subcontrols select:hover {
+      background: rgba(88, 166, 255, 0.12);
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.22);
+    }
+
+    .subcontrols select:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.35);
+      border-color: #58a6ff;
+    }
+
+    .subcontrols select option {
+      color: var(--text);
+      background: var(--panel);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin: 12px 0 6px;
+    }
+
+    .card {
+      background: #0b0f14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .card .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .card .value {
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .filters label {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .crit {
+      background: var(--crit);
+      color: #fff;
+    }
+
+    .high {
+      background: var(--high);
+      color: #fff;
+    }
+
+    .med {
+      background: var(--med);
+      color: #111;
+    }
+
+    .low {
+      background: var(--low);
+      color: #fff;
+    }
+
+    .unk {
+      background: var(--unk);
+      color: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    #tableWrap {
+      overflow-x: auto;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    /* Target and Message columns: allow breaking long paths/tokens in Chrome */
+    table td:nth-child(7):nth-last-child(2),
+    /* image Target */
+    table td:nth-child(5):nth-last-child(2),
+    /* cluster Target */
+    table td:nth-child(4):nth-last-child(3)
+
+    /* cluster Message */
+      {
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    /* Kube-bench columns: wrap Resolution text and preserve line breaks */
+    .kube-table td:nth-child(5) {
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    /* Kyverno: table layout for professional alignment */
+    .kyv-table thead th,
+    .kyv-table tbody td {
+      vertical-align: top;
+    }
+
+    .kyv-table thead th:nth-child(1),
+    .kyv-table tbody td:nth-child(1) {
+      width: 6%;
+      min-width: 64px;
+      text-align: center;
+    }
+
+    .kyv-table thead th:nth-child(2),
+    .kyv-table tbody td:nth-child(2) {
+      width: 7%;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .kyv-table thead th:nth-child(3),
+    .kyv-table tbody td:nth-child(3) {
+      width: 20%;
+      min-width: 160px;
+    }
+
+    .kyv-table td:nth-child(3) {
+      white-space: nowrap;
+    }
+
+    .kyv-table thead th:nth-child(4),
+    .kyv-table tbody td:nth-child(4) {
+      width: 8%;
+      min-width: 100px;
+      white-space: nowrap;
+    }
+
+    .kyv-table thead th:nth-child(5),
+    .kyv-table tbody td:nth-child(5) {
+      width: 18%;
+      min-width: 150px;
+    }
+
+    .kyv-table thead th:nth-child(6),
+    .kyv-table tbody td:nth-child(6) {
+      width: auto;
+      min-width: 220px;
+    }
+
+    .kyv-table:not(.ssl-table) td:nth-child(5),
+    .kyv-table:not(.ssl-table) td:nth-child(6) {
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .kyv-table tbody tr:nth-child(odd) {
+      background: rgba(88, 166, 255, 0.05);
+    }
+
+    .kyv-table tbody tr:hover {
+      background: rgba(88, 166, 255, 0.12);
+      transition: background 120ms ease;
+    }
+
+    /* SSL: soften FQDN wrapping, break only when necessary */
+    .ssl-table td:nth-child(3) {
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .ssl-table thead th:nth-child(1),
+    .ssl-table tbody td:nth-child(1) {
+      width: 10px;
+      text-align: center;
+      padding: 2px 2px;
+    }
+
+    .ssl-table thead th:nth-child(2),
+    .ssl-table tbody td:nth-child(2) {
+      width: 14%;
+    }
+
+    .ssl-table thead th:nth-child(3),
+    .ssl-table tbody td:nth-child(3) {
+      width: 28%;
+      min-width: 160px;
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .ssl-table thead th:nth-child(4),
+    .ssl-table tbody td:nth-child(4) {
+      width: 4%;
+      min-width: 44px;
+      text-align: center;
+      white-space: nowrap;
+      padding: 6px 6px;
+    }
+
+    .ssl-table thead th:nth-child(5),
+    .ssl-table tbody td:nth-child(5) {
+      width: 13%;
+    }
+
+    .ssl-table thead th:nth-child(6),
+    .ssl-table tbody td:nth-child(6) {
+      width: 13%;
+    }
+
+    .ssl-table thead th:nth-child(7),
+    .ssl-table tbody td:nth-child(7) {
+      width: 13%;
+    }
+
+    /* SBOM: table styling and column tweaks */
+    .sbom-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: auto;
+    }
+
+    .sbom-table thead th {
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      z-index: 1;
+    }
+
+    .sbom-table tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .sbom-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.04);
+      transition: background 120ms ease;
+    }
+
+    .sbom-table th,
+    .sbom-table td {
+      padding: 8px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .sbom-table thead th:nth-child(1),
+    .sbom-table tbody td:nth-child(1) {
+      width: 28px;
+      text-align: center;
+      padding: 4px 4px;
+    }
+
+    .sbom-table thead th:nth-child(2),
+    .sbom-table tbody td:nth-child(2) {
+      width: 13%;
+      min-width: 100px;
+      text-align: left;
+    }
+
+    .sbom-table td:nth-child(2) {
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .sbom-table thead th:nth-child(3),
+    .sbom-table tbody td:nth-child(3) {
+      width: 8%;
+      min-width: 90px;
+    }
+
+    .sbom-table td:nth-child(3) {
+      white-space: nowrap;
+    }
+
+    .sbom-table thead th:nth-child(4),
+    .sbom-table tbody td:nth-child(4) {
+      width: 10%;
+      min-width: 110px;
+    }
+
+    .sbom-table thead th:nth-child(5),
+    .sbom-table tbody td:nth-child(5) {
+      width: 10%;
+      min-width: 110px;
+      white-space: nowrap;
+    }
+
+    .sbom-table thead th:nth-child(6),
+    .sbom-table tbody td:nth-child(6) {
+      width: 10%;
+      min-width: 110px;
+      white-space: nowrap;
+    }
+
+    .sbom-table thead th:nth-child(7),
+    .sbom-table tbody td:nth-child(7) {
+      width: 5%;
+      min-width: 70px;
+      text-align: left;
+    }
+
+    .sbom-table td:nth-child(7) {
+      white-space: nowrap !important;
+    }
+
+    .sbom-table thead th:nth-child(8),
+    .sbom-table tbody td:nth-child(8) {
+      min-width: 360px;
+    }
+
+    .status {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .status-affected {
+      background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+      color: #fecaca;
+      border-color: #dc2626;
+    }
+
+    .status-fixed {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+      color: #d1fae5;
+      border-color: #059669;
+    }
+
+    .status-unknown {
+      background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+      color: #e5e7eb;
+      border-color: #6b7280;
+    }
+
+    /* Ansible table: match SBOM styling and set 4-column layout */
+    .ansible-table.sbom-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: auto;
+    }
+
+    .ansible-table.sbom-table thead th {
+      font-weight: 700;
+    }
+
+    .ansible-table.sbom-table th,
+    .ansible-table.sbom-table td {
+      padding: 8px 10px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .ansible-table.sbom-table thead th:nth-child(1),
+    .ansible-table.sbom-table tbody td:nth-child(1) {
+      width: 28px;
+      text-align: center;
+      padding: 4px 4px;
+    }
+
+    .ansible-table.sbom-table thead th:nth-child(2),
+    .ansible-table.sbom-table tbody td:nth-child(2) {
+      width: 24%;
+      min-width: 160px;
+    }
+
+    .ansible-table.sbom-table thead th:nth-child(3),
+    .ansible-table.sbom-table tbody td:nth-child(3) {
+      width: 44%;
+      min-width: 260px;
+    }
+
+    .ansible-table.sbom-table thead th:nth-child(4),
+    .ansible-table.sbom-table tbody td:nth-child(4) {
+      min-width: 220px;
+    }
+
+    .ansible-table.sbom-table td:nth-child(2),
+    .ansible-table.sbom-table td:nth-child(3) {
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    /* Embedded Ansible report iframe */
+    .ansible-frame {
+      width: 100%;
+      border: none;
+      background: #0b0f14;
+    }
+
+    /* Inline Ansible table styles */
+    .ansible-tableWrap {
+      overflow: visible;
+    }
+
+    .ansible-table thead th {
+      font-weight: normal;
+    }
+
+    /* Table container */
+    table.report-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid #4b5560;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0b0f14;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    /* Inner grid lines softened */
+    table.report-table th,
+    table.report-table td {
+      border: 1px solid #3d444d;
+    }
+
+    /* Header styling */
+    table.report-table thead th {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(135deg, #2f3640 0%, #252a32 100%);
+      color: #e6edf3;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 14px 12px;
+      border-bottom: 2px solid var(--accent, #58a6ff);
+      box-shadow: 0 3px 0 rgba(88, 166, 255, 0.25), 0 6px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Number column center-aligned and highlighted */
+    table.report-table thead th:first-child,
+    table.report-table tbody td:first-child {
+      text-align: center;
+    }
+
+    table.report-table tbody td:first-child {
+      font-weight: 700;
+      color: #e6edf3;
+      background: rgba(88, 166, 255, 0.06);
+    }
+
+    /* Body cell spacing */
+    table.report-table tbody td {
+      padding: 12px 10px;
+      line-height: 1.5;
+    }
+
+    /* Zebra striping and hover */
+    table.report-table tbody tr:nth-child(odd) {
+      background: rgba(88, 166, 255, 0.05);
+    }
+
+    table.report-table tbody tr:hover {
+      background: rgba(88, 166, 255, 0.12);
+      transform: translateY(-1px);
+      transition: background 120ms ease, transform 120ms ease;
+    }
+
+    /* Lists in Actions column */
+    table.report-table td ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+
+    table.report-table td li {
+      margin: 4px 0;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 900px) {
+      table.report-table thead th {
+        font-size: 13px;
+        padding: 10px 8px;
+      }
+
+      table.report-table tbody td {
+        font-size: 13px;
+        padding: 8px;
+      }
+    }
+
+    th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* Unbold Ansible table headers specifically */
+    table.report-table.ansible-table thead th {
+      font-weight: 400 !important;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #updated {
+      margin-left: auto;
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Courier New', monospace;
+      font-size: 11px;
+    }
+
+    a.link {
+      color: #58a6ff;
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+
+    a.link:hover {
+      color: #79c0ff;
+      text-decoration: underline;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+      padding: 20px;
+      text-align: center;
+      background: rgba(75, 85, 96, 0.05);
+      border-radius: 8px;
+      border: 1px dashed var(--border);
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <img src="logo-mobile.webp" alt="Security Report Logo" id="site-logo" />
+    <h1>Security Policy & Vulnerability Report</h1>
+    <div class="footer" id="updated">Initializing...</div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="nav">
+        <button id="nav-image" class="active">Trivy Image Scan</button>
+        <div id="imageReportsSub" class="subsection hidden">
+          <div class="subheader">
+            <div class="title">Reports by Namespace <span id="reportCount" class="count-badge">0</span></div>
+          </div>
+          <div class="subcontrols">
+            <select id="namespaceSel"></select>
+          </div>
+          <div id="reportsList" class="subnav"></div>
+        </div>
+
+        <button id="nav-kyverno">Kyverno Policy Report</button>
+        <div id="kyvernoReportsSub" class="subsection hidden">
+          <div class="subheader">
+            <div class="title">Reports By Namespace <span id="kyvCount" class="count-badge">0</span></div>
+          </div>
+          <div class="subcontrols">
+            <select id="kyvNsSel"></select>
+          </div>
+        </div>
+        <button id="nav-ssl">Nmap SSL Scan Report</button>
+        <button id="nav-kube">CIS Benchmark Report</button>
+        <div id="kubeReportsSub" class="subsection hidden">
+          <div class="subheader">
+            <div class="title">Kube-bench Reports <span id="kubeCount" class="count-badge">0</span></div>
+          </div>
+          <div class="subcontrols">
+            <select id="kubeSel"></select>
+          </div>
+        </div>
+        <button id="nav-ansible">Ansible Roles Report</button>
+        <button id="nav-sbom">Trivy SBOM Report</button>
+        <button id="nav-cluster">Trivy Cluster Report</button>
+        <div id="clusterReportsSub" class="subsection hidden">
+          <div class="subheader">
+            <div class="title">Reports by Cluster <span id="clusterCount" class="count-badge">0</span></div>
+          </div>
+          <div class="subcontrols">
+            <select id="clusterSel"></select>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <main class="main">
+      <div class="wrap">
+        <div class="panel">
+          <div class="controls">
+            <div id="upload-image" class="upload">
+              <div class="download" style="display:flex; align-items:center; gap:12px;">
+                <div class="label" style="font-weight:600; font-size:14px; color:#e6edf3;">Download Consolidated
+                  Vulnerability Report</div>
+                <button id="imgExcelDownloadBtn"
+                  style="padding:8px 16px; background:linear-gradient(135deg, rgba(88,166,255,0.15) 0%, rgba(88,166,255,0.08) 100%); border:1px solid #58a6ff; border-radius:6px; color:#58a6ff; font-weight:600; cursor:pointer; transition:all 150ms ease; font-size:13px;"
+                  onmouseover="this.style.background='linear-gradient(135deg, rgba(88,166,255,0.25) 0%, rgba(88,166,255,0.15) 100%)'; this.style.transform='translateY(-1px)'"
+                  onmouseout="this.style.background='linear-gradient(135deg, rgba(88,166,255,0.15) 0%, rgba(88,166,255,0.08) 100%)'; this.style.transform='translateY(0)'">Download</button>
+              </div>
+            </div>
+
+
+            <div id="upload-kube" class="upload hidden" style="display:none !important">
+              <label for="kubeFile">Load kube-bench</label>
+              <input type="file" id="kubeFile" accept=".txt,.log,.json" />
+            </div>
+            <div id="upload-kyverno" class="upload hidden">
+              <div class="download" style="display:flex; align-items:center; gap:12px;">
+                <div class="label" style="font-weight:600; font-size:14px; color:#e6edf3;">Download Consolidated Policy
+                  Report</div>
+                <button id="kyvDownloadBtn"
+                  style="padding:8px 16px; background:linear-gradient(135deg, rgba(88,166,255,0.15) 0%, rgba(88,166,255,0.08) 100%); border:1px solid #58a6ff; border-radius:6px; color:#58a6ff; font-weight:600; cursor:pointer; transition:all 150ms ease; font-size:13px;"
+                  onmouseover="this.style.background='linear-gradient(135deg, rgba(88,166,255,0.25) 0%, rgba(88,166,255,0.15) 100%)'; this.style.transform='translateY(-1px)'"
+                  onmouseout="this.style.background='linear-gradient(135deg, rgba(88,166,255,0.15) 0%, rgba(88,166,255,0.08) 100%)'; this.style.transform='translateY(0)'">Download</button>
+              </div>
+            </div>
+            <div id="upload-ssl" class="upload hidden">
+              <label for="sslFile">Load SSL JSON</label>
+              <input type="file" id="sslFile" accept=".json" />
+            </div>
+
+            <div class="filters" id="filters"></div>
+            <div class="sort">
+              <label for="sortSel">Sort</label>
+              <select id="sortSel">
+                <option value="sev_desc">Severity (Critical → Low)</option>
+                <option value="sev_asc">Severity (Low → Critical)</option>
+                <option value="none">None (as-is)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <section class="panel" style="margin-top:16px">
+          <h2 id="section-title"
+            style="margin-top:0; margin-bottom:20px; font-size:18px; font-weight:600; color:#e6edf3; border-bottom:2px solid var(--border); padding-bottom:12px;">
+            Image Vulnerabilities Report</h2>
+          <div class="cards" id="cards"></div>
+          <div id="tableWrap"></div>
+        </section>
+        <!-- Inline template for Ansible Report -->
+        <template id="tmpl-ansible">
+          <h3 style="margin-top:24px; font-size:16px; font-weight:600; color:#e6edf3;">Platform upgrade actions</h3>
+          <table class="kyv-table sbom-table ansible-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Remediation actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Upgrade Docker CRI to Containerd</td>
+                <td>Containerd is the recommended CRI; Docker as CRI is deprecated in many environments.</td>
+                <td>
+                  <ul>
+                    <li>Install and configure `containerd` in provisioning.</li>
+                    <li>Validate kubelet and CNI compatibility; update runtime settings if needed.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Replace CSI Local Path for production</td>
+                <td>Local Path Provisioner targets non‑production/single‑node setups.</td>
+                <td>
+                  <ul>
+                    <li>Offer production options like Rook Ceph, Longhorn.</li>
+                    <li>Parameterize storage class and default selection policy.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Remove NodePort usage</td>
+                <td>NodePort is discouraged for production; prefer Ingress or LoadBalancer.</td>
+                <td>
+                  <ul>
+                    <li>Use Ingress (NGINX/Gateway API) or `type: LoadBalancer` with MetalLB/cloud LB.</li>
+                    <li>Gate NodePort under non‑production profiles when unavoidable.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Upgrade Weave CNI to Cilium/Calico</td>
+                <td>Modern CNIs offer superior performance, security (eBPF), and observability.</td>
+                <td>
+                  <ul>
+                    <li>Deploy Cilium or Calico with Helm and sane defaults.</li>
+                    <li>Validate network policies and kube‑proxy replacement/eBPF as appropriate.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Grafana dashboard publicly accessible without login in CMS , Also it allows user to default login as
+                  admin with full power</td>
+                <td>Instance is exposed publicly without authentication in CMS, allowing default admin login with full
+                  power: <code>https://bridge.armada.ai/grafana/prometheus/</code></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+          <h3 style="margin-top:24px; font-size:16px; font-weight:600; color:#e6edf3;">Ansible issues and remediation
+          </h3>
+          <table class="kyv-table sbom-table ansible-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Issue</th>
+                <th>Issue Details</th>
+                <th>Remediation actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Plaintext credentials in defaults/main.yaml</td>
+                <td>`defaults/main.yaml` contains sensitive credentials (GitLab PAT, registry passwords), a security and
+                  compliance risk.</td>
+                <td>
+                  <ul>
+                    <li>Move secrets into vaulted vars (`group_vars/` or `host_vars`).</li>
+                    <li>Use `no_log: true` on secret-handling tasks; remove creds from Git URLs.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Heavy reliance on shell/command tasks</td>
+                <td>Shell-based `kubectl`/`helm` calls reduce idempotence, hinder check-mode, and depend on local CLIs.
+                </td>
+                <td>
+                  <ul>
+                    <li>Use `kubernetes.core.k8s`, `k8s_info`, `k8s_exec` and
+                      `community.general.helm_repository`/`helm`.</li>
+                    <li>Add module-based waits (`wait`, `wait_timeout`) and readiness checks via `k8s_info`.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Migrate all shell commands to Ansible modules</td>
+                <td>Declarative modules provide idempotence, clearer error handling, and portability.</td>
+                <td>
+                  <ul>
+                    <li>Helm via `community.general.helm_repository` and `community.general.helm`.</li>
+                    <li>Kubernetes via `kubernetes.core.k8s`, `k8s_info`, `k8s_exec`.</li>
+                  </ul>
+                </td>
+              </tr>
+
+              <tr>
+                <td>4</td>
+                <td>Direct pulling latest Helm charts</td>
+                <td>Pulling latest charts risks breaking changes during major releases.</td>
+                <td>
+                  <ul>
+                    <li>Pin chart versions via `chart_version` in Helm tasks.</li>
+                    <li>Optionally mirror/tested versions in an internal repo.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Use values.yaml for configuration</td>
+                <td>Post‑install `kubectl patch` is brittle; values files are the correct surface.</td>
+                <td>
+                  <ul>
+                    <li>Move service types, ports, image tags into `values.yaml` (templated).</li>
+                    <li>Apply charts with `values_files` and reduce ad‑hoc patches.</li>
+                  </ul>
+                </td>
+              </tr>
+
+              <tr>
+                <td>6</td>
+                <td>Align kube‑rbac‑proxy versions</td>
+                <td>Version drift introduces inconsistent behavior and potential security gaps.</td>
+                <td>
+                  <ul>
+                    <li>Define a single `kube_rbac_proxy_image_tag` and use consistently.</li>
+                    <li>Audit dependencies and pin versions in Helm values.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>Unify image registries</td>
+                <td>Multiple sources complicate provenance, caching, and security review.</td>
+                <td>
+                  <ul>
+                    <li>Standardize on a single registry via a `docker_repo` variable.</li>
+                    <li>Enforce image source policy and manage registry secrets via `k8s`.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>Use Ansible Helm module for deploys</td>
+                <td>Shell‑based Helm usage is non‑declarative and hard to maintain.</td>
+                <td>
+                  <ul>
+                    <li>Use `community.general.helm` with `state: present`, `wait`, `values_files`, and pinned
+                      `chart_version`.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>Use Ansible Helm module for uninstalls</td>
+                <td>Ensure symmetric lifecycle management via modules.</td>
+                <td>
+                  <ul>
+                    <li>Use `community.general.helm` with `state: absent`, `release_name`, `release_namespace`.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <!-- removed per request: Install MetalLB via Helm and duplicate metrics-server -->
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>Jobs lack TTL; orphaned resources</td>
+                <td>Orphaned Jobs accumulate and consume resources.</td>
+                <td>
+                  <ul>
+                    <li>Set `ttlSecondsAfterFinished` in Job specs or enable TTL controller.</li>
+                    <li>Add a cleanup CronJob if TTL controller is unavailable.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>11</td>
+                <td>Move secrets to Ansible Vault</td>
+                <td>Secrets must not live in plaintext in the repo or defaults.</td>
+                <td>
+                  <ul>
+                    <li>Create vaulted var files for all credentials.</li>
+                    <li>Tag secret tasks with `no_log: true` and avoid printing sensitive data.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>12</td>
+                <td>Use a standard Kubernetes bootstrap provisioner (Kubespray)</td>
+                <td>Manual cluster creation via shell commands is brittle and hard to maintain. Use a production-ready
+                  provisioner like Kubespray for repeatability, versioned defaults, and a documented lifecycle.</td>
+                <td>
+                  <ul>
+                    <li>Adopt Kubespray for cluster creation and lifecycle management.</li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>13</td>
+                <td>Align installation method to air‑gapped provisioning</td>
+                <td>Enterprise environments often require offline installs. Pre‑mirroring images/charts and using
+                  internal endpoints increases supply chain control and reliability.</td>
+                <td>
+                  <ul>
+                    <li>Support local chart references (files/ or internal artifact store) and image mirroring scripts.
+                    </li>
+                    <li>Disable live `helm repo add` and external fetches when offline; pre‑stage artifacts and update
+                      values.</li>
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+        </template>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      mode: 'image',
+      image: null,
+      cluster: null,
+      sbom: null,
+      severities: new Set(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']),
+      sort: 'none',
+      imageSubExpanded: false,
+      clusterSubExpanded: false,
+      namespace: null,
+      kubeRecords: [],
+      kubeSubExpanded: false,
+      kubeFilters: { FAIL: true, WARN: true, PASS: true, INFO: true },
+      kubeFiles: [],
+      // Kyverno state
+      kyvRows: [],
+      kyvSubExpanded: false,
+      kyvFilters: { FAIL: true, WARN: true, ERROR: true, SKIP: true, PASS: true },
+      kyvNs: '',
+      // SSL state
+      sslRows: []
+    };
+
+    const sevOrder = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"]; // display order
+    const sevClass = s => ({ CRITICAL: "crit", HIGH: "high", MEDIUM: "med", LOW: "low", UNKNOWN: "unk" }[(s || "UNKNOWN").toUpperCase()] || "unk");
+    const sevRank = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, UNKNOWN: 1 };
+
+    function $(id) { return document.getElementById(id); }
+    function fmt(n) { return (n || 0).toLocaleString(); }
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      $("updated").textContent = `Last updated: ${timeStr}`;
+    }
+
+    function buildFilters() {
+      const container = $("filters");
+      container.innerHTML = "";
+      if (state.mode === 'ansible' || state.mode === 'ssl') {
+        return;
+      }
+      if (state.mode === 'kube') {
+        const statuses = ['FAIL', 'WARN', 'PASS', 'INFO'];
+        statuses.forEach(st => {
+          const id = `fk-${st}`;
+          const checked = state.kubeFilters[st] ? "checked" : "";
+          container.insertAdjacentHTML("beforeend",
+            `<label><input type="checkbox" id="${id}" ${checked}/> ${st}</label>`);
+          $(id).addEventListener("change", e => {
+            state.kubeFilters[st] = !!e.target.checked;
+            render();
+          });
+        });
+        return;
+      }
+      if (state.mode === 'kyverno') {
+        const statuses = ['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'];
+        statuses.forEach(st => {
+          const id = `fkyv-${st}`;
+          const checked = state.kyvFilters[st] ? "checked" : "";
+          container.insertAdjacentHTML("beforeend",
+            `<label><input type="checkbox" id="${id}" ${checked}/> ${st}</label>`);
+          $(id).addEventListener("change", e => {
+            state.kyvFilters[st] = !!e.target.checked;
+            render();
+          });
+        });
+        return;
+      }
+      sevOrder.forEach(s => {
+        const id = `f-${s}`;
+        const checked = state.severities.has(s) ? "checked" : "";
+        container.insertAdjacentHTML("beforeend",
+          `<label><input type="checkbox" id="${id}" ${checked}/> ${s}</label>`);
+        $(id).addEventListener("change", e => {
+          if (e.target.checked) state.severities.add(s); else state.severities.delete(s);
+          render();
+        });
+      });
+    }
+
+    function buildSort() {
+      const sel = $("sortSel");
+      const sortWrap = document.querySelector('.sort');
+      if (state.mode === 'ansible' || state.mode === 'ssl') {
+        if (sortWrap) sortWrap.classList.add('hidden');
+        return;
+      } else { if (sortWrap) sortWrap.classList.remove('hidden'); }
+      if (state.mode === 'kube') {
+        sel.innerHTML = `
+      <option value="none">None (as-is)</option>
+      <option value="k_status">Status (FAIL → WARN → PASS → INFO)</option>
+      <option value="k_check">Check ID (A → Z)</option>
+    `;
+      } else if (state.mode === 'kyverno') {
+        sel.innerHTML = `
+      <option value="kyv_status">Status (Fail → Pass)</option>
+      <option value="sev_desc">Severity (Critical → Low)</option>
+      <option value="sev_asc">Severity (Low → Critical)</option>
+      <option value="type_asc">Type (A → Z)</option>
+      <option value="none">None (as-is)</option>
+    `;
+      } else {
+        sel.innerHTML = `
+      <option value="sev_desc">Severity (Critical → Low)</option>
+      <option value="sev_asc">Severity (Low → Critical)</option>
+      <option value="none">None (as-is)</option>
+    `;
+      }
+      sel.value = state.sort;
+      sel.onchange = (e) => { state.sort = e.target.value; render(); };
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      $("nav-image").classList.toggle("active", mode === 'image');
+      $("nav-cluster").classList.toggle("active", mode === 'cluster');
+      $("nav-kube").classList.toggle("active", mode === 'kube');
+      $("nav-kyverno").classList.toggle("active", mode === 'kyverno');
+      $("nav-ansible").classList.toggle("active", mode === 'ansible');
+      $("nav-ssl").classList.toggle("active", mode === 'ssl');
+      $("nav-sbom").classList.toggle("active", mode === 'sbom');
+      $("upload-image").classList.toggle("hidden", mode !== 'image');
+      $("upload-kube").classList.toggle("hidden", mode !== 'kube');
+      $("upload-kyverno").classList.toggle("hidden", mode !== 'kyverno');
+      $("upload-ssl").classList.toggle("hidden", mode !== 'ssl');
+      // Collapse empty controls/cards block for Ansible and SSL modes
+      const controlsEl = document.querySelector('.controls');
+      if (controlsEl) {
+        controlsEl.classList.toggle('hidden', mode === 'ansible' || mode === 'ssl');
+        if (controlsEl.parentElement && controlsEl.parentElement.classList) {
+          controlsEl.parentElement.classList.toggle('hidden', mode === 'ansible' || mode === 'ssl'); // hide the empty panel container
+        }
+      }
+      $("cards").classList.toggle('hidden', mode === 'ansible' || mode === 'ssl');
+      const mainEl = document.querySelector('.main');
+      const layoutEl = document.querySelector('.layout');
+      if (mainEl) mainEl.classList.toggle('no-inner-scroll', mode === 'ansible' || mode === 'ssl');
+      if (layoutEl) layoutEl.classList.toggle('no-inner-scroll', mode === 'ansible' || mode === 'ssl');
+
+      $("section-title").textContent = (
+        mode === 'image' ? 'Image Vulnerabilities Report' :
+          (mode === 'cluster' ? 'Cluster Misconfigurations' : (mode === 'kube' ? 'CIS Benchmark Report' : (mode === 'kyverno' ? 'Cluster Policy Report' : (mode === 'ssl' ? 'SSL Scan Report' : (mode === 'sbom' ? 'Trivy SBOM Report' : 'Ansible roles Validation report')))))
+      );
+      state.sort = 'none';
+      buildFilters();
+      buildSort();
+      applySubsectionVisibility();
+      render();
+    }
+
+    function parseImage(json) {
+      if (!json) return { list: [], counts: {} };
+      const results = json.Results || json.results || [];
+      const list = [];
+      results.forEach(r => {
+        const vuls = r.Vulnerabilities || r.vulnerabilities || [];
+        vuls.forEach(v => {
+          list.push({
+            severity: (v.Severity || v.severity || "UNKNOWN").toUpperCase(),
+            id: v.VulnerabilityID || v.vulnerabilityID || v.CVE || "",
+            pkg: v.PkgName || v.pkgName || "",
+            installed: v.InstalledVersion || v.installedVersion || "",
+            fixed: v.FixedVersion || v.fixedVersion || "",
+            title: v.Title || v.title || "",
+            target: r.Target || r.target || json.ArtifactName || json.artifactName || "",
+            refs: v.References || v.references || []
+          });
+        });
+      });
+      const counts = aggregateCounts(list.map(x => x.severity));
+      return { list, counts };
+    }
+
+    function parseCluster(json) {
+      if (!json) return { list: [], counts: {} };
+      let results = [];
+      // Support top-level Results/results
+      if (Array.isArray(json.Results)) {
+        results = json.Results;
+      } else if (Array.isArray(json.results)) {
+        results = json.results;
+      }
+      // Support Trivy Cluster schema: Findings (with Namespace/Kind/Name)
+      if (Array.isArray(json.Findings)) {
+        json.Findings.forEach(f => {
+          const rlist = f.Results || f.results || [];
+          rlist.forEach(r => {
+            results.push({ ...r, _ctx: { Namespace: f.Namespace, Kind: f.Kind, Name: f.Name } });
+          });
+        });
+      } else if (Array.isArray(json.findings)) {
+        json.findings.forEach(f => {
+          const rlist = f.Results || f.results || [];
+          rlist.forEach(r => {
+            results.push({ ...r, _ctx: { Namespace: f.Namespace, Kind: f.Kind, Name: f.Name } });
+          });
+        });
+      }
+      // Support alternative Trivy Cluster schema: Resources (Kind/Name)
+      if (Array.isArray(json.Resources)) {
+        json.Resources.forEach(res => {
+          const rlist = res.Results || res.results || [];
+          rlist.forEach(r => {
+            results.push({ ...r, _ctx: { Namespace: res.Namespace, Kind: res.Kind, Name: res.Name } });
+          });
+        });
+      } else if (Array.isArray(json.resources)) {
+        json.resources.forEach(res => {
+          const rlist = res.Results || res.results || [];
+          rlist.forEach(r => {
+            results.push({ ...r, _ctx: { Namespace: res.Namespace, Kind: res.Kind, Name: res.Name } });
+          });
+        });
+      }
+
+      const list = [];
+      results.forEach(r => {
+        const mis = r.Misconfigurations || r.misconfigurations || [];
+        const ctx = r._ctx || {};
+        mis.forEach(m => {
+          const composedTarget = r.Target || r.target || [ctx.Namespace, (ctx.Kind && ctx.Name) ? `${ctx.Kind}/${ctx.Name}` : (ctx.Kind || ctx.Name)].filter(Boolean).join(' ');
+          list.push({
+            severity: (m.Severity || m.severity || "UNKNOWN").toUpperCase(),
+            id: m.ID || m.id || "",
+            title: m.Title || m.title || "",
+            message: m.Message || m.message || m.Description || m.description || "",
+            target: composedTarget || "Kubernetes",
+            link: m.PrimaryURL || m.primaryURL || (m.References && m.References[0]) || ""
+          });
+        });
+      });
+      const counts = aggregateCounts(list.map(x => x.severity));
+      return { list, counts };
+    }
+
+    function aggregateCounts(sevs) {
+      const c = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
+      sevs.forEach(s => { c[s] = (c[s] || 0) + 1; });
+      return c;
+    }
+
+    // SBOM (CycloneDX) parser: maps vulnerabilities to component name/version
+    function parseSbom(json) {
+      const rows = [];
+      if (!json || !Array.isArray(json.Results)) return { list: rows, counts: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 } };
+      for (const res of json.Results) {
+        const vulns = res.Vulnerabilities || [];
+        const pkgsById = new Map();
+        const pkgs = res.Packages || [];
+        for (const p of pkgs) { const id = p.ID || p.Identifier?.BOMRef || p.Identifier?.PURL || p.Name; pkgsById.set(id, p); }
+        for (const v of vulns) {
+          const id = String(v.VulnerabilityID || '');
+          const pkgId = String(v.PkgID || v.PkgName || '');
+          const pkgName = String(v.PkgName || pkgsById.get(pkgId)?.Name || pkgId);
+          const installed = String(v.InstalledVersion || pkgsById.get(pkgId)?.Version || '');
+          const fixed = String(v.FixedVersion || '');
+          const status = String(v.Status || '');
+          const severity = String(v.Severity || '').toUpperCase();
+          const title = String(v.Title || '');
+          const score = (function () { const cvss = v.CVSS || {}; let max = null; for (const k of Object.keys(cvss)) { const s = cvss[k]?.V3Score ?? cvss[k]?.V2Score; if (s != null) { max = max == null ? Number(s) : Math.max(Number(s), max); } } return max == null ? '' : String(max); })();
+          const cwe = Array.isArray(v.CweIDs) && v.CweIDs.length ? v.CweIDs[0] : '';
+          const ref = Array.isArray(v.References) && v.References.length ? v.References[0] : (v.PrimaryURL || '');
+          rows.push({ id, library: pkgName, installed, fixed, status, severity, title, score, cwe, ref });
+        }
+      }
+      const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
+      for (const r of rows) { const s = (r.severity || 'UNKNOWN').toUpperCase(); counts[s] = (counts[s] || 0) + 1; }
+      return { list: rows, counts };
+    }
+
+    function cards(containerId, counts) {
+      const container = $(containerId);
+      const total = Object.values(counts || {}).reduce((a, b) => a + b, 0);
+      const entries = sevOrder.map(s => ({ label: s, value: (counts || {})[s] || 0, cls: sevClass(s) }));
+      container.innerHTML = "";
+      entries.forEach(e => {
+        container.insertAdjacentHTML("beforeend",
+          `<div class="card">
+        <div class="label">${e.label}</div>
+        <div class="value"><span class="tag ${e.cls}">${fmt(e.value)}</span></div>
+      </div>`);
+      });
+      container.insertAdjacentHTML("beforeend",
+        `<div class="card"><div class="label">TOTAL</div><div class="value">${fmt(total)}</div></div>`);
+    }
+
+    function table(containerId, rows, type) {
+      const container = $(containerId);
+      let filtered = rows.filter(r => state.severities.has(r.severity));
+      // Apply severity sorting
+      if (state.sort === 'sev_desc') {
+        filtered = filtered.slice().sort((a, b) => (sevRank[b.severity] - sevRank[a.severity]) || String(a.id).localeCompare(String(b.id)));
+      } else if (state.sort === 'sev_asc') {
+        filtered = filtered.slice().sort((a, b) => (sevRank[a.severity] - sevRank[b.severity]) || String(a.id).localeCompare(String(b.id)));
+      }
+      if (filtered.length === 0) { container.innerHTML = `<div class="empty"><strong>No vulnerabilities found</strong><br><span style="font-size:12px; opacity:0.8;">Try adjusting your severity filters or select a different report.</span></div>`; return; }
+      if (type === "image") {
+        container.innerHTML = `<table>
+      <thead><tr>
+        <th>Severity</th><th>CVE</th><th>Package</th><th>Installed</th><th>Fixed</th><th>Title</th><th>Target</th><th>Ref</th>
+      </tr></thead>
+      <tbody>${filtered.map(r => `
+        <tr>
+          <td><span class="tag ${sevClass(r.severity)}">${r.severity}</span></td>
+          <td>${escapeHtml(r.id)}</td>
+          <td>${escapeHtml(r.pkg)}</td>
+          <td>${escapeHtml(r.installed)}</td>
+          <td>${escapeHtml(r.fixed)}</td>
+          <td>${escapeHtml(r.title)}</td>
+          <td>${escapeHtml(r.target)}</td>
+          <td>${linkHtml(r.refs && r.refs[0])}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`;
+      } else {
+        container.innerHTML = `<table>
+      <thead><tr>
+        <th>Severity</th><th>ID</th><th>Title</th><th>Message</th><th>Target</th><th>Ref</th>
+      </tr></thead>
+      <tbody>${filtered.map(r => `
+        <tr>
+          <td><span class="tag ${sevClass(r.severity)}">${r.severity}</span></td>
+          <td>${escapeHtml(r.id)}</td>
+          <td>${escapeHtml(r.title)}</td>
+          <td>${escapeHtml(r.message)}</td>
+          <td>${escapeHtml(r.target)}</td>
+          <td>${linkHtml(r.link)}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`;
+      }
+    }
+
+    // SBOM table rendering aligned with sbom-report.html
+    function tableSBOM(containerId, rows) {
+      const container = $(containerId);
+      let filtered = (rows || []).filter(r => state.severities.has((r.severity || 'UNKNOWN').toUpperCase()));
+      if (state.sort === 'sev_desc') {
+        filtered = filtered.slice().sort((a, b) => (sevRank[(b.severity || 'UNKNOWN').toUpperCase()] - sevRank[(a.severity || 'UNKNOWN').toUpperCase()]) || String(a.id).localeCompare(String(b.id)));
+      } else if (state.sort === 'sev_asc') {
+        filtered = filtered.slice().sort((a, b) => (sevRank[(a.severity || 'UNKNOWN').toUpperCase()] - sevRank[(b.severity || 'UNKNOWN').toUpperCase()]) || String(a.id).localeCompare(String(b.id)));
+      }
+      if (filtered.length === 0) { container.innerHTML = '<div class="empty"><strong>No SBOM vulnerabilities found</strong><br><span style="font-size:12px; opacity:0.8;">Try adjusting your severity filters or load a different SBOM report.</span></div>'; return; }
+      container.innerHTML = `<table class="kyv-table sbom-table"><thead><tr>
+      <th>#</th><th>Library</th><th>Severity</th><th>Status</th><th>Installed Version</th><th>Fixed Version</th><th>Ref</th><th>Title</th>
+    </tr></thead><tbody>${filtered.map((r, i) => {
+        const sev = (r.severity || 'UNKNOWN').toUpperCase();
+        const status = String(r.status || '').toLowerCase();
+        const statusCls = status.includes('fixed') ? 'status-fixed' : (status.includes('affect') ? 'status-affected' : 'status-unknown');
+        return `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeHtml(r.library)}</td>
+        <td><span class="tag ${sevClass(sev)}">${sev}</span></td>
+        <td><span class="status ${statusCls}">${escapeHtml(r.status)}</span></td>
+        <td>${escapeHtml(r.installed)}</td>
+        <td>${escapeHtml(r.fixed)}</td>
+        <td>${linkHtml(r.ref)}</td>
+        <td>${escapeHtml(r.title)}</td>
+      </tr>`;
+      }).join('')}
+    </tbody></table>`;
+    }
+
+    function escapeHtml(s) { return String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+    function linkHtml(url) { if (!url) return ""; return `<a class="link" href="${url}" target="_blank">link</a>`; }
+
+    function render() {
+      updateTime();
+      if (state.mode === 'image') {
+        const parsed = parseImage(state.image);
+        cards('cards', parsed.counts);
+        table('tableWrap', parsed.list, 'image');
+        return;
+      }
+      if (state.mode === 'cluster') {
+        const parsed = parseCluster(state.cluster);
+        cards('cards', parsed.counts);
+        table('tableWrap', parsed.list, 'cluster');
+        return;
+      }
+      if (state.mode === 'sbom') {
+        const parsed = parseSbom(state.sbom);
+        cards('cards', parsed.counts);
+        tableSBOM('tableWrap', parsed.list);
+        return;
+      }
+      if (state.mode === 'kyverno') {
+        const rows = state.kyvRows || [];
+        const nsRows = state.kyvNs ? rows.filter(r => String(r.namespace || '') === state.kyvNs) : [];
+        const counts = { FAIL: 0, WARN: 0, ERROR: 0, SKIP: 0, PASS: 0 };
+        nsRows.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
+        cardsKyverno('cards', counts);
+        tableKyverno('tableWrap', rows);
+        return;
+      }
+      if (state.mode === 'ssl') {
+        tableSSL('tableWrap', state.sslRows);
+        return;
+      }
+      if (state.mode === 'ansible') {
+        $("cards").innerHTML = '';
+        const tpl = document.getElementById('tmpl-ansible');
+        $("tableWrap").innerHTML = tpl ? tpl.innerHTML : '<div class="empty"><strong>Ansible report unavailable</strong><br><span style="font-size:12px; opacity:0.8;">The Ansible roles validation report template could not be loaded.</span></div>';
+        return;
+      }
+      const counts = { FAIL: 0, WARN: 0, PASS: 0, INFO: 0 };
+      state.kubeRecords.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
+      cardsKube('cards', counts);
+      tableKube('tableWrap', state.kubeRecords);
+    }
+
+    // Auto-list JSON files from Trivy-reports directory and enable click-to-load
+    const REPORTS_DIR = 'trivy-reports/';
+    const CLUSTER_DIR = 'trivy-cluster-report/';
+    async function fetchDirListing(dirUrl) {
+      try {
+        const res = await fetch(dirUrl, { headers: { 'Accept': 'text/html' } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const links = Array.from(doc.querySelectorAll('a'));
+        const files = links
+          .map(a => a.getAttribute('href'))
+          .map(h => h ? h.split('?')[0] : '')
+          .filter(h => h && /\.(json|zip)$/i.test(h));
+        return files;
+      } catch (err) {
+        console.warn('Failed to fetch directory listing', err);
+        return [];
+      }
+    }
+
+    // List all directory entries (hrefs) from a server-generated index page
+    async function fetchDirEntries(dirUrl) {
+      try {
+        const res = await fetch(dirUrl, { headers: { 'Accept': 'text/html' } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return Array.from(doc.querySelectorAll('a'))
+          .map(a => a.getAttribute('href'))
+          .map(h => h ? h.split('?')[0] : '')
+          .filter(h => h);
+      } catch (err) {
+        console.warn('Failed to fetch directory entries', err);
+        return [];
+      }
+    }
+
+    // Kube-bench: constants, parser, cards/table, and dropdown population
+    const KUBE_DIR = 'kube-bench/';
+    function parseKubeBenchText(text) {
+      if (!text) return [];
+      const lines = String(text).split(/\r?\n/);
+
+      // Build section map from INFO headers (e.g., "1.2 API Server")
+      const sectionMap = {};
+      for (const line of lines) {
+        const sm = line.match(/^\[INFO\]\s+([0-9]+(?:\.[0-9]+)?)\s+(.*)$/);
+        if (sm) { sectionMap[sm[1]] = sm[2].trim(); }
+      }
+      const findSectionName = (id) => {
+        let bestPrefix = '';
+        let name = '';
+        for (const prefix in sectionMap) {
+          if (id === prefix || id.startsWith(prefix + '.')) {
+            if (prefix.length > bestPrefix.length) { bestPrefix = prefix; name = sectionMap[prefix]; }
+          }
+        }
+        if (name) return name;
+        const major = id.split('.')[0];
+        const majorMap = { '1': 'Control Plane', '2': 'Etcd', '3': 'Control Plane Config', '4': 'Worker Node', '5': 'Policies' };
+        return majorMap[major] || `Group ${major}`;
+      };
+
+      // Build remediation map from "== Remediations ... ==" blocks
+      const remMap = {};
+      let inRem = false; let currentId = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (/^==\s*Remediations/.test(line)) { inRem = true; currentId = null; continue; }
+        if (inRem && (/^==\s*Summary/.test(line) || /^\[INFO\]/.test(line) || /^\[(FAIL|WARN|PASS|INFO)\]/.test(line))) { inRem = false; currentId = null; continue; }
+        if (!inRem) continue;
+        const idm = line.match(/^([0-9]+(?:\.[0-9]+)+)\b(.*)$/);
+        if (idm) {
+          currentId = idm[1];
+          const first = idm[2].trim();
+          remMap[currentId] = first ? first : '';
+          continue;
+        }
+        if (currentId) {
+          if (/^==/.test(line)) { inRem = false; currentId = null; continue; }
+          const t = line.trim();
+          remMap[currentId] += (remMap[currentId] ? '\n' : '') + t;
+        }
+      }
+
+      // Parse checks and attach section + remediation
+      const records = [];
+      for (const line of lines) {
+        const m = line.match(/^\[(FAIL|WARN|PASS|INFO)\]\s+([0-9]+(?:\.[0-9]+)+)\s+(.*)$/);
+        if (m) {
+          const status = m[1];
+          const id = m[2];
+          let title = m[3].trim();
+          const typeMatch = title.match(/\((Manual|Automated)\)\s*$/);
+          if (typeMatch) { title = title.replace(/\s*\((Manual|Automated)\)\s*$/, ''); }
+          const section = findSectionName(id);
+          const remediation = remMap[id] || '';
+          records.push({ status, check: id, title, section, remediation });
+        }
+      }
+      return records;
+    }
+    function cardsKube(containerId, counts) {
+      const container = $(containerId);
+      const order = ['FAIL', 'WARN', 'PASS', 'INFO'];
+      const clsMap = { FAIL: 'crit', WARN: 'high', PASS: 'low', INFO: 'unk' };
+      const total = order.reduce((a, s) => a + (counts[s] || 0), 0);
+      container.innerHTML = "";
+      order.forEach(s => {
+        const val = counts[s] || 0;
+        container.insertAdjacentHTML("beforeend",
+          `<div class="card">
+        <div class="label">${s}</div>
+        <div class="value"><span class="tag ${clsMap[s]}">${fmt(val)}</span></div>
+      </div>`);
+      });
+      container.insertAdjacentHTML("beforeend",
+        `<div class="card"><div class="label">TOTAL</div><div class="value">${fmt(total)}</div></div>`);
+    }
+    function tableKube(containerId, rows) {
+      const container = $(containerId);
+      let filtered = rows.filter(r => state.kubeFilters[r.status]);
+      if (filtered.length === 0) { container.innerHTML = `<div class="empty"><strong>No items found</strong><br><span style="font-size:12px; opacity:0.8;">Try adjusting your status filters or select a different report.</span></div>`; return; }
+      const order = { FAIL: 0, WARN: 1, PASS: 2, INFO: 3 };
+      if (state.sort === 'k_status') {
+        filtered = filtered.slice().sort((a, b) => (order[a.status] - order[b.status]) || String(a.check).localeCompare(String(b.check)));
+      } else if (state.sort === 'k_check') {
+        filtered = filtered.slice().sort((a, b) => String(a.check).localeCompare(String(b.check)) || (order[a.status] - order[b.status]));
+      }
+      const clsMap = { FAIL: 'crit', WARN: 'high', PASS: 'low', INFO: 'unk' };
+      container.innerHTML = `<table class="kube-table">
+    <thead><tr>
+      <th>Status</th><th>Check ID</th><th>Title</th><th>Section</th><th>Resolution</th>
+    </tr></thead>
+    <tbody>${filtered.map(r => `
+      <tr>
+        <td><span class="tag ${clsMap[r.status]}">${r.status}</span></td>
+        <td>${escapeHtml(r.check || '')}</td>
+        <td>${escapeHtml(r.title || '')}</td>
+        <td>${escapeHtml(r.section || '')}</td>
+        <td>${escapeHtml(r.remediation || '')}</td>
+      </tr>`).join("")}
+    </tbody>
+  </table>`;
+    }
+    async function populateKubeDropdown() {
+      const sel = $('kubeSel'); if (!sel) return;
+      try {
+        const entries = await fetchDirEntries(KUBE_DIR);
+        const files = entries.filter(h => /(\.txt|\.log)$/i.test(h)).map(name => ({ name, path: KUBE_DIR + name }));
+        sel.innerHTML = '';
+        const noneOpt = document.createElement('option'); noneOpt.value = ''; noneOpt.textContent = '(none)'; sel.appendChild(noneOpt);
+        files.sort((a, b) => a.name.localeCompare(b.name)).forEach(f => {
+          const opt = document.createElement('option'); opt.value = f.path; opt.textContent = f.name; sel.appendChild(opt);
+        });
+        const countEl = $('kubeCount'); if (countEl) countEl.textContent = String(files.length);
+        sel.value = '';
+      } catch (err) { console.error('populateKubeDropdown error', err); }
+    }
+
+    // Populate namespace dropdown from subfolders under REPORTS_DIR and load reports
+    async function populateNamespaceDropdown() {
+      const sel = $("namespaceSel");
+      if (!sel) return;
+      const entries = await fetchDirEntries(REPORTS_DIR);
+      let namespaces = entries
+        .map(h => String(h))
+        .map(h => h.replace(/\?.*$/, ''))
+        .filter(h => h && !h.toLowerCase().includes('.json'))
+        .filter(h => /\/$/.test(h))
+        .map(h => h.replace(/\/$/, ''))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+
+      sel.innerHTML = "";
+      // Always include a '(none)' option and do not auto-populate
+      const noneOpt = document.createElement('option');
+      noneOpt.value = '';
+      noneOpt.textContent = '(none)';
+      sel.appendChild(noneOpt);
+      namespaces.forEach(ns => {
+        const opt = document.createElement('option');
+        opt.value = ns;
+        opt.textContent = ns;
+        sel.appendChild(opt);
+      });
+      // Default to none; only load list when a namespace is selected
+      state.namespace = '';
+      sel.value = '';
+      sel.addEventListener('change', e => {
+        state.namespace = e.target.value;
+        if (state.namespace) {
+          populateReportsList(state.namespace);
+        } else {
+          const listEl = $("reportsList");
+          const countEl = $("reportCount");
+          if (countEl) countEl.textContent = "0";
+          if (listEl) listEl.innerHTML = "";
+        }
+      });
+    }
+    async function loadReport(path) {
+      try {
+        const res = await fetch(path, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        state.image = data;
+        setMode('image');
+        render();
+        $("updated").textContent = `Loaded: ${path} • ${new Date().toLocaleString()}`;
+      } catch (err) {
+        alert("Failed to load report: " + path);
+        console.error(err);
+      }
+    }
+
+    // Load a selected Cluster JSON from cluster-report directory
+    async function populateClusterDropdown() {
+      const sel = $("clusterSel");
+      if (!sel) return;
+      try {
+        const files = await fetchDirListing(CLUSTER_DIR);
+        sel.innerHTML = "";
+        const noneOpt = document.createElement('option');
+        noneOpt.value = '';
+        noneOpt.textContent = '(none)';
+        sel.appendChild(noneOpt);
+        files.sort((a, b) => a.localeCompare(b)).forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name.replace(/\.(json|zip)$/i, '');
+          sel.appendChild(opt);
+        });
+        const countEl = $("clusterCount");
+        if (countEl) countEl.textContent = String(files.length);
+        sel.value = '';
+        sel.addEventListener('change', e => {
+          const v = e.target.value;
+          if (v) {
+            loadClusterReport(CLUSTER_DIR + v);
+          } else {
+            // Clear cluster data and hide records when '(none)' is selected
+            state.cluster = null;
+            render();
+            const msg = `Cluster selection cleared • ${new Date().toLocaleString()}`;
+            const upd = $("updated"); if (upd) upd.textContent = msg;
+          }
+        });
+      } catch (err) {
+        console.warn('Failed to populate cluster dropdown', err);
+      }
+    }
+    async function loadClusterReport(path) {
+      try {
+        if (/\.zip$/i.test(path)) {
+          const resZip = await fetch(path);
+          if (!resZip.ok) throw new Error(`HTTP ${resZip.status}`);
+          const blob = await resZip.blob();
+          const zip = await JSZip.loadAsync(blob);
+          let file = zip.file(/cluster\.json$/i)[0];
+          if (!file) {
+            const jsonFiles = zip.filter((relPath, file) => /\.json$/i.test(relPath));
+            file = jsonFiles && jsonFiles[0];
+          }
+          if (!file) throw new Error('No JSON file found in ZIP');
+          const text = await file.async('string');
+          const data = JSON.parse(text);
+          state.cluster = data;
+        } else {
+          const res = await fetch(path, { headers: { 'Accept': 'application/json' } });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          state.cluster = data;
+        }
+        setMode('cluster');
+        render();
+        $("updated").textContent = `Loaded: ${path} • ${new Date().toLocaleString()}`;
+      } catch (err) {
+        alert("Failed to load cluster report: " + path);
+        console.error(err);
+      }
+    }
+
+    // Auto-load cluster.json when entering Cluster mode via nav button
+    async function loadClusterAuto() {
+      try {
+        const res = await fetch(CLUSTER_DIR + 'cluster.json', { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        state.cluster = data;
+        setMode('cluster');
+        render();
+        $("updated").textContent = `Loaded: ${CLUSTER_DIR}cluster.json • ${new Date().toLocaleString()}`;
+      } catch (err) {
+        console.warn('Failed to auto-load cluster.json', err);
+        // Fall back to just switching modes; user can upload manually
+        setMode('cluster');
+        $("updated").textContent = `Cluster mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
+      }
+    }
+
+    // Auto-load kyverno.zip when entering Kyverno mode via nav button
+    async function loadKyvernoAuto() {
+      try {
+        const zipResp = await fetch('kyverno-report/kyverno.zip');
+        if (zipResp.ok) {
+          const blob = await zipResp.blob();
+          const zip = await JSZip.loadAsync(blob);
+          let file = zip.file(/kyverno\.json$/i)[0];
+          if (!file) { const jsonFiles = zip.filter((relPath) => /\.json$/i.test(relPath)); file = jsonFiles && jsonFiles[0]; }
+          if (file) {
+            const text = await file.async('string');
+            state.kyvRows = parseKyverno(JSON.parse(text));
+            buildKyvernoNamespaceDropdown();
+            render();
+            $("updated").textContent = `Loaded: kyverno-report/kyverno.zip • ${new Date().toLocaleString()}`;
+            return;
+          }
+        }
+        // If neither present, just show Kyverno mode
+        $("updated").textContent = `Kyverno mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
+      } catch (err) {
+        console.warn('Failed to auto-load kyverno report', err);
+        $("updated").textContent = `Kyverno mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
+      }
+    }
+
+    /* Image JSON upload removed: change listener no longer needed */
+
+
+
+    $("nav-image").addEventListener('click', () => {
+      if (state.mode !== 'image') {
+        setMode('image');
+        state.imageSubExpanded = true;
+        applySubsectionVisibility();
+      } else {
+        state.imageSubExpanded = !state.imageSubExpanded;
+        applySubsectionVisibility();
+      }
+    });
+    $("nav-cluster").addEventListener('click', () => {
+      if (state.mode !== 'cluster') {
+        setMode('cluster');
+        state.clusterSubExpanded = true;
+        applySubsectionVisibility();
+      } else {
+        state.clusterSubExpanded = !state.clusterSubExpanded;
+        applySubsectionVisibility();
+      }
+    });
+
+    $("nav-kube").addEventListener('click', () => {
+      if (state.mode !== 'kube') {
+        setMode('kube');
+        state.kubeSubExpanded = true;
+        applySubsectionVisibility();
+      } else {
+        state.kubeSubExpanded = !state.kubeSubExpanded;
+        applySubsectionVisibility();
+      }
+    });
+
+    $("nav-kyverno").addEventListener('click', async () => {
+      if (state.mode !== 'kyverno') {
+        setMode('kyverno');
+        state.kyvSubExpanded = true;
+        applySubsectionVisibility();
+        await loadKyvernoAuto();
+      } else {
+        state.kyvSubExpanded = !state.kyvSubExpanded;
+        applySubsectionVisibility();
+      }
+    });
+
+    // SSL Scan Report nav handler
+    $("nav-ssl").addEventListener('click', async () => {
+      if (state.mode !== 'ssl') {
+        setMode('ssl');
+        applySubsectionVisibility();
+        await loadSslAuto();
+      } else {
+        applySubsectionVisibility();
+      }
+    });
+
+    // SBOM Report nav handler
+    $("nav-sbom").addEventListener('click', async () => {
+      if (state.mode !== 'sbom') {
+        setMode('sbom');
+        applySubsectionVisibility();
+        await loadSbomAuto();
+      } else {
+        applySubsectionVisibility();
+      }
+    });
+
+    // Ansible Action Report nav handler
+    $("nav-ansible").addEventListener('click', () => {
+      if (state.mode !== 'ansible') {
+        setMode('ansible');
+        applySubsectionVisibility();
+      } else {
+        applySubsectionVisibility();
+      }
+    });
+
+    const kubeSelEl = $("kubeSel");
+    if (kubeSelEl) {
+      kubeSelEl.addEventListener('change', async (e) => {
+        const v = e.target.value;
+        if (!v) { state.kubeRecords = []; render(); return; }
+        try {
+          const resp = await fetch(v);
+          const text = await resp.text();
+          state.kubeRecords = parseKubeBenchText(text);
+          setMode('kube');
+          render();
+          $("updated").textContent = `Loaded: ${v} • ${new Date().toLocaleString()}`;
+        } catch (err) {
+          console.error('Failed to load kube-bench file', err);
+          alert('Failed to load kube-bench file: ' + v);
+        }
+      });
+    }
+
+
+    buildFilters();
+    buildSort();
+    populateNamespaceDropdown();
+    populateClusterDropdown();
+    populateKubeDropdown();
+    setMode('image');
+    render();
+
+    // Kyverno: namespace select and file upload handlers
+    const kyvNsSelEl = $("kyvNsSel");
+    if (kyvNsSelEl) {
+      kyvNsSelEl.addEventListener('change', (e) => { state.kyvNs = e.target.value; render(); });
+    }
+    const kyvDownloadBtn = $("kyvDownloadBtn");
+    const imgExcelDownloadBtn = $("imgExcelDownloadBtn");
+
+    // Restore kube-bench file upload handler
+    const kubeFileEl = $("kubeFile");
+    if (kubeFileEl) {
+      kubeFileEl.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            state.kubeRecords = parseKubeBenchText(String(r.result || ''));
+            setMode('kube');
+            render();
+          } catch (err) { alert('Invalid kube-bench text'); }
+        };
+        r.readAsText(f);
+      });
+    }
+    if (kyvDownloadBtn) {
+      kyvDownloadBtn.addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = 'kyverno-report/Policy_report.xlsx';
+        a.download = 'Policy_report.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+    }
+    if (imgExcelDownloadBtn) {
+      imgExcelDownloadBtn.addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = REPORTS_DIR + 'consolidated-report_images.xlsx';
+        a.download = 'consolidated-report_images.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+    }
+    const kyvFileEl = $("kyvFile");
+    if (kyvFileEl) {
+      kyvFileEl.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const isZip = /\.zip$/i.test(f.name);
+        const r = new FileReader();
+        if (isZip) {
+          r.onload = async () => {
+            try {
+              const zip = await JSZip.loadAsync(r.result);
+              let file = zip.file(/kyverno\.json$/i)[0];
+              if (!file) { const jsonFiles = zip.filter((relPath) => /\.json$/i.test(relPath)); file = jsonFiles && jsonFiles[0]; }
+              if (!file) throw new Error('No JSON file found in ZIP');
+              const text = await file.async('string');
+              state.kyvRows = parseKyverno(JSON.parse(text));
+              buildKyvernoNamespaceDropdown();
+              render();
+              $("updated").textContent = `Loaded: ${f.name} • ${new Date().toLocaleString()}`;
+            } catch (err) { alert('Invalid Kyverno ZIP'); console.error(err); }
+          };
+          r.readAsArrayBuffer(f);
+        } else {
+          r.onload = () => {
+            try {
+              state.kyvRows = parseKyverno(JSON.parse(String(r.result || '')));
+              buildKyvernoNamespaceDropdown();
+              render();
+              $("updated").textContent = `Loaded: ${f.name} • ${new Date().toLocaleString()}`;
+            } catch (err) { alert('Invalid Kyverno JSON'); console.error(err); }
+          };
+          r.readAsText(f);
+        }
+      });
+    }
+
+    const sslFileEl = $("sslFile");
+    if (sslFileEl) {
+      sslFileEl.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            const data = JSON.parse(String(r.result || ''));
+            state.sslRows = parseSSL(data);
+            setMode('ssl');
+            render();
+            $("updated").textContent = `Loaded: ${f.name} • ${new Date().toLocaleString()}`;
+          } catch (err) {
+            alert('Invalid SSL JSON');
+            console.error(err);
+          }
+        };
+        r.readAsText(f);
+      });
+    }
+
+    const sbomFileEl = $("sbomFile");
+    if (sbomFileEl) {
+      sbomFileEl.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+          try {
+            const data = JSON.parse(String(r.result || ''));
+            state.sbom = data;
+            setMode('sbom');
+            render();
+            $("updated").textContent = `Loaded: ${f.name} • ${new Date().toLocaleString()}`;
+          } catch (err) {
+            alert('Invalid SBOM JSON');
+            console.error(err);
+          }
+        };
+        r.readAsText(f);
+      });
+    }
+
+    function applySubsectionVisibility() {
+      $("imageReportsSub").classList.toggle("hidden", !(state.mode === 'image' && state.imageSubExpanded));
+      $("clusterReportsSub").classList.toggle("hidden", !(state.mode === 'cluster' && state.clusterSubExpanded));
+      $("kubeReportsSub").classList.toggle("hidden", !(state.mode === 'kube' && state.kubeSubExpanded));
+      $("kyvernoReportsSub").classList.toggle("hidden", !(state.mode === 'kyverno' && state.kyvSubExpanded));
+    }
+
+    // Build report list for selected namespace (or root) and enable click-to-load
+    async function populateReportsList(ns) {
+      const listEl = $("reportsList");
+      if (!listEl) return;
+      if (!ns) {
+        const countEl = $("reportCount");
+        if (countEl) countEl.textContent = "0";
+        listEl.innerHTML = "";
+        return;
+      }
+      const baseDir = ns ? (REPORTS_DIR + ns.replace(/\/$/, '') + '/') : REPORTS_DIR;
+      const files = await fetchDirListing(baseDir);
+      const countEl = $("reportCount");
+      if (countEl) countEl.textContent = String(files.length);
+      listEl.innerHTML = "";
+      if (files.length === 0) {
+        const loc = ns ? `${REPORTS_DIR}${ns}/` : REPORTS_DIR;
+        listEl.insertAdjacentHTML("beforeend", `<div class="footer" style="padding:12px; background:rgba(75,85,96,0.08); border-radius:6px; border:1px solid var(--border);">No JSON reports found in <code style="color:#58a6ff; font-family:monospace; background:rgba(88,166,255,0.1); padding:2px 6px; border-radius:4px;">${loc}</code>. Ensure your server exposes a directory index or use the file input above.</div>`);
+        return;
+      }
+      files.sort((a, b) => a.localeCompare(b));
+      files.forEach(name => {
+        const label = name.replace(/\/?$/, '').replace(/\.json$/i, '');
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.addEventListener('click', async () => {
+          await loadReport(baseDir + name);
+          Array.from(listEl.querySelectorAll('button')).forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+        listEl.appendChild(btn);
+      });
+    }
+
+    // Kyverno: parser, cards/table, and namespace dropdown
+    function parseKyverno(json) {
+      const items = Array.isArray(json?.items) ? json.items : [json];
+      const rows = [];
+      items.forEach(item => {
+        if (!item || !item.results) return;
+        const metaNs = (item.metadata && item.metadata.namespace) || '';
+        const scope = item.scope || {};
+        const scopeNs = scope.namespace || metaNs;
+        const scopeKind = scope.kind || '';
+        const scopeName = scope.name || '';
+        item.results.forEach(res => {
+          const status = String(res.result || '').toUpperCase();
+          const sev = String(res.severity || 'UNKNOWN').toUpperCase();
+          const base = { status, severity: sev, policy: res.policy || '', message: res.message || '', type: scopeKind, name: scopeName, namespace: scopeNs };
+          const rlist = Array.isArray(res.resources) ? res.resources : [];
+          if (rlist.length > 0) {
+            rlist.forEach(r => {
+              rows.push({
+                ...base,
+                type: String(r.kind || scopeKind || ''),
+                name: String(r.name || scopeName || ''),
+                namespace: String(r.namespace || scopeNs || '')
+              });
+            });
+          } else {
+            rows.push(base);
+          }
+        });
+      });
+      return rows;
+    }
+    function cardsKyverno(containerId, counts) {
+      const container = $(containerId);
+      const order = ['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'];
+      const clsMap = { FAIL: 'crit', WARN: 'high', ERROR: 'unk', SKIP: 'unk', PASS: 'low' };
+      const total = order.reduce((a, s) => a + (counts[s] || 0), 0);
+      container.innerHTML = '';
+      order.forEach(s => {
+        container.insertAdjacentHTML('beforeend', `<div class="card"><div class="label">${s}</div><div class="value"><span class="tag ${clsMap[s]}">${fmt(counts[s] || 0)}</span></div></div>`);
+      });
+      container.insertAdjacentHTML('beforeend', `<div class="card"><div class="label">TOTAL</div><div class="value">${fmt(total)}</div></div>`);
+    }
+    function tableKyverno(containerId, rows) {
+      const container = $(containerId);
+      if (!state.kyvNs) { container.innerHTML = '<div class="empty"><strong>Namespace selection required</strong><br><span style="font-size:12px; opacity:0.8;">Please select a namespace from the dropdown above to view policy compliance results.</span></div>'; return; }
+      let filtered = (rows || []).filter(r => state.kyvFilters[r.status]);
+      filtered = filtered.filter(r => String(r.namespace || '') === state.kyvNs);
+      if (state.sort === 'kyv_status') {
+        const order = { FAIL: 0, WARN: 1, ERROR: 2, SKIP: 3, PASS: 4 };
+        filtered = filtered.slice().sort((a, b) => (order[a.status] - order[b.status]) || String(a.policy || '').localeCompare(String(b.policy || '')));
+      } else if (state.sort === 'sev_desc') {
+        filtered = filtered.slice().sort((a, b) => (sevRank[b.severity] - sevRank[a.severity]) || String(a.policy || '').localeCompare(String(b.policy || '')));
+      } else if (state.sort === 'sev_asc') {
+        filtered = filtered.slice().sort((a, b) => (sevRank[a.severity] - sevRank[b.severity]) || String(a.policy || '').localeCompare(String(b.policy || '')));
+      } else if (state.sort === 'type_asc') {
+        filtered = filtered.slice().sort((a, b) => String(a.type || '').localeCompare(String(b.type || '')) || String(a.name || '').localeCompare(String(b.name || '')) || String(a.policy || '').localeCompare(String(b.policy || '')));
+      }
+      if (filtered.length === 0) { container.innerHTML = '<div class="empty"><strong>No policy violations found</strong><br><span style="font-size:12px; opacity:0.8;">Try adjusting your status filters or select a different namespace.</span></div>'; return; }
+      const clsForStatus = s => (s === 'FAIL' ? 'crit' : (s === 'WARN' ? 'high' : (s === 'PASS' ? 'low' : 'unk')));
+      container.innerHTML = `<table class="kyv-table"><thead><tr>
+    <th>Status</th><th>Severity</th><th>Policy</th><th>Type</th><th>Name</th><th>Message</th>
+  </tr></thead><tbody>${filtered.map(r => `
+    <tr>
+      <td><span class="tag ${clsForStatus(r.status)}">${r.status}</span></td>
+      <td><span class="tag ${sevClass(r.severity)}">${r.severity}</span></td>
+      <td>${escapeHtml(r.policy)}</td>
+      <td>${escapeHtml(r.type)}</td>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml(r.message)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+    }
+    function buildKyvernoNamespaceDropdown() {
+      const sel = $('kyvNsSel'); if (!sel) return;
+      const namespaces = Array.from(new Set((state.kyvRows || []).map(r => String(r.namespace || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+      const countEl = $('kyvCount'); if (countEl) countEl.textContent = String(namespaces.length);
+      sel.innerHTML = '';
+      const allOpt = document.createElement('option'); allOpt.value = ''; allOpt.textContent = '(none)'; sel.appendChild(allOpt);
+      namespaces.forEach(ns => { const opt = document.createElement('option'); opt.value = ns; opt.textContent = ns; sel.appendChild(opt); });
+      sel.value = state.kyvNs || '';
+    }
+
+    // SSL: parser, table, and auto-load helper
+    function parseSSL(data) {
+      const rows = [];
+      if (!data) return rows;
+      const arr = Array.isArray(data) ? data : [];
+      for (const item of arr) {
+        rows.push({
+          namespace: String(item.namespace || ''),
+          fqdn: String(item.fqdn || ''),
+          port: item.port != null ? item.port : '',
+          accepted: Array.isArray(item.accepted_ciphers) ? item.accepted_ciphers : [],
+          weak: Array.isArray(item.weak_ciphers) ? item.weak_ciphers : [],
+          safe: Array.isArray(item.safe_ciphers) ? item.safe_ciphers : []
+        });
+      }
+      return rows;
+    }
+    function tableSSL(containerId, rows) {
+      const container = $(containerId);
+      const list = (arr) => { if (!arr || arr.length === 0) return ''; return `<ul>${arr.map(a => `<li>${escapeHtml(a)}</li>`).join('')}</ul>`; };
+      const allRows = Array.isArray(rows) ? rows : [];
+      const visible = allRows.filter(r => (r.accepted && r.accepted.length) || (r.weak && r.weak.length) || (r.safe && r.safe.length));
+      if (visible.length === 0) { container.innerHTML = '<div class="empty"><strong>No SSL scan data available</strong><br><span style="font-size:12px; opacity:0.8;">No cipher information found in the SSL scan results. Please ensure the scan completed successfully.</span></div>'; return; }
+      container.innerHTML = `<table class="kyv-table ssl-table"><thead><tr>
+    <th>#</th><th>Namespace</th><th>FQDN</th><th>Port</th><th>Currently Accepted Ciphers</th><th>Weak Ciphers (Remove)</th><th>Safe Ciphers to be Allowed</th>
+  </tr></thead><tbody>${visible.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${escapeHtml(r.namespace)}</td>
+      <td>${escapeHtml(r.fqdn)}</td>
+      <td>${escapeHtml(r.port)}</td>
+      <td>${list(r.accepted)}</td>
+      <td>${list(r.weak)}</td>
+      <td>${list(r.safe)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+    }
+    async function loadSslAuto() {
+      try {
+        const candidates = ['nmap/nmap.json', './nmap/nmap.json'];
+        let data = null; let loadedPath = '';
+        for (const path of candidates) {
+          try {
+            const res = await fetch(path, { headers: { 'Accept': '*/*' }, cache: 'no-store' });
+            if (!res.ok) continue;
+            const text = await res.text();
+            data = JSON.parse(text); loadedPath = path; break;
+          } catch (err) { console.warn('Fetch failed for', path, err); }
+        }
+        if (data) {
+          state.sslRows = parseSSL(data);
+          setMode('ssl');
+          render();
+          const rows = state.sslRows || [];
+          const visible = rows.filter(r => (r.accepted && r.accepted.length) || (r.weak && r.weak.length) || (r.safe && r.safe.length));
+          const hiddenCount = rows.length - visible.length;
+          $("updated").textContent = `Loaded: ${loadedPath || 'nmap/nmap.json'} • ${new Date().toLocaleString()} • rows: ${visible.length} of ${rows.length}${hiddenCount > 0 ? ` (hidden: ${hiddenCount})` : ''}`;
+        } else {
+          setMode('ssl');
+          $("updated").textContent = `SSL mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
+        }
+      } catch (err) {
+        console.warn('Failed to auto-load nmap.json', err);
+        setMode('ssl');
+        $("updated").textContent = `SSL mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
+      }
+    }
+
+    async function loadSbomAuto() {
+      try {
+        const candidates = ['trivy-sbom/sbom.json', './trivy-sbom/sbom.json'];
+        let data = null; let loadedPath = '';
+        for (const path of candidates) {
+          try {
+            const res = await fetch(path, { headers: { 'Accept': '*/*' }, cache: 'no-store' });
+            if (!res.ok) continue;
+            const text = await res.text();
+            data = JSON.parse(text); loadedPath = path; break;
+          } catch (err) { console.warn('Fetch failed for', path, err); }
+        }
+        if (data) {
+          state.sbom = data;
+          setMode('sbom');
+          render();
+          const parsed = parseSbom(state.sbom);
+          $("updated").textContent = `Loaded: ${loadedPath || 'trivy-sbom/sbom.json'} • ${new Date().toLocaleString()} • rows: ${parsed.list.length}`;
+        } else {
+          setMode('sbom');
+          $("updated").textContent = `SBOM mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
+        }
+      } catch (err) {
+        console.warn('Failed to auto-load sbom.json', err);
+        setMode('sbom');
+        $("updated").textContent = `SBOM mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: security-ops
+---
+# Security Dashboard Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-dashboard
+  namespace: security-ops
+spec:
+  type: NodePort
+  selector:
+    app: security-dashboard
+  ports:
+    - name: api
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30095
+    - name: reports
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+      nodePort: 30096
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: security-dashboard-sa
+  namespace: security-ops
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: security-dashboard-admin-binding
+subjects:
+- kind: ServiceAccount
+  name: security-dashboard-sa
+  namespace: security-ops
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+# Security Dashboard Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-dashboard
+  namespace: security-ops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: security-dashboard
+  template:
+    metadata:
+      labels:
+        app: security-dashboard
+    spec:
+      hostPID: true
+      serviceAccountName: security-dashboard-sa
+      containers:
+        - name: security-dashboard
+          image: quay.io/abhilash_bs1/security-dashboard:latest
+          imagePullPolicy: Always
+          env:
+            - name: APP_HOME
+              value: "/app"
+          ports:
+            - containerPort: 8000
+            - containerPort: 8081
+          # CRITICAL: Mount socket to allow scanning the node's images
+          # AND host directories for kube-bench
+          volumeMounts:
+            - name: containerd-socket
+              mountPath: /run/containerd/containerd.sock 
+              readOnly: true
+            - name: etc-kubernetes
+              mountPath: /etc/kubernetes
+              readOnly: true
+            - name: var-lib-kubelet
+              mountPath: /var/lib/kubelet
+              readOnly: true
+            - name: etc-systemd
+              mountPath: /etc/systemd
+              readOnly: true
+      volumes:
+        - name: containerd-socket
+          hostPath:
+            path: /run/containerd/containerd.sock
+            type: Socket
+        - name: etc-kubernetes
+          hostPath:
+            path: /etc/kubernetes
+        - name: var-lib-kubelet
+          hostPath:
+            path: /var/lib/kubelet
+        - name: etc-systemd
+          hostPath:
+            path: /etc/systemd
