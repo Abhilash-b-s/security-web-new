@@ -96,7 +96,11 @@ async def run_single_scan(scan_type: ScanType, scan_id: str, request: ScanReques
     # Mocking commands for demonstration if tools aren't installed, 
     # but implementing as if they are.
     # User /app in container, or fallback to current dir
+    # User /app in container, or fallback to current dir
     cwd = os.getenv("APP_HOME", "/app") 
+    
+    # Prepare environment
+    env = os.environ.copy()
     
     if scan_type == ScanType.KUBE_BENCH:
         command = ["bash", f"{cwd}/4_run_kube_bench.sh"]
@@ -116,10 +120,47 @@ async def run_single_scan(scan_type: ScanType, scan_id: str, request: ScanReques
     elif scan_type == ScanType.NMAP:
         command = ["bash", f"{cwd}/3_run_nmap.sh"]
 
+    elif scan_type == ScanType.TRIVY_REPO:
+        # Load Git Config
+        # Import inside function or at top - ensure imported
+        from routers.settings import load_git_config
+        git_config = load_git_config()
+        
+        if not git_config.username or not git_config.token or not git_config.repos:
+            await manager.broadcast("Error: Git configuration missing (User, Token, or Repos). Configure in Settings.\n", scan_id)
+            return {
+                "scan_type": scan_type,
+                "status": ScanStatus.FAILED,
+                "output": "Git configuration missing",
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        # Write repos.txt
+        repos_file = os.path.join(cwd, "repos.txt")
+        try:
+             repo_list = [r.strip() for r in git_config.repos.split('\n') if r.strip()]
+             with open(repos_file, "w") as f:
+                 for r in repo_list:
+                     f.write(f"{r}\n")
+        except Exception as e:
+             await manager.broadcast(f"Error writing repos.txt: {e}\n", scan_id)
+             return {
+                "scan_type": scan_type,
+                "status": ScanStatus.FAILED,
+                "output": f"Error writing repos.txt: {e}",
+                "timestamp": datetime.now().isoformat()
+            }
+
+        # Set env vars for the script
+        env["GIT_USER"] = git_config.username
+        env["GIT_TOKEN"] = git_config.token
+        command = ["bash", f"{cwd}/7_run_trivy_repo.sh"]
+
     accum_output = []
     
-    # Prepare environment
-    env = os.environ.copy()
+    accum_output = []
+    
+    # env is already initialized at the top
     
     # Multi-Registry Login
     # Iterate through all configured registries and attempt login

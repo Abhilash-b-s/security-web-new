@@ -1,30 +1,28 @@
 import React, { useState } from 'react';
-import { Play, Shield, Activity, Layers, Terminal } from 'lucide-react';
+import { Play, Shield, Activity, Layers, Terminal, Code, GitGraph } from 'lucide-react';
 
 const SCAN_TYPES = [
-    { id: 'kube-bench', label: 'CIS Benchmark Report', icon: <Shield className="w-4 h-4" /> },
-    { id: 'kyverno', label: 'Kyverno Policy Report', icon: <Activity className="w-4 h-4" /> },
-    { id: 'trivy-image', label: 'Image Vulnerability Report', icon: <Layers className="w-4 h-4" /> },
-    { id: 'trivy-sbom', label: 'Trivy SBOM Report', icon: <Layers className="w-4 h-4" /> },
-    { id: 'trivy-cluster', label: 'Trivy Cluster Report', icon: <Layers className="w-4 h-4" /> },
-    { id: 'nmap', label: 'Nmap SSL Report', icon: <Terminal className="w-4 h-4" /> },
+    { id: 'trivy-image', label: 'Image Vulnerabilities', icon: <Layers className="w-4 h-4" /> },
+    { id: 'trivy-sbom', label: 'SBOM Inventory', icon: <Layers className="w-4 h-4" /> },
+    { id: 'trivy-repo', label: 'Source Code Scan', icon: <GitGraph className="w-4 h-4" /> },
+    { id: 'nmap', label: 'Network Security Scan', icon: <Terminal className="w-4 h-4" /> },
+    { id: 'kyverno', label: 'Policy Compliance', icon: <Activity className="w-4 h-4" /> },
+    { id: 'kube-bench', label: 'CIS Benchmarks', icon: <Shield className="w-4 h-4" /> },
+    { id: 'trivy-cluster', label: 'Cluster Risks Scan', icon: <Layers className="w-4 h-4" /> },
 ];
 
 export default function ScanControl({ onStartScan, isScanning }) {
-    const [registryUser, setRegistryUser] = useState('');
-    const [registryPassword, setRegistryPassword] = useState('');
 
     const handleStartScan = (typeId) => {
-        // Only pass credentials if likely needed (or always pass, validation on backend/script)
-        // For now, pass always if present
-        onStartScan(typeId, { registryUser, registryPassword });
+        // Registry credentials are now managed in Settings and loaded by backend
+        onStartScan(typeId, {});
     };
 
     return (
         <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-xl w-full">
             <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
                 <Activity className="w-5 h-5 text-blue-400" />
-                Scan Controls
+                Security Operations
             </h2>
 
             <div className="flex flex-col gap-4 mb-6">
@@ -47,10 +45,13 @@ export default function ScanControl({ onStartScan, isScanning }) {
             </div>
 
             <button
-                onClick={() => { }}
-                disabled={true}
-                className="w-full py-2 px-3 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all bg-gray-700/50 border border-gray-600 opacity-50 cursor-not-allowed text-gray-400"
-                title="Temporarily disabled"
+                onClick={() => handleStartScan('all')}
+                disabled={isScanning}
+                className={`w-full py-2 px-3 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${isScanning
+                    ? 'bg-gray-700/50 border border-gray-600 opacity-50 cursor-not-allowed text-gray-400'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20'
+                    }`}
+                title="Run All Scans"
             >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 Run All Scans

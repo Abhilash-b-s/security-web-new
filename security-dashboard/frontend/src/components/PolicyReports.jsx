@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import JSZip from 'jszip';
-import { Shield, FileJson, AlertTriangle, CheckCircle, XCircle, Info, Hash, Clock, Download, ChevronRight, ChevronDown, Package, Layers, Image as ImageIcon, Globe, ClipboardList, Server } from 'lucide-react';
+import { Shield, FileJson, AlertTriangle, CheckCircle, XCircle, Info, Hash, Clock, Download, ChevronRight, ChevronDown, Package, Layers, Image as ImageIcon, Globe, ClipboardList, Server, Code, GitGraph } from 'lucide-react';
 
 export default function PolicyReports() {
-  const [activeView, setActiveView] = useState('kyverno'); // kyverno | sbom | image | nmap | cis | cluster
+  const [activeView, setActiveView] = useState('kyverno'); // kyverno | sbom | image | nmap | cis | cluster | trivy-repo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -18,6 +18,11 @@ export default function PolicyReports() {
   const [imageFiles, setImageFiles] = useState([]);
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [imageData, setImageData] = useState({ list: [], counts: {} });
+
+  // Git Repo Report State
+  const [trivyRepoFiles, setTrivyRepoFiles] = useState([]);
+  const [selectedTrivyRepoFile, setSelectedTrivyRepoFile] = useState(null);
+  const [trivyRepoData, setTrivyRepoData] = useState({ list: [], counts: {} });
 
   // Filters
   const [kyvernoNs, setKyvernoNs] = useState('');
@@ -40,6 +45,11 @@ export default function PolicyReports() {
     CRITICAL: true, HIGH: true, MEDIUM: true, LOW: true, UNKNOWN: true
   });
 
+  // Git Repo Filters
+  const [trivyRepoSeverityFilters, setTrivyRepoSeverityFilters] = useState({
+    CRITICAL: true, HIGH: true, MEDIUM: true, LOW: true, UNKNOWN: true
+  });
+
   // Fetch logic
   useEffect(() => {
     setError(null);
@@ -55,6 +65,8 @@ export default function PolicyReports() {
       loadCis();
     } else if (activeView === 'cluster') {
       loadCluster();
+    } else if (activeView === 'trivy-repo') {
+      fetchTrivyRepoFiles();
     }
   }, [activeView]);
 
@@ -64,6 +76,13 @@ export default function PolicyReports() {
       loadImageReport(selectedImageFile);
     }
   }, [selectedImageFile]);
+
+  // Load Git Repo Data when file selected
+  useEffect(() => {
+    if (activeView === 'trivy-repo' && selectedTrivyRepoFile) {
+      loadTrivyRepoReport(selectedTrivyRepoFile);
+    }
+  }, [selectedTrivyRepoFile]);
 
 
   const loadKyverno = async () => {
@@ -230,6 +249,39 @@ export default function PolicyReports() {
     }
   }
 
+  const fetchTrivyRepoFiles = async () => {
+    if (trivyRepoFiles.length > 0) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/files/list?subpath=trivy_repo_scan');
+      if (!res.ok) throw new Error(`Failed to list repo reports: ${res.status}`);
+      const files = await res.json();
+      setTrivyRepoFiles(files);
+      if (files.length > 0) setSelectedTrivyRepoFile(files[0]);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const loadTrivyRepoReport = async (filename) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/new/trivy_repo_scan/${filename}`);
+      if (!res.ok) throw new Error(`Failed to load report ${filename}: ${res.status}`);
+      const json = await res.json();
+      const parsed = parseTrivyRepo(json);
+      setTrivyRepoData(parsed);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
 
   // --- Parsers ---
 
@@ -329,6 +381,56 @@ export default function PolicyReports() {
         });
       });
     });
+    const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
+    list.forEach(item => { counts[item.severity] = (counts[item.severity] || 0) + 1; });
+    return { list, counts };
+  }
+
+  function parseTrivyRepo(json) {
+    if (!json) return { list: [], counts: {} };
+    const list = [];
+    const results = json.Results || [];
+
+    results.forEach(res => {
+      const target = res.Target || '';
+
+      // Handle Packages (Vulnerabilities)
+      if (res.Vulnerabilities) {
+        res.Vulnerabilities.forEach(v => {
+          list.push({
+            type: 'Vulnerability',
+            severity: (v.Severity || 'UNKNOWN').toUpperCase(),
+            id: v.VulnerabilityID || '',
+            pkg: v.PkgName || '',
+            installed: v.InstalledVersion || '',
+            fixed: v.FixedVersion || '',
+            title: v.Title || '',
+            desc: v.Description || '',
+            target: target,
+            refs: v.References || []
+          });
+        });
+      }
+
+      // Handle Secrets
+      if (res.Secrets) {
+        res.Secrets.forEach(s => {
+          list.push({
+            type: 'Secret',
+            severity: (s.Severity || 'UNKNOWN').toUpperCase(),
+            id: s.RuleID || '',
+            pkg: s.Category || '',
+            installed: `Lines ${s.StartLine}-${s.EndLine}`,
+            fixed: 'N/A',
+            title: s.Title || '',
+            desc: 'Code Match',
+            target: target,
+            refs: []
+          });
+        });
+      }
+    });
+
     const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
     list.forEach(item => { counts[item.severity] = (counts[item.severity] || 0) + 1; });
     return { list, counts };
@@ -527,37 +629,43 @@ export default function PolicyReports() {
           onClick={() => setActiveView('kyverno')}
           className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'kyverno' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
         >
-          <Shield className="w-4 h-4" /> Policy Report
+          <Shield className="w-4 h-4" /> Policy Compliance
         </button>
         <button
           onClick={() => setActiveView('sbom')}
           className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'sbom' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
         >
-          <Package className="w-4 h-4" /> SBOM Report
+          <Package className="w-4 h-4" /> SBOM Inventory
+        </button>
+        <button
+          onClick={() => setActiveView('trivy-repo')}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'trivy-repo' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+        >
+          <GitGraph className="w-4 h-4" /> Source Code
         </button>
         <button
           onClick={() => setActiveView('image')}
           className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'image' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
         >
-          <ImageIcon className="w-4 h-4" /> Image Scan Report
+          <ImageIcon className="w-4 h-4" /> Image Vulnerabilities
         </button>
         <button
           onClick={() => setActiveView('nmap')}
           className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'nmap' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
         >
-          <Globe className="w-4 h-4" /> Network (SSL) Report
+          <Globe className="w-4 h-4" /> Network Security
         </button>
         <button
           onClick={() => setActiveView('cis')}
           className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cis' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
         >
-          <ClipboardList className="w-4 h-4" /> CIS Benchmark Report
+          <ClipboardList className="w-4 h-4" /> CIS Benchmarks
         </button>
         <button
           onClick={() => setActiveView('cluster')}
           className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cluster' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
         >
-          <Server className="w-4 h-4" /> Trivy Cluster
+          <Server className="w-4 h-4" /> Cluster Risks
         </button>
       </div>
 
@@ -1121,6 +1229,105 @@ export default function PolicyReports() {
             </div>
           </div>
         )}
+
+        {/* TRIVY REPO SCAN */}
+        {!loading && !error && activeView === 'trivy-repo' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
+                <StatusCard key={s} label={s} value={trivyRepoData.counts[s] || 0} />
+              ))}
+              <div className="p-4 rounded-lg border border-gray-700 bg-[#1e1e1e] flex flex-col items-center justify-center">
+                <span className="text-xs font-semibold opacity-70 mb-1">TOTAL</span>
+                <span className="text-2xl font-bold text-gray-200">
+                  {Object.values(trivyRepoData.counts).reduce((a, b) => a + b, 0)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="md:col-span-4 bg-[#161b22] p-4 rounded-lg border border-[#30363d]">
+                <div className="text-xs font-semibold uppercase text-gray-500 mb-2">Select Repository Report</div>
+                <select
+                  value={selectedTrivyRepoFile || ''}
+                  onChange={(e) => setSelectedTrivyRepoFile(e.target.value)}
+                  className="w-full bg-[#0e1116] border border-[#30363d] rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                >
+                  {trivyRepoFiles.length === 0 && <option value="">No reports found</option>}
+                  {trivyRepoFiles.map(f => (
+                    <option key={f} value={f}>{f.replace('.json', '')}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="md:col-span-8 bg-[#161b22] p-4 rounded-lg border border-[#30363d] flex items-center">
+                <div className="flex flex-wrap gap-4 items-center">
+                  <span className="text-xs text-gray-400 font-mono uppercase">Filter Severity:</span>
+                  {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
+                    <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${trivyRepoSeverityFilters[sev]
+                        ? 'bg-blue-600 border-blue-600'
+                        : 'bg-transparent border-gray-600 hover:border-gray-500'
+                        }`}>
+                        {trivyRepoSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
+                      </div>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={trivyRepoSeverityFilters[sev]}
+                        onChange={() => setTrivyRepoSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
+                      />
+                      <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-500' :
+                        sev === 'HIGH' ? 'text-orange-400' :
+                          sev === 'MEDIUM' ? 'text-yellow-400' :
+                            sev === 'LOW' ? 'text-blue-400' : 'text-gray-400'
+                        }`}>{sev}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-[#161b22] text-gray-200 font-medium">
+                  <tr>
+                    <th className="p-3 border-b border-[#30363d] w-24">Severity</th>
+                    <th className="p-3 border-b border-[#30363d]">Type</th>
+                    <th className="p-3 border-b border-[#30363d]">Vulnerability/Rule ID</th>
+                    <th className="p-3 border-b border-[#30363d]">Package/Category</th>
+                    <th className="p-3 border-b border-[#30363d]">Installed/Lines</th>
+                    <th className="p-3 border-b border-[#30363d]">Fixed Ver</th>
+                    <th className="p-3 border-b border-[#30363d]">Target File</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#30363d]">
+                  {trivyRepoData.list
+                    .filter(r => trivyRepoSeverityFilters[r.severity])
+                    .map((row, idx) => (
+                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.severity)}`}>
+                            {row.severity}
+                          </span>
+                        </td>
+                        <td className="p-3 text-gray-200">{row.type}</td>
+                        <td className="p-3 font-mono text-blue-300">{row.id}</td>
+                        <td className="p-3 font-medium text-gray-200">{row.pkg}</td>
+                        <td className="p-3 text-gray-200 font-mono">{row.installed}</td>
+                        <td className="p-3 text-gray-200">{row.fixed}</td>
+                        <td className="p-3 text-gray-200 break-all">{row.target}</td>
+                      </tr>
+                    ))}
+                  {trivyRepoData.list.length === 0 && (
+                    <tr><td colSpan="7" className="p-8 text-center text-gray-500">No issues found or no report selected</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
 
       </div>
     </div>

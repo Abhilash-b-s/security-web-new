@@ -14,11 +14,65 @@ export default function Settings() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Git Config State
+    const [gitUsername, setGitUsername] = useState('');
+    const [gitToken, setGitToken] = useState('');
+    const [gitRepos, setGitRepos] = useState('');
+    const [gitLoading, setGitLoading] = useState(false);
+    const [gitError, setGitError] = useState(null);
+
+    const [gitSuccess, setGitSuccess] = useState(null);
+    const [isEditingGit, setIsEditingGit] = useState(false);
+
     useEffect(() => {
         if (activeSection === 'registry') {
             fetchRegistries();
+        } else if (activeSection === 'git') {
+            fetchGitConfig();
         }
     }, [activeSection]);
+
+    const fetchGitConfig = async () => {
+        try {
+            const response = await fetch('/api/settings/git-config');
+            if (response.ok) {
+                const data = await response.json();
+                setGitUsername(data.username || '');
+                setGitToken(data.token || '');
+                setGitRepos(data.repos || '');
+            }
+        } catch (err) {
+            console.error("Failed to fetch git config:", err);
+        }
+    };
+
+    const handleSaveGitConfig = async (e) => {
+        e.preventDefault();
+        setGitLoading(true);
+        setGitError(null);
+        setGitSuccess(null);
+
+        try {
+            const config = { username: gitUsername, token: gitToken, repos: gitRepos };
+            const response = await fetch('/api/settings/git-config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            if (response.ok) {
+                setGitSuccess("Git configuration saved successfully!");
+                setIsEditingGit(false);
+                setTimeout(() => setGitSuccess(null), 3000);
+            } else {
+                setGitError("Failed to save git configuration");
+            }
+        } catch (err) {
+            setGitError("Error saving configuration: " + err.message);
+        } finally {
+            setGitLoading(false);
+        }
+    };
 
     const fetchRegistries = async () => {
         try {
@@ -106,8 +160,7 @@ export default function Settings() {
     // Navigation Items
     const navItems = [
         { id: 'registry', label: 'Registry Management', icon: <Database className="w-4 h-4" /> },
-        // Future settings tabs (e.g., 'system', 'users') can be added here
-        // { id: 'general', label: 'General', icon: <SettingsIcon className="w-4 h-4" /> }
+        { id: 'git', label: 'Git Configuration', icon: <SettingsIcon className="w-4 h-4" /> }
     ];
 
     const baseButtonClasses = 'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ';
@@ -128,8 +181,8 @@ export default function Settings() {
                             key={item.id}
                             onClick={() => setActiveSection(item.id)}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-all w-full text-left ${activeSection === item.id
-                                    ? 'bg-blue-600/20 text-blue-400 border-blue-500/50 shadow-lg shadow-blue-500/20'
-                                    : 'bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-blue-600/40 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/20'
+                                ? 'bg-blue-600/20 text-blue-400 border-blue-500/50 shadow-lg shadow-blue-500/20'
+                                : 'bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-blue-600/40 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/20'
                                 }`}
                         >
                             <div className={`p-1.5 rounded-md ${activeSection === item.id ? 'bg-blue-500/20 text-blue-300' : 'bg-gray-700 text-blue-400'}`}>
@@ -150,6 +203,95 @@ export default function Settings() {
                         <div className="flex flex-col items-center justify-center h-[50vh] text-gray-500">
                             <SettingsIcon className="w-16 h-16 mb-4 opacity-20" />
                             <p className="text-lg">Select a category from the sidebar to configure settings.</p>
+                        </div>
+                    )}
+
+                    {activeSection === 'git' && (
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            <div>
+                                <h1 className="text-2xl font-bold mb-2">Git Configuration</h1>
+                                <p className="text-gray-400">Configure credentials for Git Repository scanning. The token will be used to clone private repositories.</p>
+                            </div>
+
+                            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-sm">
+                                <form onSubmit={handleSaveGitConfig} className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-400 mb-1">Git Username</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                disabled={!isEditingGit}
+                                                placeholder="e.g. abhilash-armada-ai"
+                                                value={gitUsername}
+                                                onChange={(e) => setGitUsername(e.target.value)}
+                                                className={`w-full bg-gray-900 border border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-400 mb-1">Git Access Token</label>
+                                            <input
+                                                type="password"
+                                                required
+                                                disabled={!isEditingGit}
+                                                placeholder="Access Token"
+                                                value={gitToken}
+                                                onChange={(e) => setGitToken(e.target.value)}
+                                                className={`w-full bg-gray-900 border border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-400 mb-1">Repository URLs (One per line)</label>
+                                        <textarea
+                                            required
+                                            disabled={!isEditingGit}
+                                            rows={6}
+                                            placeholder="https://gitlab.com/example/repo.git"
+                                            value={gitRepos}
+                                            onChange={(e) => setGitRepos(e.target.value)}
+                                            className={`w-full bg-gray-900 border border-gray-600 rounded-lg py-2 px-4 text-sm font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Comments starting with # are ignored.</p>
+                                    </div>
+
+                                    {gitError && <p className="text-red-400 text-sm">{gitError}</p>}
+                                    {gitSuccess && <p className="text-green-400 text-sm">{gitSuccess}</p>}
+
+                                    <div className="flex justify-end gap-3">
+                                        {!isEditingGit ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsEditingGit(true)}
+                                                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                                            >
+                                                <Edit className="w-4 h-4" /> Edit Configuration
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsEditingGit(false);
+                                                        fetchGitConfig(); // Revert changes
+                                                    }}
+                                                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    disabled={gitLoading}
+                                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20"
+                                                >
+                                                    {gitLoading ? 'Saving...' : 'Save Configuration'}
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     )}
 
@@ -295,3 +437,4 @@ export default function Settings() {
         </div>
     );
 }
+

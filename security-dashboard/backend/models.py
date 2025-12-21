@@ -9,6 +9,7 @@ class ScanType(str, Enum):
     TRIVY_IMAGE = "trivy-image"
     TRIVY_SBOM = "trivy-sbom"
     TRIVY_CLUSTER = "trivy-cluster"
+    TRIVY_REPO = "trivy-repo"
     NMAP = "nmap"
     ALL = "all"
 
@@ -39,4 +40,10 @@ class RegistryCredential(BaseModel):
     url: str
     username: str
     password: str
+
+class GitConfig(BaseModel):
+    username: str
+    token: str
+    repos: str # multiline string or List[str]
+
 

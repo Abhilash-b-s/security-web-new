@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models import RegistryCredential
+from models import RegistryCredential, GitConfig
 from typing import List
 import json
 import os
@@ -81,3 +81,28 @@ async def update_registry(reg_id: str, credential: RegistryCredential):
     save_registries(registries)
     
     return updated_registry
+
+GIT_CONFIG_FILE = "git_config.json"
+
+def load_git_config():
+    if not os.path.exists(GIT_CONFIG_FILE):
+        return GitConfig(username="", token="", repos="")
+    try:
+        with open(GIT_CONFIG_FILE, "r") as f:
+            data = json.load(f)
+            return GitConfig(**data)
+    except json.JSONDecodeError:
+        return GitConfig(username="", token="", repos="")
+
+def save_git_config(config: GitConfig):
+    with open(GIT_CONFIG_FILE, "w") as f:
+        json.dump(config.dict(), f, indent=2)
+
+@router.get("/git-config", response_model=GitConfig)
+async def get_git_config():
+    return load_git_config()
+
+@router.post("/git-config", response_model=GitConfig)
+async def update_git_config(config: GitConfig):
+    save_git_config(config)
+    return config
