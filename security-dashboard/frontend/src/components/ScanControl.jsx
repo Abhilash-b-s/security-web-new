@@ -45,13 +45,10 @@ export default function ScanControl({ onStartScan, isScanning }) {
             </div>
 
             <button
-                onClick={() => handleStartScan('all')}
-                disabled={isScanning}
-                className={`w-full py-2 px-3 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all ${isScanning
-                    ? 'bg-gray-700/50 border border-gray-600 opacity-50 cursor-not-allowed text-gray-400'
-                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20'
-                    }`}
-                title="Run All Scans"
+                onClick={() => { }}
+                disabled={true}
+                className="w-full py-2 px-3 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all bg-gray-700/50 border border-gray-600 opacity-50 cursor-not-allowed text-gray-400"
+                title="Run All Scans (Disabled)"
             >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 Run All Scans

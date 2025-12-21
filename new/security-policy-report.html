@@ -112,7 +112,8 @@
     #nav-kyverno,
     #nav-ansible,
     #nav-ssl,
-    #nav-sbom {
+    #nav-sbom,
+    #nav-repo {
       background: linear-gradient(180deg, rgba(75, 85, 96, 0.12) 0%, rgba(75, 85, 96, 0.06) 100%);
       border-color: #4b5560;
     }
@@ -123,7 +124,8 @@
     #nav-kyverno:hover,
     #nav-ansible:hover,
     #nav-ssl:hover,
-    #nav-sbom:hover {
+    #nav-sbom:hover,
+    #nav-repo:hover {
       background: linear-gradient(180deg, rgba(75, 85, 96, 0.50) 0%, rgba(75, 85, 96, 0.25) 100%);
       border-color: #8da2b8;
       box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.55) inset, 0 0 0 2px rgba(88, 166, 255, 0.30), 0 6px 12px rgba(0, 0, 0, 0.35);
@@ -137,7 +139,8 @@
     #nav-kyverno.active,
     #nav-ansible.active,
     #nav-ssl.active,
-    #nav-sbom.active {
+    #nav-sbom.active,
+    #nav-repo.active {
       background: linear-gradient(180deg, rgba(75, 85, 96, 0.22) 0%, rgba(75, 85, 96, 0.12) 100%);
     }
 
@@ -955,6 +958,13 @@
         </div>
         <button id="nav-ansible">Ansible Roles Report</button>
         <button id="nav-sbom">Trivy SBOM Report</button>
+        <button id="nav-repo">Trivy Repo Scan</button>
+        <div id="repoReportsSub" class="subsection hidden">
+          <div class="subheader">
+            <div class="title">Repositories <span id="repoCount" class="count-badge">0</span></div>
+          </div>
+          <div id="repoList" class="subnav"></div>
+        </div>
         <button id="nav-cluster">Trivy Cluster Report</button>
         <div id="clusterReportsSub" class="subsection hidden">
           <div class="subheader">
@@ -1268,10 +1278,12 @@
       image: null,
       cluster: null,
       sbom: null,
+      repo: null,
       severities: new Set(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']),
       sort: 'none',
       imageSubExpanded: false,
       clusterSubExpanded: false,
+      repoSubExpanded: false,
       namespace: null,
       kubeRecords: [],
       kubeSubExpanded: false,
@@ -1386,6 +1398,7 @@
     function setMode(mode) {
       state.mode = mode;
       $("nav-image").classList.toggle("active", mode === 'image');
+      $("nav-repo").classList.toggle("active", mode === 'repo');
       $("nav-cluster").classList.toggle("active", mode === 'cluster');
       $("nav-kube").classList.toggle("active", mode === 'kube');
       $("nav-kyverno").classList.toggle("active", mode === 'kyverno');
@@ -1412,7 +1425,8 @@
 
       $("section-title").textContent = (
         mode === 'image' ? 'Image Vulnerabilities Report' :
-          (mode === 'cluster' ? 'Cluster Misconfigurations' : (mode === 'kube' ? 'CIS Benchmark Report' : (mode === 'kyverno' ? 'Cluster Policy Report' : (mode === 'ssl' ? 'SSL Scan Report' : (mode === 'sbom' ? 'Trivy SBOM Report' : 'Ansible roles Validation report')))))
+          (mode === 'repo' ? 'Repository Vulnerabilities Report' :
+            (mode === 'cluster' ? 'Cluster Misconfigurations' : (mode === 'kube' ? 'CIS Benchmark Report' : (mode === 'kyverno' ? 'Cluster Policy Report' : (mode === 'ssl' ? 'SSL Scan Report' : (mode === 'sbom' ? 'Trivy SBOM Report' : 'Ansible roles Validation report'))))))
       );
       state.sort = 'none';
       buildFilters();
@@ -1567,7 +1581,7 @@
         filtered = filtered.slice().sort((a, b) => (sevRank[a.severity] - sevRank[b.severity]) || String(a.id).localeCompare(String(b.id)));
       }
       if (filtered.length === 0) { container.innerHTML = `<div class="empty"><strong>No vulnerabilities found</strong><br><span style="font-size:12px; opacity:0.8;">Try adjusting your severity filters or select a different report.</span></div>`; return; }
-      if (type === "image") {
+      if (type === "image" || type === "repo") {
         container.innerHTML = `<table>
       <thead><tr>
         <th>Severity</th><th>CVE</th><th>Package</th><th>Installed</th><th>Fixed</th><th>Title</th><th>Target</th><th>Ref</th>
@@ -1646,6 +1660,12 @@
         table('tableWrap', parsed.list, 'image');
         return;
       }
+      if (state.mode === 'repo') {
+        const parsed = parseImage(state.repo); // Reusing image parser as format is similar
+        cards('cards', parsed.counts);
+        table('tableWrap', parsed.list, 'repo');
+        return;
+      }
       if (state.mode === 'cluster') {
         const parsed = parseCluster(state.cluster);
         cards('cards', parsed.counts);
@@ -1685,6 +1705,7 @@
 
     // Auto-list JSON files from Trivy-reports directory and enable click-to-load
     const REPORTS_DIR = 'trivy-reports/';
+    const REPO_DIR = 'trivy_repo_scan/';
     const CLUSTER_DIR = 'trivy-cluster-report/';
     async function fetchDirListing(dirUrl) {
       try {
@@ -2463,6 +2484,68 @@
         $("updated").textContent = `SBOM mode (auto-load unavailable) • ${new Date().toLocaleString()}`;
       }
     }
+
+    // Repo List Logic
+    async function populateRepoList() {
+      const listEl = $("repoList");
+      if (!listEl) return;
+      const files = await fetchDirListing(REPO_DIR);
+      const countEl = $("repoCount");
+      if (countEl) countEl.textContent = String(files.length);
+      listEl.innerHTML = "";
+      if (files.length === 0) {
+        listEl.insertAdjacentHTML("beforeend", `<div class="footer" style="padding:12px; background:rgba(75,85,96,0.08); border-radius:6px; border:1px solid var(--border);">No JSON reports found in <code style="color:#58a6ff; font-family:monospace; background:rgba(88,166,255,0.1); padding:2px 6px; border-radius:4px;">${REPO_DIR}</code>.</div>`);
+        return;
+      }
+      files.sort((a, b) => a.localeCompare(b));
+      files.forEach(name => {
+        const label = name.replace(/\/?$/, '').replace(/\.json$/i, '');
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.addEventListener('click', async () => {
+          await loadRepoReport(REPO_DIR + name);
+          Array.from(listEl.querySelectorAll('button')).forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+        listEl.appendChild(btn);
+      });
+    }
+
+    async function loadRepoReport(path) {
+      try {
+        const res = await fetch(path, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        state.repo = data;
+        setMode('repo');
+        render();
+        $("updated").textContent = `Loaded: ${path} • ${new Date().toLocaleString()}`;
+      } catch (err) {
+        alert("Failed to load repo report: " + path);
+        console.error(err);
+      }
+    }
+
+    $("nav-repo").addEventListener('click', () => {
+      if (state.mode !== 'repo') {
+        setMode('repo');
+        state.repoSubExpanded = true;
+        applySubsectionVisibility();
+      } else {
+        state.repoSubExpanded = !state.repoSubExpanded;
+        applySubsectionVisibility();
+      }
+    });
+
+    function applySubsectionVisibility() {
+      $("imageReportsSub").classList.toggle("hidden", !(state.mode === 'image' && state.imageSubExpanded));
+      $("clusterReportsSub").classList.toggle("hidden", !(state.mode === 'cluster' && state.clusterSubExpanded));
+      $("kubeReportsSub").classList.toggle("hidden", !(state.mode === 'kube' && state.kubeSubExpanded));
+      $("kyvernoReportsSub").classList.toggle("hidden", !(state.mode === 'kyverno' && state.kyvSubExpanded));
+      $("repoReportsSub").classList.toggle("hidden", !(state.mode === 'repo' && state.repoSubExpanded));
+    }
+
+    // Call init
+    populateRepoList();
   </script>
 </body>
 

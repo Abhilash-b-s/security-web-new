@@ -627,43 +627,43 @@ export default function PolicyReports() {
 
         <button
           onClick={() => setActiveView('kyverno')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'kyverno' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'kyverno' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
         >
           <Shield className="w-4 h-4" /> Policy Compliance
         </button>
         <button
           onClick={() => setActiveView('sbom')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'sbom' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'sbom' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
         >
           <Package className="w-4 h-4" /> SBOM Inventory
         </button>
         <button
           onClick={() => setActiveView('trivy-repo')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'trivy-repo' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'trivy-repo' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
         >
           <GitGraph className="w-4 h-4" /> Source Code
         </button>
         <button
           onClick={() => setActiveView('image')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'image' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'image' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
         >
           <ImageIcon className="w-4 h-4" /> Image Vulnerabilities
         </button>
         <button
           onClick={() => setActiveView('nmap')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'nmap' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'nmap' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
         >
           <Globe className="w-4 h-4" /> Network Security
         </button>
         <button
           onClick={() => setActiveView('cis')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cis' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cis' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
         >
           <ClipboardList className="w-4 h-4" /> CIS Benchmarks
         </button>
         <button
           onClick={() => setActiveView('cluster')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cluster' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200 hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cluster' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
         >
           <Server className="w-4 h-4" /> Cluster Risks
         </button>

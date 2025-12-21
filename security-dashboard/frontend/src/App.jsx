@@ -150,10 +150,10 @@ function App() {
     return (
         <div className="h-screen bg-gray-900 text-white flex flex-col font-sans overflow-hidden">
             {/* Header */}
-            <header className="bg-gray-800 border-b border-gray-700 p-4 shadow-md">
+            <header className="bg-gray-800 border-b border-gray-700 px-4 py-2 shadow-md">
                 <div className="flex items-center justify-between px-0">
                     <div className="flex items-center gap-3">
-                        <img src="/logo-mobile.webp" alt="Logo" className="w-40 h-10 object-contain" />
+                        <img src="/logo-mobile.webp" alt="Logo" className="w-auto h-7 object-contain" />
                         <ShieldAlert className="w-8 h-8 text-blue-500" />
                     </div>
                     <nav className="flex gap-4 items-center">
@@ -209,7 +209,7 @@ function App() {
             </header>
 
             {/* Main Content */}
-            < main className="flex-1 flex flex-col p-6 overflow-hidden" >
+            < main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : 'p-6'}`} >
                 {activeTab === 'dashboard' ? (
                     <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
                         {/* Left Sidebar: Scan Controls & Status */}
