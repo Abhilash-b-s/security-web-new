@@ -83,19 +83,35 @@ If you prefer manual steps:
    kubectl apply -f k8s/dashboard.yaml
    ```
 
-## Usage
+## Dashboard Guide
 
-1. **Access the Dashboard**: 
-   Open your browser and navigate to the service URL (e.g., `http://localhost:30007` or your cluster's node IP).
-   
-2. **Configure Settings**:
-   Go to the **Settings** tab to configure Git credentials if you plan to scan private repositories.
+### 1. ⚙️ Settings (CRITICAL Setup)
+**Most Important Step:** Before running any **Source Code** or **Image** scans, you must configure your environment here.
 
-3. **Run Scans**:
-   Navigate to the **Dashboard** or **Security Operations** section to trigger specific scans (e.g., Source Code, Network, Image).
+- **Git Configuration**: Enter your Git Username and Personal Access Token (PAT). This is required for the scanner to authenticate and clone private repositories.
+- **Registry Credentials**: (If applicable) Configure access for pulling private container images.
+*Failure to set this up will result in authentication errors during scanning.*
 
-4. **View Reports**:
-   Check the **Scan Reports** tab to analyze the results of completed scans.
+### 2. 📋 Scan Reports
+The central hub for analyzing security data. Navigate through tabs to view specific reports:
+- **Policy Compliance**: Kyverno cluster policy results.
+- **SBOM Inventory**: Software Bill of Materials for your artifacts.
+- **Source Code**: Detailed vulnerability and secret findings from Git repositories.
+- **Image Vulnerabilities**: CVEs detected in container images.
+- **Network Security**: Nmap scan results for network discovery.
+- **CIS Benchmarks**: Compliance checks against CIS Kubernetes benchmarks.
+- **Cluster Risks**: General Kubernetes misconfigurations.
+
+### 3. 📜 Event Logs
+Monitor real-time feedback from the scanning engine.
+- Watch live progress of long-running scans.
+- Debug issues if a scan fails or returns unexpected results.
+- Verify that backend services are responding correctly.
+
+### 4. 💻 Terminal
+Direct shell access to the security container.
+- **Cluster Management**: Run `kubectl` commands to inspect resources, pods, and cluster state directly from the dashboard.
+
 
 ## License
 Proprietary / Internal Use.
