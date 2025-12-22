@@ -86,21 +86,21 @@ export default function WebTerminal() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-gray-900 rounded-lg border border-gray-800 shadow-2xl overflow-hidden">
-            <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-green-400" />
-                <span className="text-sm font-mono text-gray-400">Web Terminal (kubectl ready)</span>
+        <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-800 shadow-2xl overflow-hidden transition-colors duration-200">
+            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-300 dark:border-gray-700 flex items-center gap-2 transition-colors duration-200">
+                <Terminal className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-mono text-black dark:text-gray-400">Web Terminal (kubectl ready)</span>
                 <span className={`ml-auto w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
             </div>
 
-            <form onSubmit={handleSend} className="px-4 py-6 bg-gray-800 border-b border-gray-700 flex flex-col gap-2 shadow-md z-10">
+            <form onSubmit={handleSend} className="px-4 py-6 bg-gray-50 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 flex flex-col gap-2 shadow-md z-10 transition-colors duration-200">
                 {error && (
                     <div className="text-red-500 text-xs font-mono px-2">
                         {error}
                     </div>
                 )}
                 <div className="flex gap-2 items-center">
-                    <span className="text-green-500 font-mono text-lg font-bold py-1 pl-2">$</span>
+                    <span className="text-green-600 dark:text-green-500 font-mono text-lg font-bold py-1 pl-2">$</span>
                     <input
                         type="text"
                         value={command}
@@ -109,21 +109,21 @@ export default function WebTerminal() {
                             if (error) setError(null);
                         }}
                         onKeyDown={handleKeyDown}
-                        className="flex-1 bg-transparent border-none focus:ring-0 text-white font-mono text-lg placeholder-gray-600 h-10"
+                        className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white font-mono text-lg placeholder-gray-400 dark:placeholder-gray-600 h-10"
                         placeholder="Enter command (e.g., kubectl get pods)"
                         autoFocus
                     />
                     <button
                         type="submit"
                         disabled={!isConnected}
-                        className="p-2 text-blue-400 hover:text-white disabled:opacity-50"
+                        className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-white disabled:opacity-50"
                     >
                         <Send className="w-5 h-5" />
                     </button>
                 </div>
             </form>
 
-            <div className="flex-1 p-4 overflow-auto bg-gray-950 font-mono text-sm text-gray-300 whitespace-pre shadow-inner">
+            <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950 font-mono text-sm text-black dark:text-gray-300 whitespace-pre shadow-inner transition-colors duration-200">
                 {output}
                 <div ref={endRef} />
             </div>

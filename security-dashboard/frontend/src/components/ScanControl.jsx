@@ -19,9 +19,9 @@ export default function ScanControl({ onStartScan, isScanning }) {
     };
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-xl w-full">
-            <h2 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-400" />
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-300 dark:border-gray-700 shadow-xl w-full transition-colors duration-200">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 Security Operations
             </h2>
 
@@ -32,11 +32,11 @@ export default function ScanControl({ onStartScan, isScanning }) {
                         onClick={() => handleStartScan(type.id)}
                         disabled={isScanning}
                         className={`flex items-center gap-2 py-2 px-3 rounded-lg border transition-all w-full ${isScanning
-                            ? 'opacity-50 cursor-not-allowed bg-gray-700 border-gray-600'
-                            : 'bg-gray-700/50 border-gray-600 hover:bg-blue-600/40 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/20'
+                            ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-400'
+                            : 'bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 hover:bg-blue-100 dark:hover:bg-blue-600/40 hover:border-blue-400 dark:hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/20 text-black dark:text-gray-200 hover:text-blue-800 dark:hover:text-blue-100'
                             }`}
                     >
-                        <div className="p-1.5 bg-gray-700 rounded-md text-blue-400">
+                        <div className="p-1.5 bg-gray-200 dark:bg-gray-700 rounded-md text-blue-700 dark:text-blue-400">
                             {React.cloneElement(type.icon, { className: "w-3.5 h-3.5" })}
                         </div>
                         <span className="font-medium text-sm">{type.label}</span>
@@ -47,7 +47,7 @@ export default function ScanControl({ onStartScan, isScanning }) {
             <button
                 onClick={() => { }}
                 disabled={true}
-                className="w-full py-2 px-3 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all bg-gray-700/50 border border-gray-600 opacity-50 cursor-not-allowed text-gray-400"
+                className="w-full py-2 px-3 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 opacity-50 cursor-not-allowed text-gray-400"
                 title="Run All Scans (Disabled)"
             >
                 <Play className="w-3.5 h-3.5 fill-current" />

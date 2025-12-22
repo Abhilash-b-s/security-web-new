@@ -15,7 +15,27 @@ function App() {
     const [logs, setLogs] = useState([]);
     const [isScanning, setIsScanning] = useState(false);
     const [currentScanId, setCurrentScanId] = useState(null);
+    const [theme, setTheme] = useState(() => {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            return localStorage.getItem('theme') || 'dark';
+        }
+        return 'dark';
+    });
     const wsRef = useRef(null);
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    };
 
     // Safe ID generator that works in all contexts (http/https/older browsers)
     const generateScanId = () => {
@@ -148,18 +168,18 @@ function App() {
     }, []);
 
     return (
-        <div className="h-screen bg-gray-900 text-white flex flex-col font-sans overflow-hidden">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
             {/* Header */}
-            <header className="bg-gray-800 border-b border-gray-700 px-4 py-2 shadow-md">
+            <header className="bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm dark:shadow-md transition-colors duration-200">
                 <div className="flex items-center justify-between px-0">
                     <div className="flex items-center gap-3">
-                        <img src="/logo-mobile.webp" alt="Logo" className="w-auto h-7 object-contain" />
-                        <ShieldAlert className="w-8 h-8 text-blue-500" />
+                        <ShieldAlert className="w-8 h-8 text-blue-600 dark:text-blue-500" />
+                        <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">DevSecOps Dashboard</span>
                     </div>
                     <nav className="flex gap-4 items-center">
                         <button
                             onClick={() => setActiveTab('dashboard')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
                                 }`}
                         >
                             <LayoutDashboard className="w-4 h-4" />
@@ -167,7 +187,7 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('reports')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'reports' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'reports' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
                                 }`}
                         >
                             <FileText className="w-4 h-4" />
@@ -175,7 +195,7 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('policy')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'policy' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'policy' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
                                 }`}
                         >
                             <FileCheck className="w-4 h-4" />
@@ -183,7 +203,7 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('terminal')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'terminal' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'terminal' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
                                 }`}
                         >
                             <Terminal className="w-4 h-4" />
@@ -191,32 +211,45 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('settings')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
                                 }`}
                         >
                             <SettingsIcon className="w-4 h-4" />
                             Settings
                         </button>
-                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-900 rounded-md border border-gray-700 ml-2">
+
+                        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                        >
+                            {theme === 'dark' ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sun"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
+                            )}
+                        </button>
+
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-900 rounded-md border border-gray-300 dark:border-gray-700 ml-2">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                             </span>
-                            <span className="text-green-400 text-sm font-medium">System Online</span>
+                            <span className="text-green-600 dark:text-green-400 text-sm font-medium">System Online</span>
                         </div>
                     </nav>
                 </div>
-            </header>
+            </header >
 
             {/* Main Content */}
-            < main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : 'p-6'}`} >
+            <main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : 'p-6'}`}>
                 {activeTab === 'dashboard' ? (
                     <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
                         {/* Left Sidebar: Scan Controls & Status */}
                         <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-6">
                             <ScanControl onStartScan={startScan} isScanning={isScanning} />
-
-
                         </div>
 
                         {/* Right Side: Terminal */}

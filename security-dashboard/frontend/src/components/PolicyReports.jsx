@@ -590,23 +590,23 @@ export default function PolicyReports() {
   // --- Helpers ---
   const getStatusColor = (status) => {
     const map = {
-      FAIL: 'text-red-400 bg-red-400/10 border-red-400/20',
-      WARN: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-      PASS: 'text-green-400 bg-green-400/10 border-green-400/20',
-      CRITICAL: 'text-red-500 bg-red-500/10 border-red-500/20',
-      HIGH: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
-      MEDIUM: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-      LOW: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-      UNKNOWN: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
-      INFO: 'text-gray-400 bg-gray-400/10 border-gray-400/20'
+      FAIL: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-300 dark:border-red-400/20',
+      WARN: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
+      PASS: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-400/10 border-green-300 dark:border-green-400/20',
+      CRITICAL: 'text-red-700 dark:text-red-500 bg-red-50 dark:bg-red-500/10 border-red-300 dark:border-red-500/20',
+      HIGH: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-400/10 border-orange-300 dark:border-orange-400/20',
+      MEDIUM: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
+      LOW: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 border-blue-300 dark:border-blue-400/20',
+      UNKNOWN: 'text-gray-900 dark:text-gray-400 bg-gray-50 dark:bg-gray-400/10 border-gray-300 dark:border-gray-400/20',
+      INFO: 'text-gray-900 dark:text-gray-400 bg-gray-50 dark:bg-gray-400/10 border-gray-300 dark:border-gray-400/20'
     };
     return map[status] || map.UNKNOWN;
   };
 
   const StatusCard = ({ label, value }) => (
-    <div className={`p-4 rounded-lg border bg-[#1e1e1e] flex flex-col items-center justify-center min-w-[100px] ${getStatusColor(label).replace('text-', 'border-')}`}>
-      <span className="text-xs font-semibold opacity-70 mb-1">{label}</span>
-      <span className={`text-2xl font-bold ${getStatusColor(label).split(' ')[0]}`}>{value}</span>
+    <div className={`p-4 rounded-lg border bg-white dark:bg-[#1e1e1e] border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center min-w-[100px] ${getStatusColor(label).replace(/text-[a-z]+-\d+/, '').replace(/bg-[a-z]+-\d+(\/\d+)?/, '')} shadow-sm transition-colors duration-200`}>
+      <span className="text-xs font-semibold opacity-70 mb-1 text-black dark:text-gray-400">{label}</span>
+      <span className={`text-2xl font-bold ${getStatusColor(label).match(/text-[a-z]+-\d+/)?.[0] || 'text-black dark:text-gray-100'}`}>{value}</span>
     </div>
   );
 
@@ -621,49 +621,49 @@ export default function PolicyReports() {
   }, [kyvernoData.rows, kyvernoNs]);
 
   return (
-    <div className="h-full flex flex-col bg-[#0e1116] text-[#c9d1d9] font-sans">
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-[#0e1116] text-gray-900 dark:text-[#c9d1d9] font-sans transition-colors duration-200">
       {/* Header Tabs */}
-      <div className="flex items-center gap-2 p-4 border-b border-[#30363d] bg-[#161b22] overflow-x-auto">
+      <div className="flex items-center gap-2 p-4 border-b border-gray-300 dark:border-[#30363d] bg-white dark:bg-[#161b22] overflow-x-auto transition-colors duration-200">
 
         <button
           onClick={() => setActiveView('kyverno')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'kyverno' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'kyverno' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 shadow-sm font-bold' : 'bg-gray-200 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
         >
           <Shield className="w-4 h-4" /> Policy Compliance
         </button>
         <button
           onClick={() => setActiveView('sbom')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'sbom' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'sbom' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 shadow-sm font-bold' : 'bg-gray-200 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
         >
           <Package className="w-4 h-4" /> SBOM Inventory
         </button>
         <button
           onClick={() => setActiveView('trivy-repo')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'trivy-repo' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'trivy-repo' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 shadow-sm font-bold' : 'bg-gray-200 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
         >
           <GitGraph className="w-4 h-4" /> Source Code
         </button>
         <button
           onClick={() => setActiveView('image')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'image' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'image' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 shadow-sm font-bold' : 'bg-gray-200 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
         >
           <ImageIcon className="w-4 h-4" /> Image Vulnerabilities
         </button>
         <button
           onClick={() => setActiveView('nmap')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'nmap' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'nmap' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 shadow-sm font-bold' : 'bg-gray-200 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
         >
           <Globe className="w-4 h-4" /> Network Security
         </button>
         <button
           onClick={() => setActiveView('cis')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cis' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cis' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 shadow-sm font-bold' : 'bg-gray-200 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
         >
           <ClipboardList className="w-4 h-4" /> CIS Benchmarks
         </button>
         <button
           onClick={() => setActiveView('cluster')}
-          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cluster' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_-3px_rgba(16,185,129,0.3)] font-bold' : 'bg-gray-800/40 border-gray-700 text-white hover:bg-gray-800 hover:text-white hover:border-gray-600'}`}
+          className={`px-4 py-2 rounded-md flex items-center gap-2 transition-all whitespace-nowrap border ${activeView === 'cluster' ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 shadow-sm font-bold' : 'bg-gray-200 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
         >
           <Server className="w-4 h-4" /> Cluster Risks
         </button>
@@ -678,7 +678,7 @@ export default function PolicyReports() {
         )}
 
         {error && (
-          <div className="p-6 bg-red-900/20 border border-red-500/30 rounded-lg text-red-200 flex items-center gap-3">
+          <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-lg text-red-700 dark:text-red-200 flex items-center gap-3">
             <AlertTriangle className="w-6 h-6" />
             <div>
               <h3 className="font-bold">Error Loading Report</h3>
@@ -694,21 +694,21 @@ export default function PolicyReports() {
               {['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'].map(s => (
                 <StatusCard key={s} label={s} value={kyvernoDisplayCounts[s] || 0} />
               ))}
-              <div className="p-4 rounded-lg border border-gray-700 bg-[#1e1e1e] flex flex-col items-center justify-center">
-                <span className="text-xs font-semibold opacity-70 mb-1">TOTAL</span>
-                <span className="text-2xl font-bold text-gray-200">
+              <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1e1e1e] flex flex-col items-center justify-center shadow-sm">
+                <span className="text-xs font-semibold opacity-70 mb-1 text-black dark:text-gray-400">TOTAL</span>
+                <span className="text-2xl font-bold text-black dark:text-gray-200">
                   {Object.values(kyvernoDisplayCounts).reduce((a, b) => a + b, 0)}
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div className="md:col-span-4 bg-[#161b22] p-4 rounded-lg border border-[#30363d]">
-                <div className="text-xs font-semibold uppercase text-gray-500 mb-2">Namespace</div>
+              <div className="md:col-span-4 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
+                <div className="text-xs font-semibold uppercase text-black mb-2">Namespace</div>
                 <select
                   value={kyvernoNs}
                   onChange={(e) => setKyvernoNs(e.target.value)}
-                  className="w-full bg-[#0e1116] border border-[#30363d] rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors duration-200"
                 >
                   <option value="">None</option>
                   <option value="ALL">All Namespaces</option>
@@ -718,14 +718,14 @@ export default function PolicyReports() {
                 </select>
               </div>
 
-              <div className="md:col-span-8 bg-[#161b22] p-4 rounded-lg border border-[#30363d] flex items-center">
+              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex items-center shadow-sm transition-colors duration-200">
                 <div className="flex flex-wrap gap-4 items-center">
-                  <span className="text-xs text-gray-400 font-mono uppercase">Filter Status:</span>
+                  <span className="text-xs text-black font-mono uppercase">Filter Status:</span>
                   {['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'].map(status => (
                     <label key={status} className="flex items-center gap-2 cursor-pointer select-none">
                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${kyvernoStatusFilters[status]
                         ? 'bg-blue-600 border-blue-600'
-                        : 'bg-transparent border-gray-600 hover:border-gray-500'
+                        : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}>
                         {kyvernoStatusFilters[status] && <CheckCircle className="w-3 h-3 text-white" />}
                       </div>
@@ -735,33 +735,33 @@ export default function PolicyReports() {
                         checked={kyvernoStatusFilters[status]}
                         onChange={() => setKyvernoStatusFilters(prev => ({ ...prev, [status]: !prev[status] }))}
                       />
-                      <span className={`text-xs font-bold ${getStatusColor(status).split(' ')[0]}`}>{status}</span>
+                      <span className={`text-xs font-bold ${getStatusColor(status).match(/text-[a-z]+-\d+/)?.[0] || 'text-gray-600 dark:text-gray-400'}`}>{status}</span>
                     </label>
                   ))}
                 </div>
                 <a
                   href="/new/kyverno-report/Policy_report.xlsx"
                   download="Policy_report.xlsx"
-                  className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-[#1f6feb]/10 text-[#58a6ff] hover:bg-[#1f6feb]/20 border border-[#1f6feb]/30 rounded text-xs font-semibold transition-colors"
+                  className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-[#1f6feb]/10 text-blue-600 dark:text-[#58a6ff] hover:bg-blue-100 dark:hover:bg-[#1f6feb]/20 border border-blue-200 dark:border-[#1f6feb]/30 rounded text-xs font-semibold transition-colors"
                 >
                   <Download className="w-4 h-4" /> Download Excel Report
                 </a>
               </div>
             </div>
 
-            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#161b22] text-gray-200 font-medium">
+                <thead className="bg-gray-100 dark:bg-[#161b22] text-black dark:text-gray-200 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-[#30363d] w-24">Status</th>
-                    <th className="p-3 border-b border-[#30363d] w-24">Severity</th>
-                    <th className="p-3 border-b border-[#30363d]">Policy</th>
-                    <th className="p-3 border-b border-[#30363d] w-32">Type</th>
-                    <th className="p-3 border-b border-[#30363d]">Resource</th>
-                    <th className="p-3 border-b border-[#30363d]">Message</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Status</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Policy</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-32">Type</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Resource</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Message</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
                   {kyvernoData.rows
                     .filter(r => {
                       if (kyvernoNs === "") return false; // None selected
@@ -769,7 +769,7 @@ export default function PolicyReports() {
                       return r.namespace === kyvernoNs && kyvernoStatusFilters[r.status]; // Specific namespace
                     })
                     .map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#161b22]/50 transition-colors">
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.status)}`}>
                             {row.status}
@@ -780,14 +780,14 @@ export default function PolicyReports() {
                             {row.severity}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-blue-300">{row.policy}</td>
-                        <td className="p-3 text-gray-200">{row.type}</td>
-                        <td className="p-3 text-gray-100">{row.name}</td>
-                        <td className="p-3 text-gray-200 break-words max-w-md">{row.message}</td>
+                        <td className="p-3 font-mono text-blue-600 dark:text-blue-300">{row.policy}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.type}</td>
+                        <td className="p-3 text-black dark:text-gray-100">{row.name}</td>
+                        <td className="p-3 text-black dark:text-gray-200 break-words max-w-md">{row.message}</td>
                       </tr>
                     ))}
                   {(!kyvernoNs || kyvernoData.rows.length === 0) && (
-                    <tr><td colSpan="6" className="p-8 text-center text-gray-500">
+                    <tr><td colSpan="6" className="p-8 text-center text-gray-900">
                       {!kyvernoNs ? "Select a namespace to view report" : "No data available"}
                     </td></tr>
                   )}
@@ -804,21 +804,21 @@ export default function PolicyReports() {
               {['FAIL', 'WARN', 'INFO', 'PASS'].map(s => (
                 <StatusCard key={s} label={s} value={cisData.counts[s] || 0} />
               ))}
-              <div className="p-4 rounded-lg border border-gray-700 bg-[#1e1e1e] flex flex-col items-center justify-center">
-                <span className="text-xs font-semibold opacity-70 mb-1">TOTAL</span>
-                <span className="text-2xl font-bold text-gray-200">
+              <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1e1e1e] flex flex-col items-center justify-center shadow-sm">
+                <span className="text-xs font-semibold opacity-70 mb-1 text-black dark:text-gray-400">TOTAL</span>
+                <span className="text-2xl font-bold text-black dark:text-gray-200">
                   {Object.values(cisData.counts).reduce((a, b) => a + b, 0)}
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center bg-[#161b22] p-3 rounded-lg border border-[#30363d]">
-              <span className="text-xs text-gray-400 font-mono uppercase">Filter Status:</span>
+            <div className="flex flex-wrap gap-4 items-center bg-white dark:bg-[#161b22] p-3 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
+              <span className="text-xs text-black font-mono uppercase">Filter Status:</span>
               {['FAIL', 'WARN', 'INFO', 'PASS'].map(status => (
                 <label key={status} className="flex items-center gap-2 cursor-pointer select-none">
                   <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${cisStatusFilters[status]
                     ? 'bg-blue-600 border-blue-600'
-                    : 'bg-transparent border-gray-600 hover:border-gray-500'
+                    : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                     }`}>
                     {cisStatusFilters[status] && <CheckCircle className="w-3 h-3 text-white" />}
                   </div>
@@ -833,35 +833,35 @@ export default function PolicyReports() {
               ))}
             </div>
 
-            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#161b22] text-gray-400 font-medium">
+                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-[#30363d] w-24 text-center text-gray-200">Status</th>
-                    <th className="p-3 border-b border-[#30363d] w-24 text-gray-200">Check ID</th>
-                    <th className="p-3 border-b border-[#30363d] w-64 text-gray-200">Section</th>
-                    <th className="p-3 border-b border-[#30363d] text-gray-200">Title</th>
-                    <th className="p-3 border-b border-[#30363d] w-[40%] text-gray-200">Resolution</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24 text-center">Status</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Check ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-64">Section</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-[40%]">Resolution</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
                   {cisData.list
                     .filter(r => cisStatusFilters[r.status])
                     .map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#161b22]/50 transition-colors">
                         <td className="p-3 text-center">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.status)}`}>
                             {row.status}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-blue-300">{row.id}</td>
-                        <td className="p-3 text-gray-200 text-sm font-semibold">{row.section || '-'}</td>
-                        <td className="p-3 text-gray-200">{row.desc}</td>
-                        <td className="p-3 text-gray-200 text-xs font-mono break-all max-w-sm">{row.remediation}</td>
+                        <td className="p-3 font-mono text-blue-600 dark:text-blue-300">{row.id}</td>
+                        <td className="p-3 text-gray-700 dark:text-gray-200 text-sm font-semibold">{row.section || '-'}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.desc}</td>
+                        <td className="p-3 text-gray-500 dark:text-gray-200 text-xs font-mono break-all max-w-sm">{row.remediation}</td>
                       </tr>
                     ))}
                   {cisData.list.filter(r => cisStatusFilters[r.status]).length === 0 && (
-                    <tr><td colSpan="5" className="p-8 text-center text-gray-500">No benchmarks found matching filters</td></tr>
+                    <tr><td colSpan="5" className="p-8 text-center text-gray-900">No benchmarks found matching filters</td></tr>
                   )}
                 </tbody>
               </table>
@@ -876,21 +876,21 @@ export default function PolicyReports() {
               {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
                 <StatusCard key={s} label={s} value={clusterData.counts[s] || 0} />
               ))}
-              <div className="p-4 rounded-lg border border-gray-700 bg-[#1e1e1e] flex flex-col items-center justify-center">
-                <span className="text-xs font-semibold opacity-70 mb-1">TOTAL</span>
-                <span className="text-2xl font-bold text-gray-200">
+              <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1e1e1e] flex flex-col items-center justify-center shadow-sm">
+                <span className="text-xs font-semibold opacity-70 mb-1 text-black dark:text-gray-400">TOTAL</span>
+                <span className="text-2xl font-bold text-black dark:text-gray-200">
                   {Object.values(clusterData.counts).reduce((a, b) => a + b, 0)}
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center bg-[#161b22] p-3 rounded-lg border border-[#30363d]">
-              <span className="text-xs text-gray-400 font-mono uppercase">Filter Severity:</span>
+            <div className="flex flex-wrap gap-4 items-center bg-white dark:bg-[#161b22] p-3 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
+              <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
               {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                 <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
                   <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${clusterSeverityFilters[sev]
                     ? 'bg-blue-600 border-blue-600'
-                    : 'bg-transparent border-gray-600 hover:border-gray-500'
+                    : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                     }`}>
                     {clusterSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
                   </div>
@@ -900,50 +900,50 @@ export default function PolicyReports() {
                     checked={clusterSeverityFilters[sev]}
                     onChange={() => setClusterSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
                   />
-                  <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-500' :
-                    sev === 'HIGH' ? 'text-orange-400' :
-                      sev === 'MEDIUM' ? 'text-yellow-400' :
-                        sev === 'LOW' ? 'text-blue-400' : 'text-gray-400'
+                  <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
+                    sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
+                      sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
+                        sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
                     }`}>{sev}</span>
                 </label>
               ))}
             </div>
 
-            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#161b22] text-gray-200 font-medium">
+                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-[#30363d] w-24 text-gray-200">Severity</th>
-                    <th className="p-3 border-b border-[#30363d] text-gray-200">ID</th>
-                    <th className="p-3 border-b border-[#30363d] w-1/3 text-gray-200">Title</th>
-                    <th className="p-3 border-b border-[#30363d] w-1/3 text-gray-200">Message</th>
-                    <th className="p-3 border-b border-[#30363d] w-16 text-gray-200">Ref</th>
-                    <th className="p-3 border-b border-[#30363d] w-40 text-gray-200">Target</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-1/3">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-1/3">Message</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-16">Ref</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-40">Target</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
                   {clusterData.list
                     .filter(row => clusterSeverityFilters[row.severity])
                     .map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#161b22]/50 transition-colors">
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.severity)}`}>
                             {row.severity}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-blue-300">{row.id}</td>
-                        <td className="p-3 text-gray-100 pointer-events-none" title={row.title}>{row.title}</td>
-                        <td className="p-3 text-gray-200 max-w-xs break-words">{row.msg}</td>
-                        <td className="p-3 text-blue-300">
+                        <td className="p-3 font-mono text-blue-600 dark:text-blue-300">{row.id}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-100 pointer-events-none" title={row.title}>{row.title}</td>
+                        <td className="p-3 text-gray-600 dark:text-gray-200 max-w-xs break-words">{row.msg}</td>
+                        <td className="p-3 text-blue-600 dark:text-blue-300">
                           {row.link ? (
                             <a href={row.link} target="_blank" rel="noopener noreferrer" className="hover:underline">Link</a>
                           ) : '-'}
                         </td>
-                        <td className="p-3 text-gray-200">{row.target}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.target}</td>
                       </tr>
                     ))}
                   {clusterData.list.filter(row => clusterSeverityFilters[row.severity]).length === 0 && (
-                    <tr><td colSpan="6" className="p-8 text-center text-gray-400">No issues found matching filters</td></tr>
+                    <tr><td colSpan="6" className="p-8 text-center text-gray-900 dark:text-gray-400">No issues found matching filters</td></tr>
                   )}
                 </tbody>
               </table>
@@ -956,21 +956,21 @@ export default function PolicyReports() {
               {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
                 <StatusCard key={s} label={s} value={sbomData.counts[s] || 0} />
               ))}
-              <div className="p-4 rounded-lg border border-gray-700 bg-[#1e1e1e] flex flex-col items-center justify-center">
-                <span className="text-xs font-semibold opacity-70 mb-1">TOTAL</span>
-                <span className="text-2xl font-bold text-gray-200">
+              <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1e1e1e] flex flex-col items-center justify-center shadow-sm">
+                <span className="text-xs font-semibold opacity-70 mb-1 text-black dark:text-gray-400">TOTAL</span>
+                <span className="text-2xl font-bold text-black dark:text-gray-200">
                   {Object.values(sbomData.counts).reduce((a, b) => a + b, 0)}
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center bg-[#161b22] p-3 rounded-lg border border-[#30363d]">
-              <span className="text-xs text-gray-400 font-mono uppercase">Filter Severity:</span>
+            <div className="flex flex-wrap gap-4 items-center bg-white dark:bg-[#161b22] p-3 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
+              <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
               {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                 <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
                   <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${sbomSeverityFilters[sev]
                     ? 'bg-blue-600 border-blue-600'
-                    : 'bg-transparent border-gray-600 hover:border-gray-500'
+                    : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                     }`}>
                     {sbomSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
                   </div>
@@ -980,50 +980,50 @@ export default function PolicyReports() {
                     checked={sbomSeverityFilters[sev]}
                     onChange={() => setSbomSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
                   />
-                  <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-500' :
-                    sev === 'HIGH' ? 'text-orange-400' :
-                      sev === 'MEDIUM' ? 'text-yellow-400' :
-                        sev === 'LOW' ? 'text-blue-400' : 'text-gray-400'
+                  <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
+                    sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
+                      sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
+                        sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
                     }`}>{sev}</span>
                 </label>
               ))}
             </div>
 
-            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#161b22] text-gray-200 font-medium">
+                <thead className="bg-gray-100 dark:bg-[#161b22] text-black dark:text-gray-200 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-[#30363d]">Severity</th>
-                    <th className="p-3 border-b border-[#30363d]">Library</th>
-                    <th className="p-3 border-b border-[#30363d]">Vulnerability ID</th>
-                    <th className="p-3 border-b border-[#30363d]">Installed</th>
-                    <th className="p-3 border-b border-[#30363d]">Fixed</th>
-                    <th className="p-3 border-b border-[#30363d]">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Library</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Vulnerability ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Installed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Fixed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Title</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
                   {sbomData.list
                     .filter(row => sbomSeverityFilters[row.severity])
                     .map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#161b22]/50 transition-colors">
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.severity)}`}>
                             {row.severity}
                           </span>
                         </td>
-                        <td className="p-3 font-medium text-gray-200">{row.library}</td>
-                        <td className="p-3 font-mono text-blue-300">
+                        <td className="p-3 font-medium text-black dark:text-gray-200">{row.library}</td>
+                        <td className="p-3 font-mono text-blue-600 dark:text-blue-300">
                           {row.ref ? (
                             <a href={row.ref} target="_blank" rel="noreferrer" className="hover:underline">{row.id}</a>
                           ) : row.id}
                         </td>
-                        <td className="p-3 text-gray-200">{row.installed}</td>
-                        <td className="p-3 text-gray-200">{row.fixed}</td>
-                        <td className="p-3 text-gray-200 break-words" title={row.title}>{row.title}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.installed}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.fixed}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200 break-words" title={row.title}>{row.title}</td>
                       </tr>
                     ))}
                   {sbomData.list.filter(row => sbomSeverityFilters[row.severity]).length === 0 && (
-                    <tr><td colSpan="6" className="p-8 text-center text-gray-500">No vulnerabilities found matching filters</td></tr>
+                    <tr><td colSpan="6" className="p-8 text-center text-gray-900">No vulnerabilities found matching filters</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1032,15 +1032,16 @@ export default function PolicyReports() {
         )}
 
         {/* IMAGE SCANS */}
+        {/* IMAGE SCANS */}
         {!loading && !error && activeView === 'image' && (
           <div className="space-y-6">
 
             {/* Controls Area */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               {/* Left: Selection Controls */}
-              <div className="md:col-span-4 bg-[#161b22] p-4 rounded-lg border border-[#30363d] space-y-4">
+              <div className="md:col-span-4 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] space-y-4 shadow-sm transition-colors duration-200">
                 <div>
-                  <div className="text-xs font-semibold uppercase text-gray-500 mb-2">Reports by Namespace</div>
+                  <div className="text-xs font-semibold uppercase text-black mb-2">Reports by Namespace</div>
                   <select
                     value={imageNs}
                     onChange={(e) => {
@@ -1055,7 +1056,7 @@ export default function PolicyReports() {
                       if (relevant.length > 0) setSelectedImageFile(relevant[0]);
                       else setSelectedImageFile(null);
                     }}
-                    className="w-full bg-[#0e1116] border border-[#30363d] rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors duration-200"
                   >
                     <option value="">None</option>
                     <option value="ALL">All Namespaces</option>
@@ -1066,11 +1067,11 @@ export default function PolicyReports() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold uppercase text-gray-500 mb-2">Image Report</div>
+                  <div className="text-xs font-semibold uppercase text-black mb-2">Image Report</div>
                   <select
                     value={selectedImageFile || ''}
                     onChange={(e) => setSelectedImageFile(e.target.value)}
-                    className="w-full bg-[#0e1116] border border-[#30363d] rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors duration-200"
                   >
                     {imageFiles
                       .filter(f => imageNs === 'ALL' || (imageNs && f.startsWith(imageNs + '/')))
@@ -1085,25 +1086,25 @@ export default function PolicyReports() {
               </div>
 
               {/* Right: Summary and Filters */}
-              <div className="md:col-span-8 bg-[#161b22] p-4 rounded-lg border border-[#30363d] flex flex-col justify-between">
+              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-col justify-between shadow-sm transition-colors duration-200">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-semibold text-gray-200">Image Vulnerabilities Report</span>
+                  <span className="font-semibold text-black dark:text-gray-200">Image Vulnerabilities Report</span>
                   <a
                     href="/new/trivy-reports/consolidated-report_images.xlsx"
                     download="consolidated-report_images.xlsx"
-                    className="flex items-center gap-2 px-3 py-1.5 bg-[#1f6feb]/10 text-[#58a6ff] hover:bg-[#1f6feb]/20 border border-[#1f6feb]/30 rounded text-xs font-semibold transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-[#1f6feb]/10 text-blue-600 dark:text-[#58a6ff] hover:bg-blue-100 dark:hover:bg-[#1f6feb]/20 border border-blue-200 dark:border-[#1f6feb]/30 rounded text-xs font-semibold transition-colors"
                   >
                     <Download className="w-4 h-4" /> Download Excel Report
                   </a>
                 </div>
 
                 <div className="flex flex-wrap gap-4 items-center">
-                  <span className="text-xs text-gray-400 font-mono uppercase">Filter Severity:</span>
+                  <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
                   {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                     <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${imageSeverityFilters[sev]
                         ? 'bg-blue-600 border-blue-600'
-                        : 'bg-transparent border-gray-600 hover:border-gray-500'
+                        : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}>
                         {imageSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
                       </div>
@@ -1113,10 +1114,10 @@ export default function PolicyReports() {
                         checked={imageSeverityFilters[sev]}
                         onChange={() => setImageSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
                       />
-                      <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-500' :
-                        sev === 'HIGH' ? 'text-orange-400' :
-                          sev === 'MEDIUM' ? 'text-yellow-400' :
-                            sev === 'LOW' ? 'text-blue-400' : 'text-gray-400'
+                      <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
+                        sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
+                          sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
+                            sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
                         }`}>{sev}</span>
                     </label>
                   ))}
@@ -1129,45 +1130,45 @@ export default function PolicyReports() {
               {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
                 <StatusCard key={s} label={s} value={imageData.counts[s] || 0} />
               ))}
-              <div className="p-4 rounded-lg border border-gray-700 bg-[#1e1e1e] flex flex-col items-center justify-center">
-                <span className="text-xs font-semibold opacity-70 mb-1">TOTAL</span>
-                <span className="text-2xl font-bold text-gray-200">
+              <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1e1e1e] flex flex-col items-center justify-center shadow-sm">
+                <span className="text-xs font-semibold opacity-70 mb-1 text-black dark:text-gray-400">TOTAL</span>
+                <span className="text-2xl font-bold text-black dark:text-gray-200">
                   {Object.values(imageData.counts).reduce((a, b) => a + b, 0)}
                 </span>
               </div>
             </div>
 
-            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#161b22] text-gray-400 font-medium">
+                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-[#30363d]">Severity</th>
-                    <th className="p-3 border-b border-[#30363d]">CVE</th>
-                    <th className="p-3 border-b border-[#30363d]">Package</th>
-                    <th className="p-3 border-b border-[#30363d]">Installed</th>
-                    <th className="p-3 border-b border-[#30363d]">Fixed</th>
-                    <th className="p-3 border-b border-[#30363d]">Title</th>
-                    <th className="p-3 border-b border-[#30363d]">Target</th>
-                    <th className="p-3 border-b border-[#30363d]">Ref</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">CVE</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Package</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Installed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Fixed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Target</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Ref</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
                   {imageData.list
                     .filter(row => imageSeverityFilters[row.severity])
                     .map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#161b22]/50 transition-colors">
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.severity)}`}>
                             {row.severity}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-gray-200">{row.id}</td>
-                        <td className="p-3 font-medium text-gray-200">{row.pkg}</td>
-                        <td className="p-3 text-gray-200">{row.installed}</td>
-                        <td className="p-3 text-gray-200">{row.fixed}</td>
-                        <td className="p-3 text-gray-200 break-words" title={row.title}>{row.title}</td>
-                        <td className="p-3 text-gray-200 break-words max-w-xs">{row.target}</td>
-                        <td className="p-3 font-mono text-blue-400">
+                        <td className="p-3 font-mono text-black dark:text-gray-200">{row.id}</td>
+                        <td className="p-3 font-medium text-black dark:text-gray-200">{row.pkg}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.installed}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.fixed}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200 break-words" title={row.title}>{row.title}</td>
+                        <td className="p-3 text-gray-600 dark:text-gray-200 break-words max-w-xs">{row.target}</td>
+                        <td className="p-3 font-mono text-blue-600 dark:text-blue-400">
                           {row.refs && row.refs[0] ? (
                             <a href={row.refs[0]} target="_blank" rel="noreferrer" className="hover:underline">link</a>
                           ) : '-'}
@@ -1175,7 +1176,7 @@ export default function PolicyReports() {
                       </tr>
                     ))}
                   {imageData.list.filter(row => imageSeverityFilters[row.severity]).length === 0 && (
-                    <tr><td colSpan="8" className="p-8 text-center text-gray-500">No vulnerabilities found matching filters</td></tr>
+                    <tr><td colSpan="8" className="p-8 text-center text-gray-900">No vulnerabilities found matching filters</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1186,43 +1187,43 @@ export default function PolicyReports() {
         {/* NMAP / SSL */}
         {!loading && !error && activeView === 'nmap' && (
           <div className="space-y-6">
-            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#161b22] text-gray-200 font-medium">
+                <thead className="bg-gray-100 dark:bg-[#161b22] text-black dark:text-gray-200 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-[#30363d]">Namespace</th>
-                    <th className="p-3 border-b border-[#30363d]">FQDN</th>
-                    <th className="p-3 border-b border-[#30363d]">Port</th>
-                    <th className="p-3 border-b border-[#30363d]">Accepted Ciphers</th>
-                    <th className="p-3 border-b border-[#30363d]">Weak Ciphers</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Namespace</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">FQDN</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Port</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Accepted Ciphers</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Weak Ciphers</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
                   {nmapData
                     .filter(row => row.accepted && row.accepted.length > 0)
                     .map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
-                        <td className="p-3 text-gray-200">{row.namespace}</td>
-                        <td className="p-3 text-blue-300">{row.fqdn}</td>
-                        <td className="p-3 text-gray-200 font-mono">{row.port}</td>
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#161b22]/50 transition-colors">
+                        <td className="p-3 text-black dark:text-gray-200">{row.namespace}</td>
+                        <td className="p-3 text-blue-600 dark:text-blue-300">{row.fqdn}</td>
+                        <td className="p-3 text-gray-600 dark:text-gray-200 font-mono">{row.port}</td>
                         <td className="p-3">
                           <div className="flex flex-wrap gap-1">
                             {row.accepted.length > 0 ? row.accepted.map(c => (
-                              <span key={c} className="px-1.5 py-0.5 bg-green-900/40 text-green-300 text-xs rounded border border-green-800">{c}</span>
-                            )) : <span className="text-gray-600 text-xs">None</span>}
+                              <span key={c} className="px-1.5 py-0.5 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs rounded border border-green-300 dark:border-green-800">{c}</span>
+                            )) : <span className="text-gray-500 dark:text-gray-600 text-xs">None</span>}
                           </div>
                         </td>
                         <td className="p-3">
                           <div className="flex flex-wrap gap-1">
                             {row.weak.length > 0 ? row.weak.map(c => (
-                              <span key={c} className="px-1.5 py-0.5 bg-red-900/40 text-red-300 text-xs rounded border border-red-800">{c}</span>
-                            )) : <span className="text-gray-600 text-xs">None</span>}
+                              <span key={c} className="px-1.5 py-0.5 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs rounded border border-red-300 dark:border-red-800">{c}</span>
+                            )) : <span className="text-gray-500 dark:text-gray-600 text-xs">None</span>}
                           </div>
                         </td>
                       </tr>
                     ))}
                   {nmapData.length === 0 && (
-                    <tr><td colSpan="5" className="p-8 text-center text-gray-500">No network scan data available</td></tr>
+                    <tr><td colSpan="5" className="p-8 text-center text-gray-900">No network scan data available</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1237,21 +1238,21 @@ export default function PolicyReports() {
               {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
                 <StatusCard key={s} label={s} value={trivyRepoData.counts[s] || 0} />
               ))}
-              <div className="p-4 rounded-lg border border-gray-700 bg-[#1e1e1e] flex flex-col items-center justify-center">
-                <span className="text-xs font-semibold opacity-70 mb-1">TOTAL</span>
-                <span className="text-2xl font-bold text-gray-200">
+              <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1e1e1e] flex flex-col items-center justify-center shadow-sm">
+                <span className="text-xs font-semibold opacity-70 mb-1 text-black dark:text-gray-400">TOTAL</span>
+                <span className="text-2xl font-bold text-black dark:text-gray-200">
                   {Object.values(trivyRepoData.counts).reduce((a, b) => a + b, 0)}
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div className="md:col-span-4 bg-[#161b22] p-4 rounded-lg border border-[#30363d]">
-                <div className="text-xs font-semibold uppercase text-gray-500 mb-2">Select Repository Report</div>
+              <div className="md:col-span-4 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
+                <div className="text-xs font-semibold uppercase text-black mb-2">Select Repository Report</div>
                 <select
                   value={selectedTrivyRepoFile || ''}
                   onChange={(e) => setSelectedTrivyRepoFile(e.target.value)}
-                  className="w-full bg-[#0e1116] border border-[#30363d] rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors duration-200"
                 >
                   {trivyRepoFiles.length === 0 && <option value="">No reports found</option>}
                   {trivyRepoFiles.map(f => (
@@ -1260,14 +1261,14 @@ export default function PolicyReports() {
                 </select>
               </div>
 
-              <div className="md:col-span-8 bg-[#161b22] p-4 rounded-lg border border-[#30363d] flex items-center">
+              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex items-center shadow-sm transition-colors duration-200">
                 <div className="flex flex-wrap gap-4 items-center">
-                  <span className="text-xs text-gray-400 font-mono uppercase">Filter Severity:</span>
+                  <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
                   {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                     <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${trivyRepoSeverityFilters[sev]
                         ? 'bg-blue-600 border-blue-600'
-                        : 'bg-transparent border-gray-600 hover:border-gray-500'
+                        : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}>
                         {trivyRepoSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
                       </div>
@@ -1277,10 +1278,10 @@ export default function PolicyReports() {
                         checked={trivyRepoSeverityFilters[sev]}
                         onChange={() => setTrivyRepoSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
                       />
-                      <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-500' :
-                        sev === 'HIGH' ? 'text-orange-400' :
-                          sev === 'MEDIUM' ? 'text-yellow-400' :
-                            sev === 'LOW' ? 'text-blue-400' : 'text-gray-400'
+                      <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
+                        sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
+                          sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
+                            sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
                         }`}>{sev}</span>
                     </label>
                   ))}
@@ -1288,39 +1289,39 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            <div className="border border-[#30363d] rounded-lg overflow-hidden bg-[#0d1117]">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-[#161b22] text-gray-200 font-medium">
+                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-[#30363d] w-24">Severity</th>
-                    <th className="p-3 border-b border-[#30363d]">Type</th>
-                    <th className="p-3 border-b border-[#30363d]">Vulnerability/Rule ID</th>
-                    <th className="p-3 border-b border-[#30363d]">Package/Category</th>
-                    <th className="p-3 border-b border-[#30363d]">Installed/Lines</th>
-                    <th className="p-3 border-b border-[#30363d]">Fixed Ver</th>
-                    <th className="p-3 border-b border-[#30363d]">Target File</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Type</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Vulnerability/Rule ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Package/Category</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Installed/Lines</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Fixed Ver</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Target File</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
                   {trivyRepoData.list
                     .filter(r => trivyRepoSeverityFilters[r.severity])
                     .map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[#161b22]/50 transition-colors">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#161b22]/50 transition-colors">
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.severity)}`}>
                             {row.severity}
                           </span>
                         </td>
-                        <td className="p-3 text-gray-200">{row.type}</td>
-                        <td className="p-3 font-mono text-blue-300">{row.id}</td>
-                        <td className="p-3 font-medium text-gray-200">{row.pkg}</td>
-                        <td className="p-3 text-gray-200 font-mono">{row.installed}</td>
-                        <td className="p-3 text-gray-200">{row.fixed}</td>
-                        <td className="p-3 text-gray-200 break-all">{row.target}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.type}</td>
+                        <td className="p-3 font-mono text-blue-600 dark:text-blue-300">{row.id}</td>
+                        <td className="p-3 font-medium text-black dark:text-gray-200">{row.pkg}</td>
+                        <td className="p-3 text-gray-600 dark:text-gray-200 font-mono">{row.installed}</td>
+                        <td className="p-3 text-black dark:text-gray-200">{row.fixed}</td>
+                        <td className="p-3 text-gray-600 dark:text-gray-200 break-all">{row.target}</td>
                       </tr>
                     ))}
                   {trivyRepoData.list.length === 0 && (
-                    <tr><td colSpan="7" className="p-8 text-center text-gray-500">No issues found or no report selected</td></tr>
+                    <tr><td colSpan="7" className="p-8 text-center text-gray-900">No issues found or no report selected</td></tr>
                   )}
                 </tbody>
               </table>
