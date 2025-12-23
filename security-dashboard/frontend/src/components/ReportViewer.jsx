@@ -51,48 +51,50 @@ export default function ReportViewer() {
     );
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-300 dark:border-gray-800 shadow-xl overflow-hidden flex h-[calc(100vh-140px)] transition-colors duration-200">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 shadow-xl dark:shadow-2xl overflow-hidden flex h-[calc(100vh-140px)] transition-colors duration-200">
 
             {/* Sidebar List */}
-            <div className="w-80 border-r border-gray-300 dark:border-gray-800 bg-gray-50 dark:bg-[#0d0f12] flex flex-col shadow-[4px_0_24px_-2px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_24px_-2px_rgba(0,0,0,0.3)] z-10 transition-colors duration-200">
-                <div className="p-5 border-b border-gray-300 dark:border-gray-800 bg-white dark:bg-[#0f1115] transition-colors duration-200">
-                    <h3 className="text-gray-900 dark:text-white font-bold text-sm tracking-wider uppercase mb-4 flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-blue-600 dark:text-blue-500" />
+            <div className="w-80 border-r border-slate-200 dark:border-gray-800 bg-gradient-light dark:bg-none dark:bg-[#0d0f12] flex flex-col shadow-lg dark:shadow-2xl z-10 transition-colors duration-200">
+                <div className="p-5 border-b border-slate-200 dark:border-gray-800 bg-white dark:bg-[#0f1115] transition-colors duration-200">
+                    <h3 className="text-slate-900 dark:text-white font-bold text-sm tracking-wider uppercase mb-4 flex items-center gap-2">
+                        <div className="p-1.5 bg-gradient-blue rounded-lg">
+                            <Activity className="w-4 h-4 text-azure-600" />
+                        </div>
                         Scan History
                     </h3>
                     <div className="relative group">
-                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-900 dark:text-gray-500 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400 transition-colors" />
+                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-700 dark:text-gray-500 group-focus-within:text-azure-600 dark:group-focus-within:text-azure-400 transition-colors" />
                         <input
                             type="text"
                             placeholder="Filter reports..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-gray-100 dark:bg-[#1a1d23] border border-gray-300 dark:border-gray-800 rounded-lg py-2 pl-9 pr-4 text-sm text-gray-900 dark:text-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-500 dark:placeholder-gray-600 transition-all shadow-inner"
+                            className="w-full bg-slate-50 dark:bg-[#1a1d23] border border-slate-300 dark:border-gray-800 rounded-lg py-2 pl-9 pr-4 text-sm text-slate-900 dark:text-gray-300 focus:ring-1 focus:ring-azure-500 focus:border-azure-500 outline-none placeholder-slate-500 dark:placeholder-gray-600 transition-all shadow-sm"
                         />
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-800">
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-gray-800">
                     {filteredReports.map((report) => (
                         <button
                             key={report.id}
                             onClick={() => loadReportDetails(report.id)}
-                            className={`w-full group relative text-left p-3 rounded-xl border transition-all duration-300 ease-out overflow-hidden hover:shadow-lg ${selectedReport?.id === report.id
-                                ? 'bg-blue-50 dark:bg-gradient-to-br dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-500/50 shadow-blue-500/10 dark:shadow-blue-900/10'
-                                : 'bg-gray-50 dark:bg-[#16181d] border-gray-300 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#1c1f26]'
+                            className={`w-full group relative text-left p-3 rounded-lg border transition-all duration-300 ease-out overflow-hidden hover:shadow-md ${selectedReport?.id === report.id
+                                ? 'bg-azure-50 dark:bg-azure-900/30 border-azure-200 dark:border-azure-500/60 shadow-azure-200/50 dark:shadow-azure-900/20'
+                                : 'bg-white dark:bg-[#16181d] border-slate-200 dark:border-gray-800 hover:border-slate-300 dark:hover:border-gray-700 hover:bg-slate-50 dark:hover:bg-[#1c1f26]'
                                 }`}
                         >
                             {/* Card Content */}
                             <div className="flex items-start gap-4 relative z-10">
                                 {/* Icon Container */}
-                                <div className={`p-2 rounded-lg shrink-0 transition-colors ${selectedReport?.id === report.id ? 'bg-blue-100 dark:bg-blue-500/10' : 'bg-gray-100 dark:bg-gray-800/50 group-hover:bg-gray-200 dark:group-hover:bg-gray-800'
+                                <div className={`p-2 rounded-lg shrink-0 transition-colors ${selectedReport?.id === report.id ? 'bg-azure-100 dark:bg-azure-500/10' : 'bg-slate-100 dark:bg-gray-800/50 group-hover:bg-slate-200 dark:group-hover:bg-gray-800'
                                     }`}>
                                     {getScanIcon(report.scan_type)}
                                 </div>
 
                                 <div className="flex-1 min-w-0 py-0.5">
                                     <div className="flex justify-between items-start mb-1">
-                                        <div className={`font-semibold text-sm truncate pr-2 ${selectedReport?.id === report.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-200 group-hover:text-black dark:group-hover:text-white'
+                                        <div className={`font-semibold text-sm truncate pr-2 ${selectedReport?.id === report.id ? 'text-azure-700 dark:text-azure-400' : 'text-slate-900 dark:text-gray-200 group-hover:text-slate-950 dark:group-hover:text-white'
                                             }`}>
                                             {report.scan_type || 'Unknown Scan'}
                                         </div>
@@ -101,9 +103,9 @@ export default function ReportViewer() {
                                             }`} />
                                     </div>
 
-                                    <div className="flex items-center gap-2 text-xs text-black dark:text-gray-500 font-mono">
+                                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-500 font-mono">
                                         <span>{new Date(report.timestamp).toLocaleDateString()}</span>
-                                        <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-700" />
+                                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-gray-700" />
                                         <span>{new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                 </div>
@@ -111,13 +113,13 @@ export default function ReportViewer() {
 
                             {/* Active Indicator Bar */}
                             {selectedReport?.id === report.id && (
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-600" />
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-azure-500 to-azure-600" />
                             )}
                         </button>
                     ))}
 
                     {filteredReports.length === 0 && (
-                        <div className="flex flex-col items-center justify-center p-8 text-black dark:text-gray-500/50">
+                        <div className="flex flex-col items-center justify-center p-8 text-slate-500 dark:text-gray-500/50">
                             <FileText className="w-8 h-8 mb-2" />
                             <p className="text-xs">No reports found</p>
                         </div>
@@ -126,24 +128,24 @@ export default function ReportViewer() {
             </div>
 
             {/* Report Detail View */}
-            <div className="flex-1 bg-gray-50 dark:bg-gray-950 overflow-y-auto transition-colors duration-200">
+            <div className="flex-1 bg-gradient-light dark:bg-none dark:bg-gray-950 overflow-y-auto transition-colors duration-200">
                 {selectedReport ? (
                     <div className="p-8 max-w-5xl mx-auto">
                         {/* Detail Header */}
-                        <div className="flex justify-between items-start mb-8 bg-white dark:bg-gray-900/50 backdrop-blur p-8 rounded-2xl border border-gray-300 dark:border-gray-800/50 shadow-xl dark:shadow-2xl transition-colors duration-200">
+                        <div className="flex justify-between items-start mb-8 bg-white dark:bg-gray-900/50 backdrop-blur p-8 rounded-xl border border-slate-200 dark:border-gray-800/50 shadow-lg dark:shadow-2xl transition-colors duration-200">
                             <div>
                                 <div className="flex items-center gap-4 mb-3">
-                                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                                    <div className="p-3 bg-gradient-blue dark:bg-gray-800 rounded-lg">
                                         {getScanIcon(selectedReport.request.scan_type)}
                                     </div>
                                     <div>
-                                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white capitalize tracking-tight mb-1">
+                                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white capitalize tracking-tight mb-1">
                                             {selectedReport.request.scan_type}
                                         </h2>
-                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                            <span className="font-mono text-black dark:text-gray-500">ID: {selectedReport.id.slice(0, 8)}</span>
-                                            <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-700" />
-                                            <span className="text-black dark:text-gray-400">Full Report</span>
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
+                                            <span className="font-mono text-slate-700 dark:text-gray-500">ID: {selectedReport.id.slice(0, 8)}</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-gray-700" />
+                                            <span className="text-slate-700 dark:text-gray-400">Full Report</span>
                                         </div>
                                     </div>
                                 </div>
@@ -151,9 +153,9 @@ export default function ReportViewer() {
 
                             <div className="flex gap-3">
                                 <div className="text-right mr-4">
-                                    <div className="text-sm text-black dark:text-gray-400 mb-1">Scanned on</div>
-                                    <div className="text-gray-900 dark:text-white font-medium flex items-center gap-2 justify-end">
-                                        <Clock className="w-4 h-4 text-blue-600 dark:text-blue-500" />
+                                    <div className="text-sm text-slate-600 dark:text-gray-400 mb-1">Scanned on</div>
+                                    <div className="text-slate-900 dark:text-white font-medium flex items-center gap-2 justify-end">
+                                        <Clock className="w-4 h-4 text-azure-600 dark:text-azure-500" />
                                         {new Date(selectedReport.timestamp).toLocaleString()}
                                     </div>
                                 </div>
@@ -166,7 +168,7 @@ export default function ReportViewer() {
                                         a.download = `report-${selectedReport.id}.json`;
                                         a.click();
                                     }}
-                                    className="h-fit px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                                    className="h-fit px-4 py-2 bg-azure-600 hover:bg-azure-700 text-white rounded-lg transition-all shadow-lg shadow-azure-600/20 flex items-center gap-2 font-medium"
                                 >
                                     <Download className="w-4 h-4" />
                                     <span>JSON</span>
@@ -177,27 +179,27 @@ export default function ReportViewer() {
                         {/* Detail Content */}
                         <div className="space-y-6">
                             {selectedReport.results.map((res, idx) => (
-                                <div key={idx} className="bg-white dark:bg-[#0f1115] rounded-xl border border-gray-300 dark:border-gray-800/50 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
-                                    <div className="px-6 py-4 border-b border-gray-300 dark:border-gray-800/50 flex justify-between items-center bg-gray-50 dark:bg-gray-800/20 group-hover:bg-gray-100 dark:group-hover:bg-gray-800/30 transition-colors">
+                                <div key={idx} className="bg-white dark:bg-[#0f1115] rounded-lg border border-slate-200 dark:border-gray-800/50 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">
+                                    <div className="px-6 py-4 border-b border-slate-200 dark:border-gray-800/50 flex justify-between items-center bg-slate-50 dark:bg-gray-800/20 group-hover:bg-slate-100 dark:group-hover:bg-gray-800/30 transition-colors">
                                         <div className="flex items-center gap-4">
                                             {res.status === 'completed' ? (
-                                                <div className="p-1.5 bg-green-100 dark:bg-green-500/10 rounded-full ring-1 ring-green-500/20">
-                                                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-500" />
+                                                <div className="p-1.5 bg-green-100 dark:bg-green-500/10 rounded-full ring-1 ring-green-300 dark:ring-green-500/20">
+                                                    <CheckCircle className="w-5 h-5 text-green-700 dark:text-green-500" />
                                                 </div>
                                             ) : (
-                                                <div className="p-1.5 bg-red-100 dark:bg-red-500/10 rounded-full ring-1 ring-red-500/20">
-                                                    <XCircle className="w-5 h-5 text-red-600 dark:text-red-500" />
+                                                <div className="p-1.5 bg-red-100 dark:bg-red-500/10 rounded-full ring-1 ring-red-300 dark:ring-red-500/20">
+                                                    <XCircle className="w-5 h-5 text-red-700 dark:text-red-500" />
                                                 </div>
                                             )}
-                                            <span className="font-semibold text-gray-900 dark:text-gray-200 text-lg tracking-wide">
+                                            <span className="font-semibold text-slate-900 dark:text-gray-200 text-lg tracking-wide">
                                                 {res.scan_type}
                                             </span>
                                         </div>
                                     </div>
 
                                     <div className="relative">
-                                        <pre className="p-6 text-xs font-mono text-black dark:text-gray-300 overflow-x-auto whitespace-pre-wrap bg-gray-50 dark:bg-[#0a0c10] leading-relaxed border-t border-black/5 dark:border-black/20">
-                                            {res.output || <span className="text-black dark:text-gray-600 italic">No output captured for this scan section.</span>}
+                                        <pre className="p-6 text-xs font-mono text-slate-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap bg-slate-50 dark:bg-[#0a0c10] leading-relaxed border-t border-slate-200 dark:border-black/20">
+                                            {res.output || <span className="text-slate-500 dark:text-gray-600 italic">No output captured for this scan section.</span>}
                                         </pre>
                                     </div>
                                 </div>
@@ -205,12 +207,12 @@ export default function ReportViewer() {
                         </div>
                     </div>
                 ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-black dark:text-gray-600 bg-gray-50 dark:bg-gray-950/50">
-                        <div className="w-32 h-32 bg-gray-200 dark:bg-gray-900/50 rounded-full flex items-center justify-center mb-6 ring-1 ring-gray-300 dark:ring-gray-800">
-                            <Activity className="w-12 h-12 text-gray-500 dark:text-gray-800" />
+                    <div className="h-full flex flex-col items-center justify-center text-slate-600 dark:text-gray-600 bg-gradient-light dark:bg-none dark:bg-gray-950/50">
+                        <div className="w-32 h-32 bg-slate-200 dark:bg-gray-900/50 rounded-full flex items-center justify-center mb-6 ring-1 ring-slate-300 dark:ring-gray-800">
+                            <Activity className="w-12 h-12 text-slate-400 dark:text-gray-800" />
                         </div>
-                        <h3 className="text-xl font-medium text-black dark:text-gray-500 mb-2">Select a Report</h3>
-                        <p className="text-black dark:text-gray-600 max-w-sm text-center text-sm">
+                        <h3 className="text-xl font-medium text-slate-700 dark:text-gray-500 mb-2">Select a Report</h3>
+                        <p className="text-slate-600 dark:text-gray-600 max-w-sm text-center text-sm">
                             Click on any report in the sidebar to inspect detailed security analysis and metrics.
                         </p>
                     </div>

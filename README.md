@@ -1,4 +1,4 @@
-# Armada Security Dashboard
+# DevSecOps Dashboard
 
 ## Overview
 The Armada Security Dashboard is a comprehensive, containerized security management platform designed for Kubernetes environments. It unifies multiple industry-standard security tools into a single, intuitive interface, providing real-time visibility into the security posture of your infrastructure, applications, and source code.
@@ -9,6 +9,7 @@ The Armada Security Dashboard is a comprehensive, containerized security managem
 - **Centralized Dashboard**: Monitor system status and latest security events at a glance.
 - **Integrated Scanning**: Trigger and manage scans from varied tools directly via the UI.
 - **Web Terminal**: Built-in web-based terminal for direct command-line access and manual verification.
+- **Theme Support**: Persistent Light/Dark mode toggle with high-contrast optimization for light environments.
 
 ### 🔍 Comprehensive Scanning Capabilities
 The dashboard integrates the following tools:

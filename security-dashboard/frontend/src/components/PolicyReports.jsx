@@ -749,19 +749,19 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 dark:bg-[#161b22] text-black dark:text-gray-200 font-medium transition-colors duration-200">
+                <thead className="bg-gray-100 dark:!bg-slate-950 text-black dark:text-gray-200 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Status</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Severity</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Policy</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-32">Type</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Resource</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Message</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-24">Status</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-24">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Policy</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-32">Type</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Resource</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Message</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:!divide-slate-800">
                   {kyvernoData.rows
                     .filter(r => {
                       if (kyvernoNs === "") return false; // None selected
@@ -787,7 +787,7 @@ export default function PolicyReports() {
                       </tr>
                     ))}
                   {(!kyvernoNs || kyvernoData.rows.length === 0) && (
-                    <tr><td colSpan="6" className="p-8 text-center text-gray-900">
+                    <tr><td colSpan="6" className="p-8 text-center text-gray-900 dark:text-gray-400">
                       {!kyvernoNs ? "Select a namespace to view report" : "No data available"}
                     </td></tr>
                   )}
@@ -833,18 +833,18 @@ export default function PolicyReports() {
               ))}
             </div>
 
-            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
+                <thead className="bg-gray-100 dark:!bg-slate-950 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24 text-center">Status</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Check ID</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-64">Section</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Title</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-[40%]">Resolution</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-24 text-center">Status</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-24">Check ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-64">Section</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-[40%]">Resolution</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:!divide-slate-800">
                   {cisData.list
                     .filter(r => cisStatusFilters[r.status])
                     .map((row, idx) => (
@@ -861,7 +861,7 @@ export default function PolicyReports() {
                       </tr>
                     ))}
                   {cisData.list.filter(r => cisStatusFilters[r.status]).length === 0 && (
-                    <tr><td colSpan="5" className="p-8 text-center text-gray-900">No benchmarks found matching filters</td></tr>
+                    <tr><td colSpan="5" className="p-8 text-center text-gray-900 dark:text-gray-400">No benchmarks found matching filters</td></tr>
                   )}
                 </tbody>
               </table>
@@ -909,19 +909,19 @@ export default function PolicyReports() {
               ))}
             </div>
 
-            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
+                <thead className="bg-gray-100 dark:!bg-slate-950 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Severity</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">ID</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-1/3">Title</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-1/3">Message</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-16">Ref</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-40">Target</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-24">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-1/3">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-1/3">Message</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-16">Ref</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-40">Target</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:!divide-slate-800">
                   {clusterData.list
                     .filter(row => clusterSeverityFilters[row.severity])
                     .map((row, idx) => (
@@ -989,19 +989,19 @@ export default function PolicyReports() {
               ))}
             </div>
 
-            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 dark:bg-[#161b22] text-black dark:text-gray-200 font-medium transition-colors duration-200">
+                <thead className="bg-gray-100 dark:!bg-slate-950 text-black dark:text-gray-200 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Severity</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Library</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Vulnerability ID</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Installed</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Fixed</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Library</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Vulnerability ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Installed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Fixed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Title</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:!divide-slate-800">
                   {sbomData.list
                     .filter(row => sbomSeverityFilters[row.severity])
                     .map((row, idx) => (
@@ -1023,7 +1023,7 @@ export default function PolicyReports() {
                       </tr>
                     ))}
                   {sbomData.list.filter(row => sbomSeverityFilters[row.severity]).length === 0 && (
-                    <tr><td colSpan="6" className="p-8 text-center text-gray-900">No vulnerabilities found matching filters</td></tr>
+                    <tr><td colSpan="6" className="p-8 text-center text-gray-900 dark:text-gray-400">No vulnerabilities found matching filters</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1138,21 +1138,21 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
+                <thead className="bg-gray-100 dark:!bg-slate-950 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Severity</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">CVE</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Package</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Installed</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Fixed</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Title</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Target</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Ref</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">CVE</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Package</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Installed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Fixed</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Title</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Target</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Ref</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:!divide-slate-800">
                   {imageData.list
                     .filter(row => imageSeverityFilters[row.severity])
                     .map((row, idx) => (
@@ -1176,7 +1176,7 @@ export default function PolicyReports() {
                       </tr>
                     ))}
                   {imageData.list.filter(row => imageSeverityFilters[row.severity]).length === 0 && (
-                    <tr><td colSpan="8" className="p-8 text-center text-gray-900">No vulnerabilities found matching filters</td></tr>
+                    <tr><td colSpan="8" className="p-8 text-center text-gray-900 dark:text-gray-400">No vulnerabilities found matching filters</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1187,18 +1187,18 @@ export default function PolicyReports() {
         {/* NMAP / SSL */}
         {!loading && !error && activeView === 'nmap' && (
           <div className="space-y-6">
-            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 dark:bg-[#161b22] text-black dark:text-gray-200 font-medium transition-colors duration-200">
+                <thead className="bg-gray-100 dark:!bg-slate-950 text-black dark:text-gray-200 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Namespace</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">FQDN</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Port</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Accepted Ciphers</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Weak Ciphers</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Namespace</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">FQDN</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Port</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Accepted Ciphers</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Weak Ciphers</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:!divide-slate-800">
                   {nmapData
                     .filter(row => row.accepted && row.accepted.length > 0)
                     .map((row, idx) => (
@@ -1223,7 +1223,7 @@ export default function PolicyReports() {
                       </tr>
                     ))}
                   {nmapData.length === 0 && (
-                    <tr><td colSpan="5" className="p-8 text-center text-gray-900">No network scan data available</td></tr>
+                    <tr><td colSpan="5" className="p-8 text-center text-gray-900 dark:text-gray-400">No network scan data available</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1289,20 +1289,20 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#0d1117] shadow-sm transition-colors duration-200">
+            <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
               <table className="w-full text-sm text-left">
-                <thead className="bg-gray-100 dark:bg-[#161b22] text-gray-700 dark:text-gray-400 font-medium transition-colors duration-200">
+                <thead className="bg-gray-100 dark:!bg-slate-950 text-gray-700 dark:text-gray-300 font-medium transition-colors duration-200">
                   <tr>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d] w-24">Severity</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Type</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Vulnerability/Rule ID</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Package/Category</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Installed/Lines</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Fixed Ver</th>
-                    <th className="p-3 border-b border-gray-300 dark:border-[#30363d]">Target File</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800 w-24">Severity</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Type</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Vulnerability/Rule ID</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Package/Category</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Installed/Lines</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Fixed Ver</th>
+                    <th className="p-3 border-b border-gray-300 dark:border-slate-800">Target File</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-[#30363d]">
+                <tbody className="divide-y divide-gray-200 dark:!divide-slate-800">
                   {trivyRepoData.list
                     .filter(r => trivyRepoSeverityFilters[r.severity])
                     .map((row, idx) => (
@@ -1321,7 +1321,7 @@ export default function PolicyReports() {
                       </tr>
                     ))}
                   {trivyRepoData.list.length === 0 && (
-                    <tr><td colSpan="7" className="p-8 text-center text-gray-900">No issues found or no report selected</td></tr>
+                    <tr><td colSpan="7" className="p-8 text-center text-gray-900 dark:text-gray-400">No issues found or no report selected</td></tr>
                   )}
                 </tbody>
               </table>

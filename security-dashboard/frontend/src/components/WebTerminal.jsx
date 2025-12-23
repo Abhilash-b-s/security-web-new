@@ -15,7 +15,7 @@ export default function WebTerminal() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/api/terminal/ws`;
 
-        console.log("Connecting to Terminal WS:", wsUrl);
+        console.log("Connecting to Terminal WS:", wsUrl, "[v2.0-slate-fix]");
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
@@ -93,32 +93,34 @@ export default function WebTerminal() {
                 <span className={`ml-auto w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
             </div>
 
-            <form onSubmit={handleSend} className="px-4 py-6 bg-gray-50 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 flex flex-col gap-2 shadow-md z-10 transition-colors duration-200">
+            <form onSubmit={handleSend} className="px-4 py-6 bg-gray-50 dark:bg-slate-900 border-b border-gray-300 dark:border-gray-700 flex flex-col gap-2 shadow-md z-10 transition-colors duration-200">
                 {error && (
                     <div className="text-red-500 text-xs font-mono px-2">
                         {error}
                     </div>
                 )}
                 <div className="flex gap-2 items-center">
-                    <span className="text-green-600 dark:text-green-500 font-mono text-lg font-bold py-1 pl-2">$</span>
-                    <input
-                        type="text"
-                        value={command}
-                        onChange={(e) => {
-                            setCommand(e.target.value);
-                            if (error) setError(null);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white font-mono text-lg placeholder-gray-400 dark:placeholder-gray-600 h-10"
-                        placeholder="Enter command (e.g., kubectl get pods)"
-                        autoFocus
-                    />
+                    <div className="relative flex-1">
+                        <span className="absolute left-3 top-2 text-green-600 dark:text-green-500 font-mono font-bold select-none">$</span>
+                        <input
+                            type="text"
+                            value={command}
+                            onChange={(e) => {
+                                setCommand(e.target.value);
+                                if (error) setError(null);
+                            }}
+                            onKeyDown={handleKeyDown}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-8 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white font-mono"
+                            placeholder="Enter command (e.g., kubectl get pods)"
+                            autoFocus
+                        />
+                    </div>
                     <button
                         type="submit"
                         disabled={!isConnected}
-                        className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-white disabled:opacity-50"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
-                        <Send className="w-5 h-5" />
+                        <Send className="w-4 h-4" />
                     </button>
                 </div>
             </form>

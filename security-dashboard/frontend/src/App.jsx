@@ -168,18 +168,18 @@ function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
+        <div className="min-h-screen bg-gradient-light dark:bg-none dark:bg-[#0b1220] text-slate-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
             {/* Header */}
-            <header className="bg-white dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm dark:shadow-md transition-colors duration-200">
+            <header className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-4 py-3 shadow-base dark:shadow-md transition-colors duration-200">
                 <div className="flex items-center justify-between px-0">
                     <div className="flex items-center gap-3">
-                        <ShieldAlert className="w-8 h-8 text-blue-600 dark:text-blue-500" />
-                        <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">DevSecOps Dashboard</span>
+                        <ShieldAlert className="w-8 h-8 text-azure-600 dark:text-azure-500" />
+                        <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">DevSecOps Dashboard</span>
                     </div>
-                    <nav className="flex gap-4 items-center">
+                    <nav className="flex gap-3 items-center">
                         <button
                             onClick={() => setActiveTab('dashboard')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
                                 }`}
                         >
                             <LayoutDashboard className="w-4 h-4" />
@@ -187,7 +187,7 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('reports')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'reports' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'reports' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
                                 }`}
                         >
                             <FileText className="w-4 h-4" />
@@ -195,7 +195,7 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('policy')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'policy' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'policy' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
                                 }`}
                         >
                             <FileCheck className="w-4 h-4" />
@@ -203,7 +203,7 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('terminal')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'terminal' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'terminal' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
                                 }`}
                         >
                             <Terminal className="w-4 h-4" />
@@ -211,18 +211,18 @@ function App() {
                         </button>
                         <button
                             onClick={() => setActiveTab('settings')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 dark:bg-transparent text-gray-900 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-transparent'
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
                                 }`}
                         >
                             <SettingsIcon className="w-4 h-4" />
                             Settings
                         </button>
 
-                        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+                        <div className="w-px h-6 bg-slate-300 dark:bg-gray-700 mx-2"></div>
 
                         <button
                             onClick={toggleTheme}
-                            className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            className="p-2 rounded-lg text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors"
                             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                         >
                             {theme === 'dark' ? (
@@ -232,12 +232,12 @@ function App() {
                             )}
                         </button>
 
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-900 rounded-md border border-gray-300 dark:border-gray-700 ml-2">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-gray-900 rounded-lg border border-green-200 dark:border-gray-700 ml-2">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                             </span>
-                            <span className="text-green-600 dark:text-green-400 text-sm font-medium">System Online</span>
+                            <span className="text-green-700 dark:text-green-400 text-sm font-medium">System Online</span>
                         </div>
                     </nav>
                 </div>

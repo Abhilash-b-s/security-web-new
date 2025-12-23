@@ -166,12 +166,14 @@ export default function Settings() {
     const baseButtonClasses = 'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ';
 
     return (
-        <div className="flex h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white overflow-hidden transition-colors duration-200">
+        <div className="flex h-full bg-gradient-light dark:bg-gray-900 text-slate-900 dark:text-white overflow-hidden transition-colors duration-200">
             {/* Left Sidebar */}
-            <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-300 dark:border-gray-700 flex flex-col transition-colors duration-200">
-                <div className="p-6 border-b border-gray-300 dark:border-gray-700">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        <SettingsIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-64 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 flex flex-col transition-colors duration-200">
+                <div className="p-6 border-b border-slate-200 dark:border-gray-700">
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                        <div className="p-1.5 bg-gradient-blue rounded-lg">
+                            <SettingsIcon className="w-5 h-5 text-azure-600" />
+                        </div>
                         Settings
                     </h2>
                 </div>
