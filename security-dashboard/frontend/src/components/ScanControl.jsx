@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Shield, Activity, Layers, Terminal, Code, GitGraph } from 'lucide-react';
+import { Play, Shield, Activity, Layers, Terminal, GitGraph } from 'lucide-react';
 
 const SCAN_TYPES = [
     { id: 'trivy-image', label: 'Image Vulnerabilities', icon: <Layers className="w-4 h-4" /> },
@@ -14,8 +14,7 @@ const SCAN_TYPES = [
 export default function ScanControl({ onStartScan, isScanning }) {
 
     const handleStartScan = (typeId) => {
-        // Registry credentials are now managed in Settings and loaded by backend
-        onStartScan(typeId, {});
+        onStartScan(typeId);
     };
 
     return (

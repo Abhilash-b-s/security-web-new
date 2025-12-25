@@ -223,8 +223,6 @@ export default function PolicyReports() {
       if (!res.ok) throw new Error(`Failed to list image reports: ${res.status}`);
       const files = await res.json();
       setImageFiles(files);
-      // Do not auto-select file, let user choose namespace checks first
-      // if (files.length > 0) setSelectedImageFile(files[0]);
     } catch (err) {
       console.error(err);
       setError(err.message);

@@ -14,8 +14,6 @@ export default function WebTerminal() {
     useEffect(() => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/api/terminal/ws`;
-
-        console.log("Connecting to Terminal WS:", wsUrl, "[v2.0-slate-fix]");
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 

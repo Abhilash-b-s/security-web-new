@@ -7,14 +7,10 @@ import PolicyReports from './components/PolicyReports';
 import Settings from './components/Settings';
 import { ShieldAlert, LayoutDashboard, FileText, Terminal, FileCheck, Settings as SettingsIcon } from 'lucide-react';
 
-
-
-
 function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [logs, setLogs] = useState([]);
     const [isScanning, setIsScanning] = useState(false);
-    const [currentScanId, setCurrentScanId] = useState(null);
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined' && window.localStorage) {
             return localStorage.getItem('theme') || 'dark';
@@ -45,20 +41,17 @@ function App() {
         return 'scan-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     };
 
-    const startScan = async (type, credentials = {}) => {
+    const startScan = async (type) => {
         setIsScanning(true);
-        setLogs([]); // Clear logs for new scan
+        setLogs([]);
 
         // Generate ID client-side to coordinate WS connection before trigger
         const scanId = generateScanId();
-        setCurrentScanId(scanId);
 
         try {
-            // 1. Connect WebSocket FIRST (with timeout)
             setLogs(prev => [...prev, "Initializing connection..."]);
             await connectWebSocket(scanId);
 
-            // 2. TRIGGER the scan once connected
             setLogs(prev => [...prev, "Starting scan process..."]);
             const response = await fetch('/api/scans/start', {
                 method: 'POST',
@@ -67,9 +60,7 @@ function App() {
                 },
                 body: JSON.stringify({
                     scan_type: type,
-                    scan_id: scanId,
-                    registry_user: credentials.registryUser,
-                    registry_password: credentials.registryPassword
+                    scan_id: scanId
                 }),
             });
 
@@ -78,7 +69,6 @@ function App() {
             }
 
         } catch (error) {
-            console.error("Error starting scan:", error);
             setLogs(prev => [...prev, `Error: ${error.message}`]);
             setIsScanning(false);
             if (wsRef.current) wsRef.current.close();
@@ -94,8 +84,6 @@ function App() {
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/api/scans/ws/${scanId}`;
-
-            console.log("Connecting to WS:", wsUrl);
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
@@ -120,16 +108,14 @@ function App() {
                     ws.close();
                     setIsScanning(false);
                 } else {
-                    // Smart Appending Logic for "Vertical Dots"
+                    // Append message, combining progress dots with previous line
                     setLogs(prev => {
                         if (prev.length === 0) return [message];
                         const lastIndex = prev.length - 1;
                         const lastLog = prev[lastIndex];
 
-                        // If message is just dots or continuation chars, append to last line
+                        // If message is dots or continuation, append to last line
                         if (message.startsWith('.') || (lastLog && !lastLog.endsWith('\n') && message.length < 50)) {
-                            // Simple heuristic: if short message starting with dot, append
-                            // Or simply always append if it looks like a progress chunk
                             if (message.match(/^\.+$/)) {
                                 const newLogs = [...prev];
                                 newLogs[lastIndex] = lastLog + message;
@@ -141,20 +127,13 @@ function App() {
                 }
             };
 
-            ws.onerror = (error) => {
-                console.error("WebSocket Error:", error);
-                // Only reject if we haven't resolved yet
-                // Use readyState to check if we are still connecting
+            ws.onerror = () => {
                 if (ws.readyState === WebSocket.CONNECTING) {
                     clearTimeout(timeoutId);
                     reject(new Error("WebSocket connection failed"));
                 } else {
                     setLogs(prev => [...prev, "--- Connection Error ---"]);
                 }
-            };
-
-            ws.onclose = () => {
-                console.log("WebSocket Disconnected");
             };
         });
     };

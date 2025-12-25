@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Terminal as TerminalIcon, Copy, Trash2, Check, Download } from 'lucide-react';
+import { Terminal as TerminalIcon, Copy, Check, Download } from 'lucide-react';
 
 export default function LogViewer({ logs }) {
     const scrollRef = useRef(null);
@@ -53,7 +53,6 @@ export default function LogViewer({ logs }) {
                     >
                         <Download className="w-3.5 h-3.5" />
                     </button>
-                    {/* Note: Clear functionality would need to be passed from parent if we want to clear actual state */}
                 </div>
             </div>
 
