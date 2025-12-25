@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ShieldCheck, Lock, LogOut } from 'lucide-react';
+import Login from './components/Login';
 import ScanControl from './components/ScanControl';
 import LogViewer from './components/LogViewer';
 import ReportViewer from './components/ReportViewer';
@@ -8,7 +10,20 @@ import Settings from './components/Settings';
 import { ShieldAlert, LayoutDashboard, FileText, Terminal, FileCheck, Settings as SettingsIcon } from 'lucide-react';
 
 function App() {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [user, setUser] = useState(() => {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const saved = localStorage.getItem('user');
+            return saved ? JSON.parse(saved) : null;
+        }
+        return null;
+    });
+
+    const [activeTab, setActiveTab] = useState(() => {
+        if (user && user.role === 'user') {
+            return 'policy';
+        }
+        return 'dashboard';
+    });
     const [logs, setLogs] = useState([]);
     const [isScanning, setIsScanning] = useState(false);
     const [theme, setTheme] = useState(() => {
@@ -29,9 +44,33 @@ function App() {
         localStorage.setItem('theme', theme);
     }, [theme]);
 
+    useEffect(() => {
+        if (user && user.role === 'user' && activeTab !== 'policy') {
+            setActiveTab('policy');
+        }
+    }, [user, activeTab]);
+
     const toggleTheme = () => {
         setTheme(prev => prev === 'dark' ? 'light' : 'dark');
     };
+
+    const handleLogin = (userData) => {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        if (userData.role === 'user') {
+            setActiveTab('policy');
+        } else {
+            setActiveTab('dashboard');
+        }
+    };
+
+    const handleLogout = () => {
+        setUser(null);
+        localStorage.removeItem('user');
+        setActiveTab('dashboard'); // Reset tab for next login
+    };
+
+
 
     // Safe ID generator that works in all contexts (http/https/older browsers)
     const generateScanId = () => {
@@ -146,6 +185,10 @@ function App() {
         };
     }, []);
 
+    if (!user) {
+        return <Login onLogin={handleLogin} />;
+    }
+
     return (
         <div className="min-h-screen bg-gradient-light dark:bg-none dark:bg-[#0b1220] text-slate-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
             {/* Header */}
@@ -156,22 +199,26 @@ function App() {
                         <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">DevSecOps Dashboard</span>
                     </div>
                     <nav className="flex gap-3 items-center">
-                        <button
-                            onClick={() => setActiveTab('dashboard')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                }`}
-                        >
-                            <LayoutDashboard className="w-4 h-4" />
-                            Dashboard
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('reports')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'reports' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                }`}
-                        >
-                            <FileText className="w-4 h-4" />
-                            Event Logs
-                        </button>
+                        {user.role === 'superuser' && (
+                            <>
+                                <button
+                                    onClick={() => setActiveTab('dashboard')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
+                                        }`}
+                                >
+                                    <LayoutDashboard className="w-4 h-4" />
+                                    Dashboard
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('reports')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'reports' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
+                                        }`}
+                                >
+                                    <FileText className="w-4 h-4" />
+                                    Event Logs
+                                </button>
+                            </>
+                        )}
                         <button
                             onClick={() => setActiveTab('policy')}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'policy' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
@@ -180,22 +227,26 @@ function App() {
                             <FileCheck className="w-4 h-4" />
                             Scan Reports
                         </button>
-                        <button
-                            onClick={() => setActiveTab('terminal')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'terminal' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                }`}
-                        >
-                            <Terminal className="w-4 h-4" />
-                            Terminal
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('settings')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                }`}
-                        >
-                            <SettingsIcon className="w-4 h-4" />
-                            Settings
-                        </button>
+                        {user.role === 'superuser' && (
+                            <>
+                                <button
+                                    onClick={() => setActiveTab('terminal')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'terminal' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
+                                        }`}
+                                >
+                                    <Terminal className="w-4 h-4" />
+                                    Terminal
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('settings')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
+                                        }`}
+                                >
+                                    <SettingsIcon className="w-4 h-4" />
+                                    Settings
+                                </button>
+                            </>
+                        )}
 
                         <div className="w-px h-6 bg-slate-300 dark:bg-gray-700 mx-2"></div>
 
@@ -211,19 +262,25 @@ function App() {
                             )}
                         </button>
 
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-gray-900 rounded-lg border border-green-200 dark:border-gray-700 ml-2">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        <div className="flex items-center gap-1 ml-2">
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">
+                                {user?.username || 'User'}
                             </span>
-                            <span className="text-green-700 dark:text-green-400 text-sm font-medium">System Online</span>
+                            <button
+                                onClick={handleLogout}
+                                className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                title="Logout"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
                         </div>
                     </nav>
                 </div>
             </header >
 
             {/* Main Content */}
-            <main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : 'p-6'}`}>
+            < main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : 'p-6'}`
+            }>
                 {activeTab === 'dashboard' ? (
                     <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
                         {/* Left Sidebar: Scan Controls & Status */}

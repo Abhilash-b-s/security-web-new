@@ -589,8 +589,10 @@ export default function PolicyReports() {
   const getStatusColor = (status) => {
     const map = {
       FAIL: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-300 dark:border-red-400/20',
+      ERROR: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-300 dark:border-red-400/20',
       WARN: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
       PASS: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-400/10 border-green-300 dark:border-green-400/20',
+      SKIP: 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-400/10 border-slate-300 dark:border-slate-400/20',
       CRITICAL: 'text-red-700 dark:text-red-500 bg-red-50 dark:bg-red-500/10 border-red-300 dark:border-red-500/20',
       HIGH: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-400/10 border-orange-300 dark:border-orange-400/20',
       MEDIUM: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
@@ -716,33 +718,36 @@ export default function PolicyReports() {
                 </select>
               </div>
 
-              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex items-center shadow-sm transition-colors duration-200">
-                <div className="flex flex-wrap gap-4 items-center">
-                  <span className="text-xs text-black font-mono uppercase">Filter Status:</span>
-                  {['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'].map(status => (
-                    <label key={status} className="flex items-center gap-2 cursor-pointer select-none">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${kyvernoStatusFilters[status]
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                        }`}>
-                        {kyvernoStatusFilters[status] && <CheckCircle className="w-3 h-3 text-white" />}
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={kyvernoStatusFilters[status]}
-                        onChange={() => setKyvernoStatusFilters(prev => ({ ...prev, [status]: !prev[status] }))}
-                      />
-                      <span className={`text-xs font-bold ${getStatusColor(status).match(/text-[a-z]+-\d+/)?.[0] || 'text-gray-600 dark:text-gray-400'}`}>{status}</span>
-                    </label>
-                  ))}
+              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm transition-colors duration-200">
+                <div className="flex flex-wrap gap-6 items-center w-full md:w-auto">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filter Status:</span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    {['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'].map(status => (
+                      <label key={status} className="flex items-center gap-2 cursor-pointer select-none group">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${kyvernoStatusFilters[status]
+                          ? 'bg-azure-600 border-azure-600 dark:bg-azure-500 dark:border-azure-500 shadow-sm'
+                          : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 group-hover:border-azure-400 dark:group-hover:border-azure-500'
+                          }`}>
+                          {kyvernoStatusFilters[status] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={kyvernoStatusFilters[status]}
+                          onChange={() => setKyvernoStatusFilters(prev => ({ ...prev, [status]: !prev[status] }))}
+                        />
+                        <span className={`text-sm font-semibold transition-colors ${kyvernoStatusFilters[status] ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-500'
+                          }`}>{status}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <a
                   href="/new/kyverno-report/Policy_report.xlsx"
                   download="Policy_report.xlsx"
-                  className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-[#1f6feb]/10 text-blue-600 dark:text-[#58a6ff] hover:bg-blue-100 dark:hover:bg-[#1f6feb]/20 border border-blue-200 dark:border-[#1f6feb]/30 rounded text-xs font-semibold transition-colors"
+                  className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-blue-500/50 rounded-lg text-sm font-semibold transition-all shadow-sm"
                 >
-                  <Download className="w-4 h-4" /> Download Excel Report
+                  <Download className="w-4 h-4" /> Export Report
                 </a>
               </div>
             </div>
@@ -810,25 +815,28 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center bg-white dark:bg-[#161b22] p-3 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
-              <span className="text-xs text-black font-mono uppercase">Filter Status:</span>
-              {['FAIL', 'WARN', 'INFO', 'PASS'].map(status => (
-                <label key={status} className="flex items-center gap-2 cursor-pointer select-none">
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${cisStatusFilters[status]
-                    ? 'bg-blue-600 border-blue-600'
-                    : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                    }`}>
-                    {cisStatusFilters[status] && <CheckCircle className="w-3 h-3 text-white" />}
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={cisStatusFilters[status]}
-                    onChange={() => setCisStatusFilters(prev => ({ ...prev, [status]: !prev[status] }))}
-                  />
-                  <span className={`text-xs font-bold ${getStatusColor(status).split(' ')[0]}`}>{status}</span>
-                </label>
-              ))}
+            <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-wrap gap-6 items-center shadow-sm transition-colors duration-200">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filter Status:</span>
+              <div className="flex flex-wrap items-center gap-4">
+                {['FAIL', 'WARN', 'INFO', 'PASS'].map(status => (
+                  <label key={status} className="flex items-center gap-2 cursor-pointer select-none group">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${cisStatusFilters[status]
+                      ? 'bg-azure-600 border-azure-600 dark:bg-azure-500 dark:border-azure-500 shadow-sm'
+                      : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 group-hover:border-azure-400 dark:group-hover:border-azure-500'
+                      }`}>
+                      {cisStatusFilters[status] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={cisStatusFilters[status]}
+                      onChange={() => setCisStatusFilters(prev => ({ ...prev, [status]: !prev[status] }))}
+                    />
+                    <span className={`text-sm font-semibold transition-colors ${cisStatusFilters[status] ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-500'
+                      }`}>{status}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
@@ -882,29 +890,28 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center bg-white dark:bg-[#161b22] p-3 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
-              <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${clusterSeverityFilters[sev]
-                    ? 'bg-blue-600 border-blue-600'
-                    : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                    }`}>
-                    {clusterSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={clusterSeverityFilters[sev]}
-                    onChange={() => setClusterSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
-                  />
-                  <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
-                    sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
-                      sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
-                        sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
-                    }`}>{sev}</span>
-                </label>
-              ))}
+            <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-wrap gap-6 items-center shadow-sm transition-colors duration-200">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filter Severity:</span>
+              <div className="flex flex-wrap items-center gap-4">
+                {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
+                  <label key={sev} className="flex items-center gap-2 cursor-pointer select-none group">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${clusterSeverityFilters[sev]
+                      ? 'bg-azure-600 border-azure-600 dark:bg-azure-500 dark:border-azure-500 shadow-sm'
+                      : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 group-hover:border-azure-400 dark:group-hover:border-azure-500'
+                      }`}>
+                      {clusterSeverityFilters[sev] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={clusterSeverityFilters[sev]}
+                      onChange={() => setClusterSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
+                    />
+                    <span className={`text-sm font-semibold transition-colors ${clusterSeverityFilters[sev] ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-500'
+                      }`}>{sev}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
@@ -962,29 +969,28 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center bg-white dark:bg-[#161b22] p-3 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
-              <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${sbomSeverityFilters[sev]
-                    ? 'bg-blue-600 border-blue-600'
-                    : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                    }`}>
-                    {sbomSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="hidden"
-                    checked={sbomSeverityFilters[sev]}
-                    onChange={() => setSbomSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
-                  />
-                  <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
-                    sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
-                      sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
-                        sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
-                    }`}>{sev}</span>
-                </label>
-              ))}
+            <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-wrap gap-6 items-center shadow-sm transition-colors duration-200">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filter Severity:</span>
+              <div className="flex flex-wrap items-center gap-4">
+                {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
+                  <label key={sev} className="flex items-center gap-2 cursor-pointer select-none group">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${sbomSeverityFilters[sev]
+                      ? 'bg-azure-600 border-azure-600 dark:bg-azure-500 dark:border-azure-500 shadow-sm'
+                      : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 group-hover:border-azure-400 dark:group-hover:border-azure-500'
+                      }`}>
+                      {sbomSeverityFilters[sev] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={sbomSeverityFilters[sev]}
+                      onChange={() => setSbomSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
+                    />
+                    <span className={`text-sm font-semibold transition-colors ${sbomSeverityFilters[sev] ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-500'
+                      }`}>{sev}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="border border-gray-300 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm transition-colors duration-200">
@@ -1035,17 +1041,17 @@ export default function PolicyReports() {
           <div className="space-y-6">
 
             {/* Controls Area */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              {/* Left: Selection Controls */}
-              <div className="md:col-span-4 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] space-y-4 shadow-sm transition-colors duration-200">
-                <div>
-                  <div className="text-xs font-semibold uppercase text-black mb-2">Reports by Namespace</div>
+            {/* Controls Area */}
+            <div className="flex flex-col gap-4">
+              {/* Top Row: Namespace and Report Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
+                  <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Reports by Namespace</div>
                   <select
                     value={imageNs}
                     onChange={(e) => {
                       const val = e.target.value;
                       setImageNs(val);
-                      // Reset file selection when namespace changes
                       if (!val) {
                         setSelectedImageFile(null);
                         return;
@@ -1054,7 +1060,7 @@ export default function PolicyReports() {
                       if (relevant.length > 0) setSelectedImageFile(relevant[0]);
                       else setSelectedImageFile(null);
                     }}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors duration-200"
+                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
                   >
                     <option value="">None</option>
                     <option value="ALL">All Namespaces</option>
@@ -1064,12 +1070,12 @@ export default function PolicyReports() {
                   </select>
                 </div>
 
-                <div>
-                  <div className="text-xs font-semibold uppercase text-black mb-2">Image Report</div>
+                <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
+                  <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Image Report</div>
                   <select
                     value={selectedImageFile || ''}
                     onChange={(e) => setSelectedImageFile(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors duration-200"
+                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
                   >
                     {imageFiles
                       .filter(f => imageNs === 'ALL' || (imageNs && f.startsWith(imageNs + '/')))
@@ -1083,43 +1089,39 @@ export default function PolicyReports() {
                 </div>
               </div>
 
-              {/* Right: Summary and Filters */}
-              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-col justify-between shadow-sm transition-colors duration-200">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-semibold text-black dark:text-gray-200">Image Vulnerabilities Report</span>
-                  <a
-                    href="/new/trivy-reports/consolidated-report_images.xlsx"
-                    download="consolidated-report_images.xlsx"
-                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-[#1f6feb]/10 text-blue-600 dark:text-[#58a6ff] hover:bg-blue-100 dark:hover:bg-[#1f6feb]/20 border border-blue-200 dark:border-[#1f6feb]/30 rounded text-xs font-semibold transition-colors"
-                  >
-                    <Download className="w-4 h-4" /> Download Excel Report
-                  </a>
+              {/* Bottom Row: Filters and Download */}
+              <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm transition-colors duration-200">
+                <div className="flex flex-wrap gap-6 items-center w-full md:w-auto">
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filter Severity:</span>
+                  <div className="flex flex-wrap items-center gap-4">
+                    {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
+                      <label key={sev} className="flex items-center gap-2 cursor-pointer select-none group">
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${imageSeverityFilters[sev]
+                          ? 'bg-azure-600 border-azure-600 dark:bg-azure-500 dark:border-azure-500 shadow-sm'
+                          : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 group-hover:border-azure-400 dark:group-hover:border-azure-500'
+                          }`}>
+                          {imageSeverityFilters[sev] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                        </div>
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={imageSeverityFilters[sev]}
+                          onChange={() => setImageSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
+                        />
+                        <span className={`text-sm font-semibold transition-colors ${imageSeverityFilters[sev] ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-500'
+                          }`}>{sev}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-4 items-center">
-                  <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
-                  {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                    <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${imageSeverityFilters[sev]
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                        }`}>
-                        {imageSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={imageSeverityFilters[sev]}
-                        onChange={() => setImageSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
-                      />
-                      <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
-                        sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
-                          sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
-                            sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
-                        }`}>{sev}</span>
-                    </label>
-                  ))}
-                </div>
+                <a
+                  href="/new/trivy-reports/consolidated-report_images.xlsx"
+                  download="consolidated-report_images.xlsx"
+                  className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-blue-500/50 rounded-lg text-sm font-semibold transition-all shadow-sm"
+                >
+                  <Download className="w-4 h-4" /> Export Report
+                </a>
               </div>
             </div>
 
@@ -1259,16 +1261,16 @@ export default function PolicyReports() {
                 </select>
               </div>
 
-              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex items-center shadow-sm transition-colors duration-200">
-                <div className="flex flex-wrap gap-4 items-center">
-                  <span className="text-xs text-black font-mono uppercase">Filter Severity:</span>
+              <div className="md:col-span-8 bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] flex flex-wrap gap-6 items-center shadow-sm transition-colors duration-200">
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filter Severity:</span>
+                <div className="flex flex-wrap items-center gap-4">
                   {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                    <label key={sev} className="flex items-center gap-2 cursor-pointer select-none">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${trivyRepoSeverityFilters[sev]
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'bg-transparent border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    <label key={sev} className="flex items-center gap-2 cursor-pointer select-none group">
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${trivyRepoSeverityFilters[sev]
+                        ? 'bg-azure-600 border-azure-600 dark:bg-azure-500 dark:border-azure-500 shadow-sm'
+                        : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 group-hover:border-azure-400 dark:group-hover:border-azure-500'
                         }`}>
-                        {trivyRepoSeverityFilters[sev] && <CheckCircle className="w-3 h-3 text-white" />}
+                        {trivyRepoSeverityFilters[sev] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                       </div>
                       <input
                         type="checkbox"
@@ -1276,10 +1278,7 @@ export default function PolicyReports() {
                         checked={trivyRepoSeverityFilters[sev]}
                         onChange={() => setTrivyRepoSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))}
                       />
-                      <span className={`text-xs font-bold ${sev === 'CRITICAL' ? 'text-red-600 dark:text-red-500' :
-                        sev === 'HIGH' ? 'text-orange-600 dark:text-orange-400' :
-                          sev === 'MEDIUM' ? 'text-yellow-600 dark:text-yellow-400' :
-                            sev === 'LOW' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
+                      <span className={`text-sm font-semibold transition-colors ${trivyRepoSeverityFilters[sev] ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-500'
                         }`}>{sev}</span>
                     </label>
                   ))}
