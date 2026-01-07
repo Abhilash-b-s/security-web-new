@@ -7,7 +7,52 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 import os
 
-app = FastAPI(title="Security Scanning Dashboard")
+app = FastAPI(
+    title="Security Scanning Dashboard API",
+    description="""
+    Comprehensive security scanning platform for Kubernetes clusters, container images, and code repositories.
+
+    ## Features
+
+    * **Multiple Security Scanners**: Trivy, Kube-bench, Kyverno, Nmap
+    * **Real-time Progress**: WebSocket-based live scan output
+    * **Report Management**: Store and retrieve scan results
+    * **Registry Configuration**: Manage multiple container registry credentials
+    * **Git Repository Scanning**: Scan source code for vulnerabilities
+    * **Interactive Terminal**: Execute kubectl commands via WebSocket
+
+    ## Scan Types
+
+    * `trivy-image`: Container image vulnerability scanning
+    * `trivy-sbom`: Generate Software Bill of Materials
+    * `trivy-cluster`: Kubernetes cluster-wide security scanning
+    * `trivy-repo`: Git repository vulnerability scanning
+    * `kube-bench`: CIS Kubernetes Benchmark checks
+    * `kyverno`: Kubernetes policy validation
+    * `nmap`: Network port scanning and service detection
+    * `all`: Execute all scans sequentially
+
+    ## Authentication
+
+    Currently the API does not require authentication. It is intended for internal use within a secured network.
+
+    ## WebSocket Endpoints
+
+    * `/api/scans/ws/{scan_id}`: Real-time scan progress streaming
+    * `/api/terminal/ws`: Interactive kubectl terminal
+    """,
+    version="1.0.0",
+    contact={
+        "name": "Security Dashboard Team",
+    },
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,6 +78,34 @@ if os.path.exists(STATIC_DIR):
 NEW_DIR = os.getenv("NEW_DIR", "/app/new")
 if os.path.exists(NEW_DIR):
     app.mount("/new", StaticFiles(directory=NEW_DIR), name="new")
+
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="Health Check",
+    description="Check if the API is running and healthy. Use this endpoint for monitoring and load balancer health checks.",
+    responses={
+        200: {
+            "description": "Service is healthy",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "healthy",
+                        "service": "Security Dashboard API",
+                        "version": "1.0.0"
+                    }
+                }
+            }
+        }
+    }
+)
+async def health_check():
+    """Health check endpoint for monitoring and load balancers."""
+    return {
+        "status": "healthy",
+        "service": "Security Dashboard API",
+        "version": "1.0.0"
+    }
 
 @app.get("/")
 async def serve_index():
