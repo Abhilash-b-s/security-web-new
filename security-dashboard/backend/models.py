@@ -111,7 +111,7 @@ class RegistryCredential(BaseModel):
     id: Optional[str] = Field(None, description="Registry credential ID")
     url: str = Field(..., description="Registry URL (e.g., docker.io, quay.io)")
     username: str = Field(..., description="Registry username")
-    password: str = Field(..., description="Registry password (write-only in responses)")
+    password: str = Field(..., description="Registry password (write-only)", exclude=True)
 
     class Config:
         json_schema_extra = {
@@ -120,6 +120,34 @@ class RegistryCredential(BaseModel):
                 "url": "quay.io",
                 "username": "myuser",
                 "password": "secret"
+            }
+        }
+
+class RegistryCredentialResponse(BaseModel):
+    """Container registry credentials response (password excluded)."""
+    id: Optional[str] = Field(None, description="Registry credential ID")
+    url: str = Field(..., description="Registry URL")
+    username: str = Field(..., description="Registry username")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": "reg-001",
+                "url": "quay.io",
+                "username": "myuser"
+            }
+        }
+
+class GitConfigResponse(BaseModel):
+    """Git configuration response (token excluded)."""
+    username: str = Field(..., description="Git username")
+    repos: str = Field(..., description="Repository URLs")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "gituser",
+                "repos": "https://github.com/org/repo1\nhttps://github.com/org/repo2"
             }
         }
 
@@ -139,7 +167,7 @@ class RegistryDeleteResponse(BaseModel):
 class GitConfig(BaseModel):
     """Git repository scanning configuration."""
     username: str = Field(..., description="Git username")
-    token: str = Field(..., description="Git personal access token (write-only in responses)")
+    token: str = Field(..., description="Git personal access token (write-only)", exclude=True)
     repos: str = Field(..., description="Newline-separated list of repository URLs to scan")
 
     class Config:

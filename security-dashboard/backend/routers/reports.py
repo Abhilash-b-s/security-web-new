@@ -110,7 +110,18 @@ async def get_report(report_id: str):
 
     The report contains all scan outputs, findings, and metadata.
     """
+    # Security: Prevent path traversal attacks
+    # Only allow alphanumeric characters and hyphens in report_id
+    import re
+    if not re.match(r'^[a-zA-Z0-9\-]+$', report_id):
+        raise HTTPException(status_code=400, detail="Invalid report ID format")
+
     filepath = os.path.join(REPORTS_DIR, f"{report_id}.json")
+
+    # Ensure the resolved path is still within REPORTS_DIR
+    if not os.path.abspath(filepath).startswith(os.path.abspath(REPORTS_DIR)):
+        raise HTTPException(status_code=403, detail="Access denied")
+
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Report not found")
 

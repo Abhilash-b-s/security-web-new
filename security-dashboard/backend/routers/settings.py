@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from models import RegistryCredential, GitConfig, RegistryDeleteResponse, ErrorResponse
+from models import (RegistryCredential, GitConfig, RegistryDeleteResponse, ErrorResponse,
+                     RegistryCredentialResponse, GitConfigResponse)
 from typing import List
 import json
 import os
@@ -23,7 +24,7 @@ def save_registries(registries):
 
 @router.get(
     "/registries",
-    response_model=List[RegistryCredential],
+    response_model=List[RegistryCredentialResponse],
     summary="List Container Registries",
     description="""
     Retrieve all configured container registry credentials.
@@ -51,11 +52,12 @@ def save_registries(registries):
 async def get_registries():
     """Get all configured container registry credentials."""
     registries = load_registries()
-    return registries
+    # Return without passwords
+    return [{"id": r.get("id"), "url": r.get("url"), "username": r.get("username")} for r in registries]
 
 @router.post(
     "/registries",
-    response_model=RegistryCredential,
+    response_model=RegistryCredentialResponse,
     summary="Add Container Registry",
     description="""
     Add a new container registry credential.
@@ -91,7 +93,8 @@ async def add_registry(credential: RegistryCredential):
     reg_dict = credential.dict()
     registries.append(reg_dict)
     save_registries(registries)
-    return credential
+    # Return without password
+    return {"id": credential.id, "url": credential.url, "username": credential.username}
 
 @router.delete(
     "/registries/{reg_id}",
@@ -129,7 +132,7 @@ async def delete_registry(reg_id: str):
 
 @router.put(
     "/registries/{reg_id}",
-    response_model=RegistryCredential,
+    response_model=RegistryCredentialResponse,
     summary="Update Container Registry",
     description="""
     Update an existing container registry credential.
@@ -179,7 +182,8 @@ async def update_registry(reg_id: str, credential: RegistryCredential):
     registries[index] = updated_registry
     save_registries(registries)
 
-    return updated_registry
+    # Return without password
+    return {"id": reg_id, "url": credential.url, "username": credential.username}
 
 GIT_CONFIG_FILE = "git_config.json"
 
@@ -199,7 +203,7 @@ def save_git_config(config: GitConfig):
 
 @router.get(
     "/git-config",
-    response_model=GitConfig,
+    response_model=GitConfigResponse,
     summary="Get Git Configuration",
     description="""
     Retrieve the current Git repository scanning configuration.
@@ -225,11 +229,13 @@ def save_git_config(config: GitConfig):
 )
 async def get_git_config():
     """Get the current Git repository configuration."""
-    return load_git_config()
+    config = load_git_config()
+    # Return without token
+    return {"username": config.username, "repos": config.repos}
 
 @router.post(
     "/git-config",
-    response_model=GitConfig,
+    response_model=GitConfigResponse,
     summary="Update Git Configuration",
     description="""
     Update the Git repository scanning configuration.
@@ -268,4 +274,5 @@ async def get_git_config():
 async def update_git_config(config: GitConfig):
     """Update the Git repository scanning configuration."""
     save_git_config(config)
-    return config
+    # Return without token
+    return {"username": config.username, "repos": config.repos}
