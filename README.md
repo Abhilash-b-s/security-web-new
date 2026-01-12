@@ -69,37 +69,6 @@ The dashboard integrates the following security tools:
 
 ## Architecture
 
-### System Components
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Security Dashboard                       │
-├─────────────────────────────────────────────────────────────┤
-│  Frontend (React + Vite)                                     │
-│  ├── Dashboard                                               │
-│  ├── Scan Control                                            │
-│  ├── Report Viewer                                           │
-│  ├── Settings                                                │
-│  ├── Event Logs                                              │
-│  └── Web Terminal                                            │
-├─────────────────────────────────────────────────────────────┤
-│  Backend (FastAPI)                                           │
-│  ├── REST API (:8000)                                        │
-│  ├── WebSocket Server (real-time)                           │
-│  ├── Scan Orchestration                                     │
-│  └── Report Management                                       │
-├─────────────────────────────────────────────────────────────┤
-│  Security Tools Layer                                        │
-│  ├── Trivy (image/repo/cluster/sbom)                       │
-│  ├── Kube-Bench (CIS benchmarks)                           │
-│  ├── Kyverno CLI (policy validation)                       │
-│  ├── Nmap (network scanning)                               │
-│  └── Kubectl (cluster access)                              │
-├─────────────────────────────────────────────────────────────┤
-│  Report Server (Static HTTP :8081)                          │
-└─────────────────────────────────────────────────────────────┘
-```
-
 ### Directory Structure
 
 ```
@@ -201,51 +170,23 @@ The project provides an automated script to build, push, and deploy to Kubernete
    kubectl apply -f k8s/dashboard.yaml
    ```
 
-4. **Verify deployment**:
+4. **Access the dashboard**:
+   ```bash
+   # Get the NodePort assigned to the service
+   kubectl get svc -n security-ops
+
+   # Access the dashboard at:
+   # http://<node-ip>:<node-port>
+   # For Minikube: minikube service security-dashboard -n security-ops --url
+   ```
+
+5. **Verify deployment**:
    ```bash
    kubectl get pods -n security-ops
    kubectl logs -f deployment/security-dashboard -n security-ops
    ```
 
-#### Option 3: Local Development
-
-For local development without Docker:
-
-1. **Start all services**:
-   ```bash
-   chmod +x start-app.sh
-   ./start-app.sh
-   ```
-
-   This will start:
-   - Backend API on `http://localhost:8000`
-   - Report server on `http://localhost:8081`
-   - Frontend dev server on `http://localhost:5173`
-
-2. **Manual setup** (if script fails):
-
-   **Backend**:
-   ```bash
-   cd security-dashboard/backend
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-   ```
-
-   **Frontend**:
-   ```bash
-   cd security-dashboard/frontend
-   npm install
-   npm run dev
-   ```
-
-   **Report Server**:
-   ```bash
-   python3 -m http.server 8081 --directory ./new
-   ```
-
-### Docker Deployment
+#### Option 3: Docker Deployment
 
 Run as a standalone container:
 
