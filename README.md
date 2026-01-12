@@ -5,6 +5,8 @@ The Security Dashboard is a comprehensive, containerized security management pla
 
 This platform enables security teams, DevOps engineers, and developers to perform continuous security assessments, track compliance, and remediate vulnerabilities efficiently.
 
+<img width="2752" height="1536" alt="image" src="https://github.com/user-attachments/assets/3be9a86a-8e65-4ec4-9006-3af96ad865a5" />
+
 ## Key Features
 
 ### 🛡️ Unified Security Operations
