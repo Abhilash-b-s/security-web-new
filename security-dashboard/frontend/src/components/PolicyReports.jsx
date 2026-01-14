@@ -593,7 +593,7 @@ export default function PolicyReports() {
       WARN: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
       PASS: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-400/10 border-green-300 dark:border-green-400/20',
       SKIP: 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-400/10 border-slate-300 dark:border-slate-400/20',
-      CRITICAL: 'text-red-700 dark:text-red-500 bg-red-50 dark:bg-red-500/10 border-red-300 dark:border-red-500/20',
+      CRITICAL: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-300 dark:border-red-400/20',
       HIGH: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-400/10 border-orange-300 dark:border-orange-400/20',
       MEDIUM: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
       LOW: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 border-blue-300 dark:border-blue-400/20',

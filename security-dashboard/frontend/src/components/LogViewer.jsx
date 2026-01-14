@@ -68,28 +68,34 @@ export default function LogViewer({ logs }) {
                         <p>Waiting for scan initialization...</p>
                     </div>
                 ) : (
-                    logs.map((log, i) => (
-                        <div key={i} className="flex group hover:bg-slate-50 dark:hover:bg-[#2a2d2e]">
+                    logs.map((log, i) => {
+                        // Replace tabs with 2 spaces for better wrapping
+                        const processedLog = log.replace(/\t/g, '  ');
+                        return (
+                        <div key={i} className="flex group hover:bg-slate-50/50 dark:hover:bg-white/5">
                             {/* Line Number */}
                             <span className="w-8 text-right text-slate-400 dark:text-gray-600 select-none mr-4 text-xs pt-[2px] opacity-50 group-hover:opacity-100">
                                 {i + 1}
                             </span>
                             {/* Log Content */}
-                            <div className="flex-1 break-all whitespace-pre-wrap">
-                                {log.startsWith('$') ? (
-                                    <span className="text-amber-700 dark:text-amber-400 font-bold">{log}</span>
-                                ) : log.startsWith('Error') || log.includes('Failed') ? (
-                                    <span className="text-red-700 dark:text-red-400">{log}</span>
-                                ) : log.includes('---') ? (
-                                    <span className="text-azure-700 dark:text-azure-400 font-semibold border-b border-azure-200 dark:border-azure-900/50 pb-1 mb-1 block mt-2">{log}</span>
-                                ) : log.includes('SUCCESS') ? (
-                                    <span className="text-green-700 dark:text-green-400">{log}</span>
+                            <div className="flex-1 overflow-hidden" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                                {processedLog.startsWith('$') ? (
+                                    <span className="text-amber-700 dark:text-amber-400 font-bold">{processedLog}</span>
+                                ) : processedLog.startsWith('Error') || processedLog.includes('Failed') ? (
+                                    <span className="text-red-700 dark:text-red-400">{processedLog}</span>
+                                ) : processedLog.includes('===') || processedLog.includes('---') ? (
+                                    <span className="text-azure-700 dark:text-azure-400 font-semibold">{processedLog}</span>
+                                ) : processedLog.includes('SUCCESS') || processedLog.includes('✓') ? (
+                                    <span className="text-green-700 dark:text-green-400">{processedLog}</span>
+                                ) : processedLog.includes('⚠') || processedLog.includes('WARN') ? (
+                                    <span className="text-yellow-700 dark:text-yellow-400">{processedLog}</span>
                                 ) : (
-                                    <span className="text-slate-700 dark:text-[#d4d4d4]">{log}</span>
+                                    <span className="text-slate-700 dark:text-[#d4d4d4]">{processedLog}</span>
                                 )}
                             </div>
                         </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </div>

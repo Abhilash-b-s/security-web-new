@@ -32,7 +32,7 @@ for f in files:
         print(f'  - {f} (error reading name)')
 "
 
-echo "Running Kyverno scan (this may take a moment)..."
+echo "Analyzing cluster resources against security policies..."
 # Run kyverno apply
 # Note: We capture stdout to the file, but let stderr go to console for progress/warnings
 kyverno apply "$KYVERNO_POLICY_DIR" --resource ./all-resources.yaml --policy-report > policy-report.yaml 2>&1 || true
@@ -41,10 +41,10 @@ kyverno apply "$KYVERNO_POLICY_DIR" --resource ./all-resources.yaml --policy-rep
 # tail -n +6 policy-report.yaml > policy-report.clean.yaml
 # mv policy-report.clean.yaml policy-report.yaml
 
-echo "Validating YAML..."
-python3 -c "import yaml; yaml.safe_load(open('policy-report.yaml'))" && echo "Valid YAML"
+echo "Verifying policy compliance report..."
+python3 -c "import yaml; yaml.safe_load(open('policy-report.yaml'))" && echo "Policy report validated successfully"
 
-echo "Converting to JSON and deduplicating..."
+echo "Processing compliance violations and warnings..."
 cat policy-report.yaml | python3 "$SCRIPT_DIR/kyverno_yaml_to_json_dedup.py" > kyverno.json
 
 echo "Generating Excel report..."

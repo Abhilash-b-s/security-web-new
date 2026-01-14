@@ -58,7 +58,7 @@ async def handle_websocket(websocket: WebSocket, scan_id: str):
 async def _run_command(command: list, scan_id: str, accum_output: list, cwd: str = None, env: dict = None):
     cmd_str = " ".join(command)
     # await manager.broadcast(f"\n$ {cmd_str}\n", scan_id)
-    
+
     try:
         process = await asyncio.create_subprocess_exec(
             *command,
@@ -69,14 +69,29 @@ async def _run_command(command: list, scan_id: str, accum_output: list, cwd: str
             stderr=asyncio.subprocess.STDOUT
         )
 
+        # Read line by line for smoother output
+        buffer = ""
         while True:
-            # Read chunks instead of lines to support incremental progress dots
-            data = await process.stdout.read(4096)
+            # Read larger chunks to get complete lines (1KB instead of 128 bytes)
+            data = await process.stdout.read(1024)
             if not data:
                 break
+
             text = data.decode('utf-8', errors='replace')
-            await manager.broadcast(text, scan_id)
-            accum_output.append(text)
+            buffer += text
+
+            # Send complete lines immediately
+            while '\n' in buffer:
+                line, buffer = buffer.split('\n', 1)
+                # Only send non-empty lines
+                if line.strip():
+                    await manager.broadcast(line + '\n', scan_id)
+                    accum_output.append(line + '\n')
+
+        # Send any remaining data
+        if buffer.strip():
+            await manager.broadcast(buffer, scan_id)
+            accum_output.append(buffer)
 
         await process.wait()
         return process.returncode

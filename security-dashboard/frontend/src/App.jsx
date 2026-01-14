@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ShieldCheck, Lock, LogOut } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { LogOut } from 'lucide-react';
 import Login from './components/Login';
 import ScanControl from './components/ScanControl';
 import LogViewer from './components/LogViewer';
@@ -7,6 +7,7 @@ import ReportViewer from './components/ReportViewer';
 import WebTerminal from './components/WebTerminal';
 import PolicyReports from './components/PolicyReports';
 import Settings from './components/Settings';
+import DashboardCharts from './components/DashboardCharts';
 import { ShieldAlert, LayoutDashboard, FileText, Terminal, FileCheck, Settings as SettingsIcon } from 'lucide-react';
 
 function App() {
@@ -147,21 +148,24 @@ function App() {
                     ws.close();
                     setIsScanning(false);
                 } else {
-                    // Append message, combining progress dots with previous line
-                    setLogs(prev => {
-                        if (prev.length === 0) return [message];
-                        const lastIndex = prev.length - 1;
-                        const lastLog = prev[lastIndex];
+                    // Handle messages that may contain newlines or partial lines
+                    // Remove only the trailing newline, preserve internal structure
+                    const cleanMessage = message.replace(/\n$/, '');
 
-                        // If message is dots or continuation, append to last line
-                        if (message.startsWith('.') || (lastLog && !lastLog.endsWith('\n') && message.length < 50)) {
-                            if (message.match(/^\.+$/)) {
-                                const newLogs = [...prev];
-                                newLogs[lastIndex] = lastLog + message;
-                                return newLogs;
+                    // Skip empty messages
+                    if (!cleanMessage.trim()) return;
+
+                    // Split on newlines to handle multi-line messages properly
+                    const lines = cleanMessage.split('\n');
+
+                    setLogs(prev => {
+                        const newLogs = [...prev];
+                        lines.forEach(line => {
+                            if (line.trim()) {
+                                newLogs.push(line);
                             }
-                        }
-                        return [...prev, message];
+                        });
+                        return newLogs;
                     });
                 }
             };
@@ -194,15 +198,26 @@ function App() {
             {/* Header */}
             <header className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-4 py-3 shadow-base dark:shadow-md transition-colors duration-200">
                 <div className="flex items-center justify-between px-0">
-                    <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => {
+                            setActiveTab('dashboard');
+                            setLogs([]);
+                            setIsScanning(false);
+                        }}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                    >
                         <ShieldAlert className="w-8 h-8 text-azure-600 dark:text-azure-500" />
                         <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">DevSecOps Dashboard</span>
-                    </div>
+                    </button>
                     <nav className="flex gap-3 items-center">
                         {user.role === 'superuser' && (
                             <>
                                 <button
-                                    onClick={() => setActiveTab('dashboard')}
+                                    onClick={() => {
+                                        setActiveTab('dashboard');
+                                        setLogs([]);
+                                        setIsScanning(false);
+                                    }}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
                                         }`}
                                 >
@@ -279,28 +294,38 @@ function App() {
             </header >
 
             {/* Main Content */}
-            < main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : 'p-6'}`
+            < main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : ''}`
             }>
                 {activeTab === 'dashboard' ? (
-                    <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
-                        {/* Left Sidebar: Scan Controls & Status */}
-                        <div className="w-full lg:w-72 flex-shrink-0 flex flex-col gap-6">
+                    <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+                        {/* Left Sidebar: Scan Controls - Full height, no margins */}
+                        <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700">
                             <ScanControl onStartScan={startScan} isScanning={isScanning} />
                         </div>
 
-                        {/* Right Side: Terminal */}
-                        <div className="flex-1 h-full min-w-0">
-                            <LogViewer logs={logs} />
+                        {/* Right Side: Charts or Terminal */}
+                        <div className="flex-1 min-w-0 overflow-auto p-6">
+                            {!isScanning && logs.length === 0 ? (
+                                // Show charts before scan starts
+                                <DashboardCharts />
+                            ) : (
+                                // Show terminal when scan is running or has logs
+                                <div className="h-full">
+                                    <LogViewer logs={logs} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : activeTab === 'reports' ? (
-                    <ReportViewer />
+                    <div className="p-6">
+                        <ReportViewer />
+                    </div>
                 ) : activeTab === 'policy' ? (
                     <PolicyReports />
                 ) : activeTab === 'settings' ? (
                     <Settings />
                 ) : (
-                    <div className="h-full">
+                    <div className="p-6">
                         <WebTerminal />
                     </div>
                 )

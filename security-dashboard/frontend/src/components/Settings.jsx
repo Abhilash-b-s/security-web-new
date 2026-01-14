@@ -166,38 +166,38 @@ export default function Settings() {
     const baseButtonClasses = 'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ';
 
     return (
-        <div className="flex h-full bg-gradient-light dark:bg-gray-900 text-slate-900 dark:text-white overflow-hidden transition-colors duration-200">
-            {/* Left Sidebar */}
-            <div className="w-64 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 flex flex-col transition-colors duration-200">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden h-full">
+            {/* Left Sidebar - Full height, extends to left margin */}
+            <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 flex flex-col">
                 <div className="p-6 border-b border-slate-200 dark:border-gray-700">
-                    <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
-                        <div className="p-1.5 bg-gradient-blue rounded-lg">
+                    <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+                        <div className="p-2 bg-gradient-blue rounded-lg">
                             <SettingsIcon className="w-5 h-5 text-azure-600" />
                         </div>
                         Settings
                     </h2>
                 </div>
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 flex flex-col overflow-y-auto bg-white dark:bg-gray-800">
                     {navItems.map((item) => (
                         <button
                             key={item.id}
                             onClick={() => setActiveSection(item.id)}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-all w-full text-left ${activeSection === item.id
-                                ? 'bg-blue-50 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/50 shadow-lg shadow-blue-500/10 dark:shadow-blue-500/20'
-                                : 'bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-600/40 hover:border-blue-400 dark:hover:border-blue-400 hover:shadow-md hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20'
+                            className={`flex items-center gap-3 py-3 px-6 border-b border-slate-200 dark:border-gray-700 transition-all duration-200 w-full font-medium text-sm transform ${activeSection === item.id
+                                ? 'bg-azure-50 dark:bg-azure-600/10 text-azure-800 dark:text-azure-100 border-l-4 border-l-azure-500'
+                                : 'bg-white dark:bg-gray-800 hover:bg-azure-50 dark:hover:bg-azure-600/10 text-slate-900 dark:text-gray-200 hover:text-azure-800 dark:hover:text-azure-100 hover:border-l-4 hover:border-l-azure-500 hover:shadow-lg hover:shadow-azure-500/20 hover:scale-[1.01] hover:-translate-x-1'
                                 }`}
                         >
-                            <div className={`p-1.5 rounded-md ${activeSection === item.id ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-blue-400'}`}>
+                            <div className={`p-2 rounded-lg transition-all duration-200 ${activeSection === item.id ? 'bg-azure-100 dark:bg-azure-500/20 text-azure-700 dark:text-azure-400' : 'bg-slate-100 dark:bg-gray-700 text-azure-700 dark:text-azure-400'}`}>
                                 {item.icon}
                             </div>
-                            <span className="font-medium text-sm">{item.label}</span>
+                            <span>{item.label}</span>
                         </button>
                     ))}
                 </nav>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-8 transition-colors duration-200">
+            <div className="flex-1 min-w-0 overflow-auto bg-gray-50 dark:bg-gray-900 p-6 transition-colors duration-200">
                 <div className="max-w-4xl mx-auto space-y-8">
 
                     {/* Render Content Based on Active Section */}

@@ -14,8 +14,8 @@ echo "   - Using local nmap installation."
 
 echo "2. Discovering Cluster Services"
 cd "$OUTPUT_DIR/nmap"
-bash "$PPWD/scripts/nmap_services.sh" 2>&1 | sed 's/^/     /' || true
+bash "$PPWD/scripts/nmap_services.sh" 2>&1 || true
 
 echo "3. Executing Nmap Scans"
-bash "$PPWD/scripts/nmap_scan_from_pod.sh" | sed 's/^/     /' || true
-echo "   - Nmap reports saved to: $OUTPUT_DIR/nmap/"
+bash "$PPWD/scripts/nmap_scan_from_pod.sh" || true
+echo "Nmap reports saved to: $OUTPUT_DIR/nmap/"

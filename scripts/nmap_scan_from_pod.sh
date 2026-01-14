@@ -24,6 +24,10 @@ fi
 echo "[" > "$OUTPUT_FILE"
 first_entry=true
 
+echo "-"
+echo "Nmap SSL/TLS Cipher Suite Scanner"
+echo
+
 # helper: extract TLS cipher lines, cleaned
 parse_ciphers_lines() {
   local raw="$1"
@@ -37,45 +41,68 @@ scan_service() {
   local port="$3"
 
   echo
-  echo "================================================================================================"
-  echo "• Scanning: $fqdn:$port"
-  echo "================================================================================================"
-  echo
+  echo "========================================================================"
+  echo "Scanning: $fqdn:$port (namespace: $ns)"
 
-  # run nmap and capture output; show it live to terminal
-  # use a temp file so we can both stream and parse reliably
+  # run nmap and capture output silently for parsing
   tmp=$(mktemp)
-  # run with host-timeout and low retries to avoid long hangs
   ( set +e
-    nmap -sV --script ssl-enum-ciphers -p "$port" "$fqdn" --host-timeout "$HOST_TIMEOUT" --max-retries "$MAX_RETRIES" 2>&1 | tee "$tmp"
+    nmap -sV --script ssl-enum-ciphers -p "$port" "$fqdn" --host-timeout "$HOST_TIMEOUT" --max-retries "$MAX_RETRIES" > "$tmp" 2>&1
   )
   raw_output=$(cat "$tmp")
 
+  # Parse host status and service info
+  local host_ip=$(echo "$raw_output" | grep -oP 'Nmap scan report for .* \(\K[0-9.]+(?=\))' | head -1)
+  local service_info=$(echo "$raw_output" | grep -oP '^\d+/tcp\s+\w+\s+\K.*' | head -1)
+  local host_status="Unknown"
+
   # If nmap reports "0 hosts up" or "Host seems down", treat as unreachable
   if printf '%s\n' "$raw_output" | grep -q -E "0 hosts up|Host seems down|All 0 scanned ports on"; then
-    echo "[!] $fqdn appears down or not reachable on port $port (nmap reported host down / no ports up)."
+    host_status="Down/Unreachable"
+    echo "  Status: ✗ Host appears down or unreachable"
     accepted_json='[]'
     weak_json='[]'
     safe_json='[]'
   else
+    host_status="Up"
+    # Show brief status
+    if [ -n "$host_ip" ]; then
+      echo "  Status: ✓ Host is up (IP: $host_ip)"
+    else
+      echo "  Status: ✓ Host is up"
+    fi
+
+    # Show service info if available
+    if [ -n "$service_info" ]; then
+      echo "  Service: $service_info"
+    fi
+
     # Extract accepted cipher lines (may be empty)
     mapfile -t cipher_lines < <(parse_ciphers_lines "$raw_output")
 
     if [ "${#cipher_lines[@]}" -eq 0 ]; then
-      # no TLS ciphers reported (port not TLS or nmap didn't find any) -> empty arrays
+      echo "  SSL/TLS: No TLS ciphers detected (non-TLS service or closed port)"
       accepted_json='[]'
       weak_json='[]'
       safe_json='[]'
     else
       # Build accepted JSON array
-      # Use jq to safely create JSON arrays from lines
       accepted_json=$(printf '%s\n' "${cipher_lines[@]}" | jq -R -s 'split("\n")[:-1]')
-
-      # weak: those matching legacy patterns
       weak_json=$(printf '%s\n' "${cipher_lines[@]}" | jq -R -s 'split("\n")[:-1] | map(select(test("cbc|rc4|3des|des|null|export|md5"; "i")))')
-
-      # safe: accepted minus weak
       safe_json=$(printf '%s\n' "${cipher_lines[@]}" | jq -R -s 'split("\n")[:-1] | map(select(test("cbc|rc4|3des|des|null|export|md5"; "i") | not))')
+
+      # Count ciphers
+      local total_ciphers="${#cipher_lines[@]}"
+      local weak_count=$(echo "$weak_json" | jq 'length')
+      local safe_count=$(echo "$safe_json" | jq 'length')
+
+      echo "  SSL/TLS: Found $total_ciphers cipher(s) - Safe: $safe_count, Weak: $weak_count"
+
+      # Show weak ciphers if any
+      if [ "$weak_count" -gt 0 ]; then
+        echo "  ⚠ Weak ciphers detected:"
+        echo "$weak_json" | jq -r '.[]' | sed 's/^/    - /'
+      fi
     fi
   fi
 
@@ -98,9 +125,8 @@ scan_service() {
     --argjson safe "$safe_json" \
     '{namespace: $ns, fqdn: $fqdn, port: ($port | tonumber), accepted_ciphers: $accepted, weak_ciphers: $weak, safe_ciphers: $safe}' >> "$OUTPUT_FILE"
 
+  echo "  ✓ Scan completed for $fqdn:$port"
   echo
-  echo "✔ Finished: $fqdn:$port"
-  echo "-----------------------------------------------------------------"
 }
 
 # read input file lines
@@ -124,4 +150,7 @@ done < "$INPUT_FILE"
 echo "]" >> "$OUTPUT_FILE"
 
 echo
-echo "[*] All scans complete. JSON output saved to: $OUTPUT_FILE"
+echo "========================================================================"
+echo "  All scans complete!"
+echo "  Report saved to: $OUTPUT_FILE"
+echo "========================================================================"
