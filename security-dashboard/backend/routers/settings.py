@@ -193,13 +193,18 @@ def load_git_config():
     try:
         with open(GIT_CONFIG_FILE, "r") as f:
             data = json.load(f)
-            return GitConfig(**data)
-    except json.JSONDecodeError:
+            return GitConfig(
+                username=data.get("username", ""),
+                token=data.get("token", ""),
+                repos=data.get("repos", "")
+            )
+    except Exception:
         return GitConfig(username="", token="", repos="")
 
 def save_git_config(config: GitConfig):
+    data = {"username": config.username, "token": config.token, "repos": config.repos}
     with open(GIT_CONFIG_FILE, "w") as f:
-        json.dump(config.dict(), f, indent=2)
+        json.dump(data, f, indent=2)
 
 @router.get(
     "/git-config",

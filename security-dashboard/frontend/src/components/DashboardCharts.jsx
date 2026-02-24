@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Shield, AlertTriangle, Package, Globe, Image as ImageIcon } from 'lucide-react';
+import { Shield, AlertTriangle, Package, Globe, Image as ImageIcon, ShieldOff, Play } from 'lucide-react';
 
 const COLORS = {
     CRITICAL: '#DC2626',
@@ -15,7 +15,43 @@ const COLORS = {
     SKIP: '#6B7280'
 };
 
+// Light vs dark chart theme tokens
+const CHART_THEME = {
+    light: {
+        grid: '#E5E7EB',
+        axis: '#6B7280',
+        tooltipBg: 'rgba(255,255,255,0.98)',
+        tooltipBorder: '#D1D5DB',
+        tooltipText: '#111827',
+        pieLabel: '#374151',
+    },
+    dark: {
+        grid: '#374151',
+        axis: '#9CA3AF',
+        tooltipBg: 'rgba(31,41,55,0.98)',
+        tooltipBorder: '#374151',
+        tooltipText: '#F3F4F6',
+        pieLabel: '#E5E7EB',
+    },
+};
+
+function useIsDark() {
+    const [isDark, setIsDark] = useState(() =>
+        document.documentElement.classList.contains('dark')
+    );
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setIsDark(document.documentElement.classList.contains('dark'));
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
+    return isDark;
+}
+
 export default function DashboardCharts() {
+    const isDark = useIsDark();
+    const theme = isDark ? CHART_THEME.dark : CHART_THEME.light;
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [dashboardData, setDashboardData] = useState({
@@ -105,6 +141,38 @@ export default function DashboardCharts() {
         );
     }
 
+    const hasAnyData = Object.values(dashboardData).some(v => v.available === true);
+
+    if (!hasAnyData) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full min-h-[480px] text-center px-6">
+                <div className="p-5 bg-slate-100 dark:bg-gray-800 rounded-2xl mb-5 border border-slate-200 dark:border-gray-700">
+                    <ShieldOff className="w-12 h-12 text-slate-400 dark:text-gray-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">No scan data yet</h2>
+                <p className="text-sm text-slate-500 dark:text-gray-400 max-w-xs mb-6 leading-relaxed">
+                    Run your first scan from the sidebar to see security insights, vulnerability breakdowns, and compliance status here.
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-400 dark:text-gray-500 max-w-sm w-full">
+                    {[
+                        { label: 'Image Vulnerabilities', hint: 'Container CVE scan' },
+                        { label: 'Policy Compliance', hint: 'Kyverno policies' },
+                        { label: 'CIS Benchmarks', hint: 'Cluster hardening' },
+                        { label: 'Network Security', hint: 'Port & cipher scan' },
+                    ].map(item => (
+                        <div key={item.label} className="flex items-center gap-2 bg-slate-50 dark:bg-gray-800/60 border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-left">
+                            <Play className="w-3 h-3 text-azure-500 flex-shrink-0" />
+                            <div>
+                                <div className="font-medium text-slate-600 dark:text-gray-300">{item.label}</div>
+                                <div className="text-slate-400 dark:text-gray-500">{item.hint}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
     // Prepare data for charts
     const kyvernoPieData = Object.entries(dashboardData.kyverno.counts)
         .filter(([_, value]) => value > 0)
@@ -189,18 +257,18 @@ export default function DashboardCharts() {
                             WARN: dashboardData.kyverno.counts.WARN || 0,
                             PASS: dashboardData.kyverno.counts.PASS || 0,
                         }]} margin={{ left: -30, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="name" stroke="#9CA3AF" hide />
-                            <YAxis stroke="#9CA3AF" />
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
+                            <XAxis dataKey="name" stroke={theme.axis} hide />
+                            <YAxis stroke={theme.axis} />
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
+                                    backgroundColor: theme.tooltipBg,
+                                    border: `1px solid ${theme.tooltipBorder}`,
                                     borderRadius: '8px',
-                                    color: '#F3F4F6'
+                                    color: theme.tooltipText
                                 }}
-                                labelStyle={{ color: '#F3F4F6' }}
-                                itemStyle={{ color: '#F3F4F6' }}
+                                labelStyle={{ color: theme.tooltipText }}
+                                itemStyle={{ color: theme.tooltipText }}
                             />
                             <Legend
                                 wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
@@ -228,18 +296,18 @@ export default function DashboardCharts() {
                             MEDIUM: dashboardData.trivyImage.counts.MEDIUM || 0,
                             LOW: dashboardData.trivyImage.counts.LOW || 0,
                         }]} margin={{ left: -30, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="name" stroke="#9CA3AF" hide />
-                            <YAxis stroke="#9CA3AF" />
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
+                            <XAxis dataKey="name" stroke={theme.axis} hide />
+                            <YAxis stroke={theme.axis} />
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
+                                    backgroundColor: theme.tooltipBg,
+                                    border: `1px solid ${theme.tooltipBorder}`,
                                     borderRadius: '8px',
-                                    color: '#F3F4F6'
+                                    color: theme.tooltipText
                                 }}
-                                labelStyle={{ color: '#F3F4F6' }}
-                                itemStyle={{ color: '#F3F4F6' }}
+                                labelStyle={{ color: theme.tooltipText }}
+                                itemStyle={{ color: theme.tooltipText }}
                             />
                             <Legend
                                 wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
@@ -268,18 +336,18 @@ export default function DashboardCharts() {
                             MEDIUM: dashboardData.trivySbom.counts.MEDIUM || 0,
                             LOW: dashboardData.trivySbom.counts.LOW || 0,
                         }]} margin={{ left: -30, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="name" stroke="#9CA3AF" hide />
-                            <YAxis stroke="#9CA3AF" />
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
+                            <XAxis dataKey="name" stroke={theme.axis} hide />
+                            <YAxis stroke={theme.axis} />
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
+                                    backgroundColor: theme.tooltipBg,
+                                    border: `1px solid ${theme.tooltipBorder}`,
                                     borderRadius: '8px',
-                                    color: '#F3F4F6'
+                                    color: theme.tooltipText
                                 }}
-                                labelStyle={{ color: '#F3F4F6' }}
-                                itemStyle={{ color: '#F3F4F6' }}
+                                labelStyle={{ color: theme.tooltipText }}
+                                itemStyle={{ color: theme.tooltipText }}
                             />
                             <Legend
                                 wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
@@ -306,18 +374,18 @@ export default function DashboardCharts() {
                             'With Weak Ciphers': dashboardData.nmap.servicesWithWeakCiphers || 0,
                             'Secure': (dashboardData.nmap.total || 0) - (dashboardData.nmap.servicesWithWeakCiphers || 0),
                         }]} margin={{ left: -30, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="name" stroke="#9CA3AF" hide />
-                            <YAxis stroke="#9CA3AF" />
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme.grid} />
+                            <XAxis dataKey="name" stroke={theme.axis} hide />
+                            <YAxis stroke={theme.axis} />
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
+                                    backgroundColor: theme.tooltipBg,
+                                    border: `1px solid ${theme.tooltipBorder}`,
                                     borderRadius: '8px',
-                                    color: '#F3F4F6'
+                                    color: theme.tooltipText
                                 }}
-                                labelStyle={{ color: '#F3F4F6' }}
-                                itemStyle={{ color: '#F3F4F6' }}
+                                labelStyle={{ color: theme.tooltipText }}
+                                itemStyle={{ color: theme.tooltipText }}
                             />
                             <Legend
                                 wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
@@ -362,7 +430,7 @@ export default function DashboardCharts() {
                                     dataKey="value"
                                     paddingAngle={4}
                                     labelLine={{
-                                        stroke: '#9CA3AF',
+                                        stroke: theme.axis,
                                         strokeWidth: 1.5
                                     }}
                                     label={({ cx, cy, midAngle, outerRadius, percent, name }) => {
@@ -374,10 +442,9 @@ export default function DashboardCharts() {
                                             <text
                                                 x={x}
                                                 y={y}
-                                                fill="#1F2937"
+                                                fill={theme.pieLabel}
                                                 textAnchor={x > cx ? 'start' : 'end'}
                                                 dominantBaseline="central"
-                                                className="dark:fill-gray-200"
                                                 style={{ fontSize: '13px', fontWeight: '500', fontFamily: 'system-ui, -apple-system, sans-serif' }}
                                             >
                                                 {`${name} ${(percent * 100).toFixed(0)}%`}
@@ -398,16 +465,16 @@ export default function DashboardCharts() {
                                 </Pie>
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: 'rgba(31, 41, 55, 0.98)',
-                                        border: '2px solid #374151',
+                                        backgroundColor: theme.tooltipBg,
+                                        border: `2px solid ${theme.tooltipBorder}`,
                                         borderRadius: '10px',
                                         padding: '10px 14px',
-                                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                                        color: '#F3F4F6',
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                        color: theme.tooltipText,
                                         fontFamily: 'system-ui, -apple-system, sans-serif'
                                     }}
-                                    labelStyle={{ color: '#F3F4F6', fontWeight: '600' }}
-                                    itemStyle={{ color: '#F3F4F6', fontWeight: '400' }}
+                                    labelStyle={{ color: theme.tooltipText, fontWeight: '600' }}
+                                    itemStyle={{ color: theme.tooltipText, fontWeight: '400' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
@@ -443,7 +510,7 @@ export default function DashboardCharts() {
                                     dataKey="value"
                                     paddingAngle={4}
                                     labelLine={{
-                                        stroke: '#9CA3AF',
+                                        stroke: theme.axis,
                                         strokeWidth: 1.5
                                     }}
                                     label={({ cx, cy, midAngle, outerRadius, percent, name }) => {
@@ -455,10 +522,9 @@ export default function DashboardCharts() {
                                             <text
                                                 x={x}
                                                 y={y}
-                                                fill="#1F2937"
+                                                fill={theme.pieLabel}
                                                 textAnchor={x > cx ? 'start' : 'end'}
                                                 dominantBaseline="central"
-                                                className="dark:fill-gray-200"
                                                 style={{ fontSize: '13px', fontWeight: '500', fontFamily: 'system-ui, -apple-system, sans-serif' }}
                                             >
                                                 {`${name} ${(percent * 100).toFixed(0)}%`}
@@ -479,16 +545,16 @@ export default function DashboardCharts() {
                                 </Pie>
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: 'rgba(31, 41, 55, 0.98)',
-                                        border: '2px solid #374151',
+                                        backgroundColor: theme.tooltipBg,
+                                        border: `2px solid ${theme.tooltipBorder}`,
                                         borderRadius: '10px',
                                         padding: '10px 14px',
-                                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                                        color: '#F3F4F6',
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                        color: theme.tooltipText,
                                         fontFamily: 'system-ui, -apple-system, sans-serif'
                                     }}
-                                    labelStyle={{ color: '#F3F4F6', fontWeight: '600' }}
-                                    itemStyle={{ color: '#F3F4F6', fontWeight: '400' }}
+                                    labelStyle={{ color: theme.tooltipText, fontWeight: '600' }}
+                                    itemStyle={{ color: theme.tooltipText, fontWeight: '400' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
@@ -523,7 +589,7 @@ export default function DashboardCharts() {
                                     dataKey="value"
                                     paddingAngle={4}
                                     labelLine={{
-                                        stroke: '#9CA3AF',
+                                        stroke: theme.axis,
                                         strokeWidth: 1.5
                                     }}
                                     label={({ cx, cy, midAngle, outerRadius, percent, name }) => {
@@ -535,10 +601,9 @@ export default function DashboardCharts() {
                                             <text
                                                 x={x}
                                                 y={y}
-                                                fill="#1F2937"
+                                                fill={theme.pieLabel}
                                                 textAnchor={x > cx ? 'start' : 'end'}
                                                 dominantBaseline="central"
-                                                className="dark:fill-gray-200"
                                                 style={{ fontSize: '13px', fontWeight: '500', fontFamily: 'system-ui, -apple-system, sans-serif' }}
                                             >
                                                 {`${name} ${(percent * 100).toFixed(0)}%`}
@@ -559,16 +624,16 @@ export default function DashboardCharts() {
                                 </Pie>
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: 'rgba(31, 41, 55, 0.98)',
-                                        border: '2px solid #374151',
+                                        backgroundColor: theme.tooltipBg,
+                                        border: `2px solid ${theme.tooltipBorder}`,
                                         borderRadius: '10px',
                                         padding: '10px 14px',
-                                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                                        color: '#F3F4F6',
+                                        boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                        color: theme.tooltipText,
                                         fontFamily: 'system-ui, -apple-system, sans-serif'
                                     }}
-                                    labelStyle={{ color: '#F3F4F6', fontWeight: '600' }}
-                                    itemStyle={{ color: '#F3F4F6', fontWeight: '400' }}
+                                    labelStyle={{ color: theme.tooltipText, fontWeight: '600' }}
+                                    itemStyle={{ color: theme.tooltipText, fontWeight: '400' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>

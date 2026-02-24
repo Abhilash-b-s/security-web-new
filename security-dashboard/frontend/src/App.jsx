@@ -27,6 +27,7 @@ function App() {
     });
     const [logs, setLogs] = useState([]);
     const [isScanning, setIsScanning] = useState(false);
+    const [settingsSection, setSettingsSection] = useState(null);
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined' && window.localStorage) {
             return localStorage.getItem('theme') || 'dark';
@@ -299,8 +300,15 @@ function App() {
                 {activeTab === 'dashboard' ? (
                     <div className="flex-1 flex flex-col lg:flex-row min-h-0">
                         {/* Left Sidebar: Scan Controls - Full height, no margins */}
-                        <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700">
-                            <ScanControl onStartScan={startScan} isScanning={isScanning} />
+                        <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 relative z-30 h-full">
+                            <ScanControl
+                                onStartScan={startScan}
+                                isScanning={isScanning}
+                                onNavigateToSettings={(section) => {
+                                    setSettingsSection(section);
+                                    setActiveTab('settings');
+                                }}
+                            />
                         </div>
 
                         {/* Right Side: Charts or Terminal */}
@@ -323,7 +331,7 @@ function App() {
                 ) : activeTab === 'policy' ? (
                     <PolicyReports />
                 ) : activeTab === 'settings' ? (
-                    <Settings />
+                    <Settings initialSection={settingsSection} />
                 ) : (
                     <div className="p-6">
                         <WebTerminal />

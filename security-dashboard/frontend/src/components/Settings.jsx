@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Globe, Database, Settings as SettingsIcon, Edit, X } from 'lucide-react';
 
-export default function Settings() {
+export default function Settings({ initialSection = null }) {
     const [registries, setRegistries] = useState([]);
     const [activeSection, setActiveSection] = useState(null); // Default to null (no section selected)
     const [editingId, setEditingId] = useState(null);
@@ -23,6 +23,12 @@ export default function Settings() {
 
     const [gitSuccess, setGitSuccess] = useState(null);
     const [isEditingGit, setIsEditingGit] = useState(false);
+
+    useEffect(() => {
+        if (initialSection) {
+            setActiveSection(initialSection);
+        }
+    }, [initialSection]);
 
     useEffect(() => {
         if (activeSection === 'registry') {
@@ -211,7 +217,7 @@ export default function Settings() {
                     {activeSection === 'git' && (
                         <div className="space-y-6 animate-in fade-in duration-300">
                             <div>
-                                <h1 className="text-2xl font-bold mb-2">Git Configuration</h1>
+                                <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Git Configuration</h1>
                                 <p className="text-black dark:text-gray-400">Configure credentials for Git Repository scanning. The token will be used to clone private repositories.</p>
                             </div>
 
@@ -300,7 +306,7 @@ export default function Settings() {
                     {activeSection === 'registry' && (
                         <div className="space-y-6 animate-in fade-in duration-300">
                             <div>
-                                <h1 className="text-2xl font-bold mb-2">Registry Management</h1>
+                                <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Registry Management</h1>
                                 <p className="text-black dark:text-gray-400">Configure container registries for Trivy authentication. The scanner will attempt to log in to all configured registries before scanning.</p>
                             </div>
 
