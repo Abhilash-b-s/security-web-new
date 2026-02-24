@@ -233,7 +233,7 @@ export default function Settings({ initialSection = null }) {
                                                 placeholder="e.g. abhilash-armada-ai"
                                                 value={gitUsername}
                                                 onChange={(e) => setGitUsername(e.target.value)}
-                                                className={`w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             />
                                         </div>
                                         <div>
@@ -245,7 +245,7 @@ export default function Settings({ initialSection = null }) {
                                                 placeholder="Access Token"
                                                 value={gitToken}
                                                 onChange={(e) => setGitToken(e.target.value)}
-                                                className={`w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             />
                                         </div>
                                     </div>
@@ -259,7 +259,7 @@ export default function Settings({ initialSection = null }) {
                                             placeholder="https://gitlab.com/example/repo.git"
                                             value={gitRepos}
                                             onChange={(e) => setGitRepos(e.target.value)}
-                                            className={`w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-4 text-sm font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm font-mono focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         />
                                         <p className="text-xs text-black dark:text-gray-500 mt-1">Comments starting with # are ignored.</p>
                                     </div>
@@ -328,7 +328,7 @@ export default function Settings({ initialSection = null }) {
                                                     placeholder="e.g. docker.io"
                                                     value={url}
                                                     onChange={(e) => setUrl(e.target.value)}
-                                                    className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
+                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
                                                 />
                                             </div>
                                         </div>
@@ -340,7 +340,7 @@ export default function Settings({ initialSection = null }) {
                                                 placeholder="Username"
                                                 value={username}
                                                 onChange={(e) => setUsername(e.target.value)}
-                                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
+                                                className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
                                             />
                                         </div>
                                         <div>
@@ -352,7 +352,7 @@ export default function Settings({ initialSection = null }) {
                                                     placeholder="• • • • • • • •"
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
-                                                    className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
+                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
                                                 />
                                                 <button
                                                     type="button"

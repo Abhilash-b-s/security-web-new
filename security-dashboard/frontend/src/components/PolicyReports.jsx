@@ -55,6 +55,13 @@ export default function PolicyReports() {
   const [sbomSearch, setSbomSearch] = useState('');
   const [trivyRepoSearch, setTrivyRepoSearch] = useState('');
 
+  // Suppressions
+  const [suppressions, setSuppressions] = useState([]);
+  const [showSuppressed, setShowSuppressed] = useState(false);
+  const [suppressModal, setSuppressModal] = useState(null); // { cve_id, pkg, scan_type }
+  const [suppressReason, setSuppressReason] = useState('accepted-risk');
+  const [suppressNote, setSuppressNote] = useState('');
+
   // Fetch logic
   useEffect(() => {
     setError(null);
@@ -81,6 +88,14 @@ export default function PolicyReports() {
       loadImageReport(selectedImageFile);
     }
   }, [selectedImageFile]);
+
+  // Load suppressions on mount
+  useEffect(() => {
+    fetch('/api/suppressions/')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setSuppressions(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   // Load Git Repo Data when file selected
   useEffect(() => {
@@ -642,6 +657,97 @@ export default function PolicyReports() {
     );
   };
 
+  // Suppression helpers
+  const isSuppressed = (cve_id, pkg) =>
+    suppressions.some(s => s.cve_id === cve_id && s.pkg === pkg);
+
+  const addSuppression = async () => {
+    if (!suppressModal) return;
+    const body = { cve_id: suppressModal.cve_id, pkg: suppressModal.pkg, scan_type: suppressModal.scan_type, reason: suppressReason, note: suppressNote };
+    try {
+      const res = await fetch('/api/suppressions/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) {
+        const created = await res.json();
+        setSuppressions(prev => [...prev, created]);
+      }
+    } catch { /* ignore */ }
+    setSuppressModal(null);
+    setSuppressNote('');
+    setSuppressReason('accepted-risk');
+  };
+
+  const removeSuppression = async (cve_id, pkg) => {
+    const sup = suppressions.find(s => s.cve_id === cve_id && s.pkg === pkg);
+    if (!sup) return;
+    try {
+      await fetch(`/api/suppressions/${sup.id}`, { method: 'DELETE' });
+      setSuppressions(prev => prev.filter(s => s.id !== sup.id));
+    } catch { /* ignore */ }
+  };
+
+  const SuppressModal = () => {
+    if (!suppressModal) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Suppress Finding</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 font-mono">{suppressModal.cve_id}{suppressModal.pkg ? ` · ${suppressModal.pkg}` : ''}</p>
+          <div className="mb-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Reason</p>
+            <div className="flex gap-3">
+              {['accepted-risk', 'false-positive'].map(r => (
+                <label key={r} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border-2 cursor-pointer text-sm font-semibold transition-all ${suppressReason === r ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'}`}>
+                  <input type="radio" className="sr-only" value={r} checked={suppressReason === r} onChange={() => setSuppressReason(r)} />
+                  {r === 'accepted-risk' ? '✓ Accepted Risk' : '✗ False Positive'}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="mb-5">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Note <span className="normal-case font-normal">(optional)</span></p>
+            <textarea
+              value={suppressNote}
+              onChange={e => setSuppressNote(e.target.value)}
+              rows={3}
+              placeholder="Add justification or ticket reference…"
+              className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-200 dark:border-[#30363d] rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
+            />
+          </div>
+          <div className="flex gap-3 justify-end">
+            <button onClick={() => { setSuppressModal(null); setSuppressNote(''); setSuppressReason('accepted-risk'); }}
+              className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              Cancel
+            </button>
+            <button onClick={addSuppression}
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm">
+              Suppress Finding
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Remediation helpers
+  const NvdLink = ({ id }) => {
+    if (!id) return <span className="text-gray-400">—</span>;
+    const url = id.startsWith('CVE-') ? `https://nvd.nist.gov/vuln/detail/${id}` : null;
+    return url
+      ? <a href={url} target="_blank" rel="noopener noreferrer" className="font-mono text-blue-600 dark:text-blue-400 hover:underline text-xs">{id}</a>
+      : <span className="font-mono text-blue-600 dark:text-blue-300 text-xs">{id}</span>;
+  };
+
+  const FixedCell = ({ version }) => {
+    if (version && version !== 'N/A') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30">
+          ↑ {version}
+        </span>
+      );
+    }
+    return <span className="text-xs text-gray-400 dark:text-gray-600">No fix</span>;
+  };
+
   const ACCENT_BORDER = {
     FAIL: 'border-l-red-500', ERROR: 'border-l-red-500', WARN: 'border-l-yellow-500',
     PASS: 'border-l-green-500', SKIP: 'border-l-slate-400', INFO: 'border-l-slate-400',
@@ -677,6 +783,7 @@ export default function PolicyReports() {
     SKIP: 'text-slate-400', INFO: 'text-slate-400',
   };
 
+  // eslint-disable-next-line no-unused-vars
   const SeverityDistBar = ({ counts, keys }) => {
     const total = keys.reduce((s, k) => s + (counts[k] || 0), 0);
     if (!total) return null;
@@ -705,6 +812,7 @@ export default function PolicyReports() {
       </div>
     );
   };
+
 
   const FilterPill = ({ label, active, onToggle }) => {
     const activeStyle = {
@@ -761,7 +869,7 @@ export default function PolicyReports() {
               onClick={() => setActiveView(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition-all border-2 ${
                 activeView === tab.id
-                  ? 'bg-blue-600 dark:bg-blue-500 border-blue-600 dark:border-blue-500 text-white shadow-sm shadow-blue-500/30'
+                  ? 'bg-green-600 dark:bg-green-600 border-green-600 dark:border-green-600 text-white shadow-sm shadow-green-500/30'
                   : 'bg-slate-100 dark:bg-gray-800/60 border-slate-300 dark:border-gray-600 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-200 hover:border-slate-400 dark:hover:border-gray-500'
               }`}
             >
@@ -771,6 +879,20 @@ export default function PolicyReports() {
           ))}
         </div>
       </div>
+
+      <SuppressModal />
+
+      {suppressions.length > 0 && (
+        <div className="mx-6 mt-4 flex items-center gap-3 px-4 py-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg">
+          <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+            {suppressions.length} finding{suppressions.length !== 1 ? 's' : ''} suppressed
+          </span>
+          <button onClick={() => setShowSuppressed(v => !v)}
+            className="text-xs text-amber-600 dark:text-amber-400 hover:underline font-medium">
+            {showSuppressed ? 'Hide suppressed' : 'Show suppressed'}
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto p-6">
         {loading && (
@@ -799,8 +921,6 @@ export default function PolicyReports() {
               ))}
               <StatusCard label="TOTAL" value={Object.values(kyvernoDisplayCounts).reduce((a, b) => a + b, 0)} />
             </div>
-
-            <SeverityDistBar counts={kyvernoDisplayCounts} keys={['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS']} />
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Namespace</span>
@@ -887,7 +1007,6 @@ export default function PolicyReports() {
               <StatusCard label="TOTAL" value={Object.values(cisData.counts).reduce((a, b) => a + b, 0)} />
             </div>
 
-            <SeverityDistBar counts={cisData.counts} keys={['FAIL', 'WARN', 'INFO', 'PASS']} />
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
@@ -946,7 +1065,6 @@ export default function PolicyReports() {
               <StatusCard label="TOTAL" value={Object.values(clusterData.counts).reduce((a, b) => a + b, 0)} />
             </div>
 
-            <SeverityDistBar counts={clusterData.counts} keys={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']} />
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
@@ -1007,7 +1125,6 @@ export default function PolicyReports() {
               <StatusCard label="TOTAL" value={Object.values(sbomData.counts).reduce((a, b) => a + b, 0)} />
             </div>
 
-            <SeverityDistBar counts={sbomData.counts} keys={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']} />
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
@@ -1042,19 +1159,27 @@ export default function PolicyReports() {
                   {sbomData.list
                     .filter(row => sbomSeverityFilters[row.severity])
                     .filter(row => !sbomSearch || row.id.toLowerCase().includes(sbomSearch.toLowerCase()) || row.library.toLowerCase().includes(sbomSearch.toLowerCase()))
-                    .map((row, idx) => (
-                      <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
+                    .filter(row => showSuppressed || !isSuppressed(row.id, row.library))
+                    .map((row, idx) => {
+                      const suppressed = isSuppressed(row.id, row.library);
+                      return (
+                      <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
                         <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
                         <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
                         <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.library}</td>
-                        <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">
-                          {row.ref ? (<a href={row.ref} target="_blank" rel="noreferrer" className="hover:underline">{row.id}</a>) : row.id}
-                        </td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm">{row.installed}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm">{row.fixed}</td>
+                        <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
+                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
+                        <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
                         <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
+                        <td className="px-3 py-2.5">
+                          {suppressed
+                            ? <button onClick={() => removeSuppression(row.id, row.library)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
+                            : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.library, scan_type: 'sbom' })} className="text-xs text-gray-400 hover:text-red-500 transition-colors">Suppress</button>
+                          }
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   {sbomData.list.filter(row => sbomSeverityFilters[row.severity]).filter(row => !sbomSearch || row.id.toLowerCase().includes(sbomSearch.toLowerCase()) || row.library.toLowerCase().includes(sbomSearch.toLowerCase())).length === 0 && (
                     <tr><td colSpan="7" className="py-16 text-center">
                       <Package className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
@@ -1151,7 +1276,6 @@ export default function PolicyReports() {
               <StatusCard label="TOTAL" value={Object.values(imageData.counts).reduce((a, b) => a + b, 0)} />
             </div>
 
-            <SeverityDistBar counts={imageData.counts} keys={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']} />
 
             <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
               <table className="w-full text-sm text-left">
@@ -1163,30 +1287,36 @@ export default function PolicyReports() {
                     <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Package</th>
                     <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Installed</th>
                     <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Fixed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
                     <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Target</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Ref</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                   {imageData.list
                     .filter(row => imageSeverityFilters[row.severity])
                     .filter(row => !imageSearch || row.id.toLowerCase().includes(imageSearch.toLowerCase()) || row.pkg.toLowerCase().includes(imageSearch.toLowerCase()))
-                    .map((row, idx) => (
-                      <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
+                    .filter(row => showSuppressed || !isSuppressed(row.id, row.pkg))
+                    .map((row, idx) => {
+                      const suppressed = isSuppressed(row.id, row.pkg);
+                      return (
+                      <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
                         <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
                         <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
-                        <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.id}</td>
+                        <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
                         <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm">{row.installed}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm">{row.fixed}</td>
-                        <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
+                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
+                        <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
                         <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400 text-xs break-all max-w-[120px]">{row.target}</td>
-                        <td className="px-3 py-2.5 text-blue-600 dark:text-blue-400 text-xs">
-                          {row.refs && row.refs[0] ? <a href={row.refs[0]} target="_blank" rel="noreferrer" className="hover:underline">link</a> : '—'}
+                        <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
+                        <td className="px-3 py-2.5">
+                          {suppressed
+                            ? <button onClick={() => removeSuppression(row.id, row.pkg)} title="Remove suppression" className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
+                            : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'image' })} title="Suppress this finding" className="text-xs text-gray-400 hover:text-red-500 transition-colors">Suppress</button>
+                          }
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   {imageData.list.filter(row => imageSeverityFilters[row.severity]).filter(row => !imageSearch || row.id.toLowerCase().includes(imageSearch.toLowerCase()) || row.pkg.toLowerCase().includes(imageSearch.toLowerCase())).length === 0 && (
                     <tr><td colSpan="9" className="py-16 text-center">
                       <ImageIcon className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
@@ -1259,7 +1389,6 @@ export default function PolicyReports() {
               <StatusCard label="TOTAL" value={Object.values(trivyRepoData.counts).reduce((a, b) => a + b, 0)} />
             </div>
 
-            <SeverityDistBar counts={trivyRepoData.counts} keys={['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']} />
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Report</span>
@@ -1307,18 +1436,28 @@ export default function PolicyReports() {
                   {trivyRepoData.list
                     .filter(r => trivyRepoSeverityFilters[r.severity])
                     .filter(r => !trivyRepoSearch || r.id.toLowerCase().includes(trivyRepoSearch.toLowerCase()) || r.pkg.toLowerCase().includes(trivyRepoSearch.toLowerCase()))
-                    .map((row, idx) => (
-                      <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
+                    .filter(r => showSuppressed || !isSuppressed(r.id, r.pkg))
+                    .map((row, idx) => {
+                      const suppressed = isSuppressed(row.id, row.pkg);
+                      return (
+                      <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
                         <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
                         <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
                         <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm">{row.type}</td>
-                        <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.id}</td>
+                        <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
                         <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
                         <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400 font-mono text-xs">{row.installed}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm">{row.fixed}</td>
+                        <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
                         <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400 text-xs break-all">{row.target}</td>
+                        <td className="px-3 py-2.5">
+                          {suppressed
+                            ? <button onClick={() => removeSuppression(row.id, row.pkg)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
+                            : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'trivy-repo' })} className="text-xs text-gray-400 hover:text-red-500 transition-colors">Suppress</button>
+                          }
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   {trivyRepoData.list.filter(r => trivyRepoSeverityFilters[r.severity]).filter(r => !trivyRepoSearch || r.id.toLowerCase().includes(trivyRepoSearch.toLowerCase()) || r.pkg.toLowerCase().includes(trivyRepoSearch.toLowerCase())).length === 0 && (
                     <tr><td colSpan="8" className="py-16 text-center">
                       <GitGraph className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Terminal, Send } from 'lucide-react';
+import { Terminal, Send, X } from 'lucide-react';
 
-export default function WebTerminal() {
+export default function WebTerminal({ onClose }) {
     const [output, setOutput] = useState('');
     const [command, setCommand] = useState('');
     const [error, setError] = useState(null);
@@ -45,10 +45,8 @@ export default function WebTerminal() {
         e.preventDefault();
         if (!command.trim() || !wsRef.current) return;
 
-        // Validation: Only allow kubectl commands
         if (!command.trim().startsWith("kubectl")) {
-            setError("Error: Only kubectl commands are allowed");
-            // Do not clear command, do not add to history yet, do not send to backend
+            setError("Only kubectl commands are allowed");
             return;
         }
 
@@ -64,14 +62,12 @@ export default function WebTerminal() {
         if (e.key === 'ArrowUp') {
             e.preventDefault();
             if (history.length === 0) return;
-
             const newIndex = historyIndex === -1 ? history.length - 1 : Math.max(0, historyIndex - 1);
             setHistoryIndex(newIndex);
             setCommand(history[newIndex]);
         } else if (e.key === 'ArrowDown') {
             e.preventDefault();
             if (historyIndex === -1) return;
-
             const newIndex = historyIndex + 1;
             if (newIndex >= history.length) {
                 setHistoryIndex(-1);
@@ -84,48 +80,51 @@ export default function WebTerminal() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg border border-gray-300 dark:border-gray-800 shadow-2xl overflow-hidden transition-colors duration-200">
-            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-300 dark:border-gray-700 flex items-center gap-2 transition-colors duration-200">
-                <Terminal className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-sm font-mono text-black dark:text-gray-400">Web Terminal (kubectl ready)</span>
-                <span className={`ml-auto w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
+        <div className="flex flex-col h-full bg-[#0d1117] overflow-hidden">
+            {/* Title bar */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#161b22] border-b border-gray-700/60 flex-shrink-0">
+                <Terminal className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-mono text-gray-300">kubectl Terminal</span>
+                <span className={`w-2 h-2 rounded-full ml-1 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="ml-auto p-1 rounded text-gray-500 hover:text-white hover:bg-gray-700 transition-colors"
+                        title="Close terminal"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
             </div>
 
-            <form onSubmit={handleSend} className="px-4 py-6 bg-gray-50 dark:bg-slate-900 border-b border-gray-300 dark:border-gray-700 flex flex-col gap-2 shadow-md z-10 transition-colors duration-200">
-                {error && (
-                    <div className="text-red-500 text-xs font-mono px-2">
-                        {error}
-                    </div>
-                )}
-                <div className="flex gap-2 items-center">
-                    <div className="relative flex-1">
-                        <span className="absolute left-3 top-2 text-green-600 dark:text-green-500 font-mono font-bold select-none">$</span>
-                        <input
-                            type="text"
-                            value={command}
-                            onChange={(e) => {
-                                setCommand(e.target.value);
-                                if (error) setError(null);
-                            }}
-                            onKeyDown={handleKeyDown}
-                            className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-8 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white font-mono"
-                            placeholder="Enter command (e.g., kubectl get pods)"
-                            autoFocus
-                        />
-                    </div>
+            {/* Output area — takes all remaining space */}
+            <div className="flex-1 overflow-auto p-3 font-mono text-sm text-gray-300 whitespace-pre bg-[#0d1117]">
+                {output || <span className="text-gray-600 italic">Ready. Type a kubectl command below.</span>}
+                <div ref={endRef} />
+            </div>
+
+            {/* Input bar — pinned to bottom */}
+            <div className="flex-shrink-0 border-t border-gray-700/60 bg-[#161b22] px-3 py-2">
+                {error && <div className="text-red-400 text-xs font-mono mb-1.5">{error}</div>}
+                <form onSubmit={handleSend} className="flex gap-2 items-center">
+                    <span className="text-green-500 font-mono font-bold select-none text-sm">$</span>
+                    <input
+                        type="text"
+                        value={command}
+                        onChange={(e) => { setCommand(e.target.value); if (error) setError(null); }}
+                        onKeyDown={handleKeyDown}
+                        className="flex-1 bg-[#0d1117] border border-gray-700 rounded py-1.5 px-3 text-sm text-gray-200 font-mono focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/40 placeholder-gray-600"
+                        placeholder="Enter command (e.g., kubectl get pods)"
+                        autoFocus
+                    />
                     <button
                         type="submit"
                         disabled={!isConnected}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center"
                     >
                         <Send className="w-4 h-4" />
                     </button>
-                </div>
-            </form>
-
-            <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950 font-mono text-sm text-black dark:text-gray-300 whitespace-pre shadow-inner transition-colors duration-200">
-                {output}
-                <div ref={endRef} />
+                </form>
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from routers import scans, reports, files, settings, dashboard
+from routers import scans, reports, files, settings, dashboard, suppressions
 from services import terminal
 
 from fastapi.staticfiles import StaticFiles
@@ -72,6 +72,7 @@ app.include_router(files.router, prefix="/api/files", tags=["files"])
 app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
 app.include_router(terminal.router, prefix="/api/terminal", tags=["terminal"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(suppressions.router, prefix="/api/suppressions", tags=["suppressions"])
 
 # Mount static files (React build)
 # Check if static directory exists (it will in Docker, might not locally)

@@ -27,6 +27,7 @@ function App() {
     });
     const [logs, setLogs] = useState([]);
     const [isScanning, setIsScanning] = useState(false);
+    const [activeScanType, setActiveScanType] = useState(null);
     const [settingsSection, setSettingsSection] = useState(null);
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined' && window.localStorage) {
@@ -74,16 +75,27 @@ function App() {
 
 
 
+    const SCAN_LABELS = {
+        'trivy-image': 'Image Scan',
+        'trivy-sbom': 'SBOM Scan',
+        'trivy-repo': 'Repo Scan',
+        'nmap': 'Network Scan',
+        'kyverno': 'Policy Scan',
+        'kube-bench': 'CIS Benchmarks',
+        'trivy-cluster': 'Cluster Scan',
+    };
+
     // Safe ID generator that works in all contexts (http/https/older browsers)
     const generateScanId = () => {
         if (typeof crypto !== 'undefined' && crypto.randomUUID) {
             return crypto.randomUUID();
         }
-        return 'scan-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        return 'scan-' + Date.now() + '-' + Math.random().toString(36).substring(2, 11);
     };
 
     const startScan = async (type) => {
         setIsScanning(true);
+        setActiveScanType(type);
         setLogs([]);
 
         // Generate ID client-side to coordinate WS connection before trigger
@@ -112,6 +124,7 @@ function App() {
         } catch (error) {
             setLogs(prev => [...prev, `Error: ${error.message}`]);
             setIsScanning(false);
+            setActiveScanType(null);
             if (wsRef.current) wsRef.current.close();
         }
     };
@@ -148,6 +161,7 @@ function App() {
                     setLogs(prev => [...prev, "--- Scan Session Ended ---"]);
                     ws.close();
                     setIsScanning(false);
+                    setActiveScanType(null);
                 } else {
                     // Handle messages that may contain newlines or partial lines
                     // Remove only the trailing newline, preserve internal structure
@@ -195,7 +209,7 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-light dark:bg-none dark:bg-[#0b1220] text-slate-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
+        <div className="h-screen overflow-hidden bg-gradient-light dark:bg-none dark:bg-[#0b1220] text-slate-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
             {/* Header */}
             <header className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-4 py-3 shadow-base dark:shadow-md transition-colors duration-200">
                 <div className="flex items-center justify-between px-0">
@@ -264,6 +278,13 @@ function App() {
                             </>
                         )}
 
+                        {isScanning && activeScanType && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-full text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" />
+                                {SCAN_LABELS[activeScanType] ?? activeScanType} running…
+                            </div>
+                        )}
+
                         <div className="w-px h-6 bg-slate-300 dark:bg-gray-700 mx-2"></div>
 
                         <button
@@ -295,50 +316,46 @@ function App() {
             </header >
 
             {/* Main Content */}
-            < main className={`flex-1 flex flex-col overflow-hidden ${activeTab === 'policy' ? 'p-2' : ''}`
-            }>
-                {activeTab === 'dashboard' ? (
-                    <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-                        {/* Left Sidebar: Scan Controls - Full height, no margins */}
-                        <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 relative z-30 h-full">
-                            <ScanControl
-                                onStartScan={startScan}
-                                isScanning={isScanning}
-                                onNavigateToSettings={(section) => {
-                                    setSettingsSection(section);
-                                    setActiveTab('settings');
-                                }}
-                            />
+            <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+                {/* Tab Content */}
+                <div className={`flex-1 flex flex-col overflow-hidden min-h-0 ${activeTab === 'policy' ? 'p-2' : ''}`}>
+                    {activeTab === 'dashboard' ? (
+                        <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+                            <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 relative z-30 h-full">
+                                <ScanControl
+                                    onStartScan={startScan}
+                                    isScanning={isScanning}
+                                    onNavigateToSettings={(section) => {
+                                        setSettingsSection(section);
+                                        setActiveTab('settings');
+                                    }}
+                                />
+                            </div>
+                            <div className="flex-1 min-w-0 overflow-auto p-6">
+                                {!isScanning && logs.length === 0 ? (
+                                    <DashboardCharts />
+                                ) : (
+                                    <div className="h-full">
+                                        <LogViewer logs={logs} />
+                                    </div>
+                                )}
+                            </div>
                         </div>
-
-                        {/* Right Side: Charts or Terminal */}
-                        <div className="flex-1 min-w-0 overflow-auto p-6">
-                            {!isScanning && logs.length === 0 ? (
-                                // Show charts before scan starts
-                                <DashboardCharts />
-                            ) : (
-                                // Show terminal when scan is running or has logs
-                                <div className="h-full">
-                                    <LogViewer logs={logs} />
-                                </div>
-                            )}
+                    ) : activeTab === 'reports' ? (
+                        <div className="p-6">
+                            <ReportViewer />
                         </div>
-                    </div>
-                ) : activeTab === 'reports' ? (
-                    <div className="p-6">
-                        <ReportViewer />
-                    </div>
-                ) : activeTab === 'policy' ? (
-                    <PolicyReports />
-                ) : activeTab === 'settings' ? (
-                    <Settings initialSection={settingsSection} />
-                ) : (
-                    <div className="p-6">
-                        <WebTerminal />
-                    </div>
-                )
-                }
-            </main >
+                    ) : activeTab === 'policy' ? (
+                        <PolicyReports />
+                    ) : activeTab === 'settings' ? (
+                        <Settings initialSection={settingsSection} />
+                    ) : activeTab === 'terminal' ? (
+                        <div className="flex-1 h-full overflow-hidden">
+                            <WebTerminal />
+                        </div>
+                    ) : null}
+                </div>
+            </main>
         </div >
     );
 }

@@ -179,6 +179,16 @@ class GitConfig(BaseModel):
             }
         }
 
+class Suppression(BaseModel):
+    """A suppressed / acknowledged finding."""
+    id: Optional[str] = Field(None, description="Suppression ID")
+    cve_id: str = Field(..., description="Vulnerability or finding ID (e.g. CVE-2024-1234)")
+    pkg: Optional[str] = Field("", description="Package name the finding belongs to")
+    scan_type: str = Field(..., description="Scan view: image | sbom | trivy-repo | cluster")
+    reason: str = Field(..., description="accepted-risk or false-positive")
+    note: Optional[str] = Field("", description="Free-text justification note")
+    created_at: Optional[str] = Field(None, description="ISO timestamp of when suppression was created")
+
 class FileListResponse(BaseModel):
     """Response containing list of files."""
     files: List[str] = Field(..., description="List of file paths")
