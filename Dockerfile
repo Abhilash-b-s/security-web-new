@@ -2,7 +2,7 @@
 # Build context: Project Root (/home/abhilash/abhi/security)
 
 # --- Stage 1: Build Frontend ---
-FROM node:24-alpine as frontend-build
+FROM node:24-alpine AS frontend-build
 WORKDIR /app/frontend
 
 # Copy frontend dependency definitions

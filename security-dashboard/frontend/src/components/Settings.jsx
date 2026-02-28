@@ -188,9 +188,9 @@ export default function Settings({ initialSection = null }) {
                         <button
                             key={item.id}
                             onClick={() => setActiveSection(item.id)}
-                            className={`flex items-center gap-3 py-3 px-6 border-b border-slate-200 dark:border-gray-700 transition-all duration-200 w-full font-medium text-sm transform ${activeSection === item.id
-                                ? 'bg-azure-50 dark:bg-azure-600/10 text-azure-800 dark:text-azure-100 border-l-4 border-l-azure-500'
-                                : 'bg-white dark:bg-gray-800 hover:bg-azure-50 dark:hover:bg-azure-600/10 text-slate-900 dark:text-gray-200 hover:text-azure-800 dark:hover:text-azure-100 hover:border-l-4 hover:border-l-azure-500 hover:shadow-lg hover:shadow-azure-500/20 hover:scale-[1.01] hover:-translate-x-1'
+                            className={`flex items-center gap-3 py-3 px-6 border-b border-slate-200 dark:border-gray-700 transition-all duration-150 w-full font-medium text-sm transform ${activeSection === item.id
+                                ? 'bg-azure-100 dark:bg-azure-600/20 text-azure-800 dark:text-azure-100 border-l-4 border-l-azure-500 shadow-md'
+                                : 'bg-white dark:bg-gray-800 hover:bg-azure-100 dark:hover:bg-azure-600/20 text-slate-900 dark:text-gray-200 hover:text-azure-800 dark:hover:text-azure-100 hover:border-l-4 hover:border-l-azure-500 hover:shadow-xl hover:shadow-azure-500/30 hover:scale-[1.02] hover:-translate-x-1 active:scale-[0.98] active:shadow-inner'
                                 }`}
                         >
                             <div className={`p-2 rounded-lg transition-all duration-200 ${activeSection === item.id ? 'bg-azure-100 dark:bg-azure-500/20 text-azure-700 dark:text-azure-400' : 'bg-slate-100 dark:bg-gray-700 text-azure-700 dark:text-azure-400'}`}>
@@ -233,7 +233,7 @@ export default function Settings({ initialSection = null }) {
                                                 placeholder="e.g. abhilash-armada-ai"
                                                 value={gitUsername}
                                                 onChange={(e) => setGitUsername(e.target.value)}
-                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             />
                                         </div>
                                         <div>
@@ -245,7 +245,7 @@ export default function Settings({ initialSection = null }) {
                                                 placeholder="Access Token"
                                                 value={gitToken}
                                                 onChange={(e) => setGitToken(e.target.value)}
-                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             />
                                         </div>
                                     </div>
@@ -259,7 +259,7 @@ export default function Settings({ initialSection = null }) {
                                             placeholder="https://gitlab.com/example/repo.git"
                                             value={gitRepos}
                                             onChange={(e) => setGitRepos(e.target.value)}
-                                            className={`w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm font-mono focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            className={`w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm font-mono focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         />
                                         <p className="text-xs text-black dark:text-gray-500 mt-1">Comments starting with # are ignored.</p>
                                     </div>
@@ -328,7 +328,7 @@ export default function Settings({ initialSection = null }) {
                                                     placeholder="e.g. docker.io"
                                                     value={url}
                                                     onChange={(e) => setUrl(e.target.value)}
-                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
+                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
                                                 />
                                             </div>
                                         </div>
@@ -340,7 +340,7 @@ export default function Settings({ initialSection = null }) {
                                                 placeholder="Username"
                                                 value={username}
                                                 onChange={(e) => setUsername(e.target.value)}
-                                                className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
+                                                className="w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
                                             />
                                         </div>
                                         <div>
@@ -352,7 +352,7 @@ export default function Settings({ initialSection = null }) {
                                                     placeholder="• • • • • • • •"
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
-                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-2 border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
+                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
                                                 />
                                                 <button
                                                     type="button"

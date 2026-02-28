@@ -94,7 +94,7 @@ export default function PolicyReports() {
     fetch('/api/suppressions/')
       .then(r => r.ok ? r.json() : [])
       .then(data => setSuppressions(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Load Git Repo Data when file selected
@@ -646,7 +646,7 @@ export default function PolicyReports() {
   const CVSS_BAR_COLORS = { CRITICAL: '#DC2626', HIGH: '#EA580C', MEDIUM: '#F59E0B', LOW: '#3B82F6', UNKNOWN: '#6B7280' };
 
   const CvssBar = ({ score, severity }) => {
-    if (score === null || score === undefined) return <span className="text-gray-400 dark:text-gray-600 text-xs font-mono">—</span>;
+    if (score === null || score === undefined) return <span className="text-gray-900 dark:text-gray-400 text-xs font-mono">—</span>;
     return (
       <div className="flex items-center gap-1.5 min-w-[72px]">
         <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -691,12 +691,12 @@ export default function PolicyReports() {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
           <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Suppress Finding</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 font-mono">{suppressModal.cve_id}{suppressModal.pkg ? ` · ${suppressModal.pkg}` : ''}</p>
+          <p className="text-xs text-gray-900 dark:text-gray-400 mb-4 font-mono">{suppressModal.cve_id}{suppressModal.pkg ? ` · ${suppressModal.pkg}` : ''}</p>
           <div className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Reason</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-2">Reason</p>
             <div className="flex gap-3">
               {['accepted-risk', 'false-positive'].map(r => (
-                <label key={r} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border-2 cursor-pointer text-sm font-semibold transition-all ${suppressReason === r ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'}`}>
+                <label key={r} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border-2 cursor-pointer text-sm font-semibold transition-all ${suppressReason === r ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300' : 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-400 hover:border-gray-300'}`}>
                   <input type="radio" className="sr-only" value={r} checked={suppressReason === r} onChange={() => setSuppressReason(r)} />
                   {r === 'accepted-risk' ? '✓ Accepted Risk' : '✗ False Positive'}
                 </label>
@@ -704,18 +704,18 @@ export default function PolicyReports() {
             </div>
           </div>
           <div className="mb-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Note <span className="normal-case font-normal">(optional)</span></p>
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-2">Note <span className="normal-case font-normal">(optional)</span></p>
             <textarea
               value={suppressNote}
               onChange={e => setSuppressNote(e.target.value)}
               rows={3}
               placeholder="Add justification or ticket reference…"
-              className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-200 dark:border-[#30363d] rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
+              className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
             />
           </div>
           <div className="flex gap-3 justify-end">
             <button onClick={() => { setSuppressModal(null); setSuppressNote(''); setSuppressReason('accepted-risk'); }}
-              className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               Cancel
             </button>
             <button onClick={addSuppression}
@@ -730,7 +730,7 @@ export default function PolicyReports() {
 
   // Remediation helpers
   const NvdLink = ({ id }) => {
-    if (!id) return <span className="text-gray-400">—</span>;
+    if (!id) return <span className="text-gray-900">—</span>;
     const url = id.startsWith('CVE-') ? `https://nvd.nist.gov/vuln/detail/${id}` : null;
     return url
       ? <a href={url} target="_blank" rel="noopener noreferrer" className="font-mono text-blue-600 dark:text-blue-400 hover:underline text-xs">{id}</a>
@@ -745,7 +745,7 @@ export default function PolicyReports() {
         </span>
       );
     }
-    return <span className="text-xs text-gray-400 dark:text-gray-600">No fix</span>;
+    return <span className="text-xs text-gray-900 dark:text-gray-400">No fix</span>;
   };
 
   const ACCENT_BORDER = {
@@ -760,12 +760,12 @@ export default function PolicyReports() {
     SKIP: 'text-slate-500 dark:text-slate-400', INFO: 'text-slate-500 dark:text-slate-400',
     CRITICAL: 'text-red-700 dark:text-red-500', HIGH: 'text-orange-600 dark:text-orange-400',
     MEDIUM: 'text-yellow-500 dark:text-yellow-400', LOW: 'text-blue-600 dark:text-blue-400',
-    UNKNOWN: 'text-gray-500 dark:text-gray-400', TOTAL: 'text-gray-700 dark:text-gray-200',
+    UNKNOWN: 'text-gray-900 dark:text-gray-400', TOTAL: 'text-gray-700 dark:text-gray-200',
   };
 
   const StatusCard = ({ label, value }) => (
     <div className={`bg-white dark:bg-[#1a2332] border border-gray-200 dark:border-gray-700/60 border-l-4 ${ACCENT_BORDER[label] || 'border-l-gray-400'} rounded-lg p-4 flex flex-col gap-1 shadow-sm`}>
-      <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">{label}</span>
+      <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400">{label}</span>
       <span className={`text-3xl font-black ${NUM_COLOR[label] || 'text-gray-800 dark:text-gray-200'}`}>{value}</span>
     </div>
   );
@@ -778,7 +778,7 @@ export default function PolicyReports() {
   };
   const DIST_TEXT = {
     CRITICAL: 'text-red-500', HIGH: 'text-orange-400', MEDIUM: 'text-yellow-400',
-    LOW: 'text-blue-400', UNKNOWN: 'text-gray-400', FAIL: 'text-red-400',
+    LOW: 'text-blue-400', UNKNOWN: 'text-gray-900', FAIL: 'text-red-400',
     WARN: 'text-yellow-400', ERROR: 'text-red-500', PASS: 'text-green-400',
     SKIP: 'text-slate-400', INFO: 'text-slate-400',
   };
@@ -790,8 +790,8 @@ export default function PolicyReports() {
     return (
       <div className="bg-white dark:bg-[#1a2332] border border-gray-200 dark:border-gray-700/60 rounded-lg px-5 py-3 shadow-sm">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Risk Distribution</span>
-          <span className="text-xs text-gray-400 dark:text-gray-500">{total.toLocaleString()} findings</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400">Risk Distribution</span>
+          <span className="text-xs text-gray-900 dark:text-gray-400">{total.toLocaleString()} findings</span>
         </div>
         <div className="flex h-2 rounded-full overflow-hidden gap-px">
           {keys.filter(k => counts[k] > 0).map(k => (
@@ -804,8 +804,8 @@ export default function PolicyReports() {
           {keys.filter(k => counts[k] > 0).map(k => (
             <span key={k} className="flex items-center gap-1.5 text-xs">
               <span className={`w-2 h-2 rounded-sm ${DIST_COLORS[k] || 'bg-gray-400'} shrink-0`} />
-              <span className={`font-semibold ${DIST_TEXT[k] || 'text-gray-400'}`}>{k}</span>
-              <span className="text-gray-400 dark:text-gray-500">{((counts[k] / total) * 100).toFixed(0)}%</span>
+              <span className={`font-semibold ${DIST_TEXT[k] || 'text-gray-900'}`}>{k}</span>
+              <span className="text-gray-900 dark:text-gray-400">{((counts[k] / total) * 100).toFixed(0)}%</span>
             </span>
           ))}
         </div>
@@ -826,14 +826,14 @@ export default function PolicyReports() {
       HIGH: 'bg-orange-100 dark:bg-orange-500/20 border-orange-400 dark:border-orange-500/50 text-orange-700 dark:text-orange-300',
       MEDIUM: 'bg-yellow-100 dark:bg-yellow-400/20 border-yellow-400 dark:border-yellow-400/50 text-yellow-700 dark:text-yellow-300',
       LOW: 'bg-blue-100 dark:bg-blue-500/20 border-blue-400 dark:border-blue-500/50 text-blue-700 dark:text-blue-300',
-      UNKNOWN: 'bg-gray-100 dark:bg-gray-500/20 border-gray-400 dark:border-gray-500/50 text-gray-600 dark:text-gray-400',
+      UNKNOWN: 'bg-gray-100 dark:bg-gray-500/20 border-gray-400 dark:border-gray-500/50 text-gray-900 dark:text-gray-400',
     };
     return (
       <button type="button" onClick={onToggle}
         className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${active
           ? (activeStyle[label] || 'bg-blue-100 dark:bg-blue-500/20 border-blue-400 text-blue-700')
-          : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600'
-        }`}
+          : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-400'
+          }`}
       >
         {label}
       </button>
@@ -867,11 +867,10 @@ export default function PolicyReports() {
             <button
               key={tab.id}
               onClick={() => setActiveView(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition-all border-2 ${
-                activeView === tab.id
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition-all border-2 ${activeView === tab.id
                   ? 'bg-green-600 dark:bg-green-600 border-green-600 dark:border-green-600 text-white shadow-sm shadow-green-500/30'
                   : 'bg-slate-100 dark:bg-gray-800/60 border-slate-300 dark:border-gray-600 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-200 hover:border-slate-400 dark:hover:border-gray-500'
-              }`}
+                }`}
             >
               {tab.icon}
               {tab.label}
@@ -923,11 +922,11 @@ export default function PolicyReports() {
             </div>
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Namespace</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Namespace</span>
               <select
                 value={kyvernoNs}
                 onChange={(e) => setKyvernoNs(e.target.value)}
-                className="bg-gray-50 dark:bg-[#0e1116] border border-gray-200 dark:border-[#30363d] rounded px-3 py-1.5 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors"
+                className="bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-1.5 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 <option value="">None</option>
                 <option value="ALL">All Namespaces</option>
@@ -936,7 +935,7 @@ export default function PolicyReports() {
                 ))}
               </select>
               <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
               <div className="flex flex-wrap gap-1.5">
                 {['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'].map(status => (
                   <FilterPill key={status} label={status} active={kyvernoStatusFilters[status]}
@@ -956,12 +955,12 @@ export default function PolicyReports() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-950 transition-colors">
                   <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24">Status</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Policy</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-32">Type</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Resource</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Message</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Status</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Severity</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Policy</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-32">Type</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Resource</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Message</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -982,13 +981,13 @@ export default function PolicyReports() {
                         <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.policy}</td>
                         <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm">{row.type}</td>
                         <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 text-sm font-medium">{row.name}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm break-words max-w-md">{row.message}</td>
+                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm break-words max-w-md">{row.message}</td>
                       </tr>
                     ))}
                   {(!kyvernoNs || kyvernoData.rows.length === 0) && (
                     <tr><td colSpan="6" className="py-16 text-center">
-                      <Shield className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{!kyvernoNs ? "Select a namespace above to view policy results" : "No data available"}</p>
+                      <Shield className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
+                      <p className="text-sm text-gray-900 dark:text-gray-400">{!kyvernoNs ? "Select a namespace above to view policy results" : "No data available"}</p>
                     </td></tr>
                   )}
                 </tbody>
@@ -1009,7 +1008,7 @@ export default function PolicyReports() {
 
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
               <div className="flex flex-wrap gap-1.5">
                 {['FAIL', 'WARN', 'INFO', 'PASS'].map(status => (
                   <FilterPill key={status} label={status} active={cisStatusFilters[status]}
@@ -1022,11 +1021,11 @@ export default function PolicyReports() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24 text-center">Status</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24">Check ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-56">Section</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-[38%]">Resolution</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24 text-center">Status</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Check ID</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-56">Section</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Title</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-[38%]">Resolution</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -1040,13 +1039,13 @@ export default function PolicyReports() {
                         <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.id}</td>
                         <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm font-semibold">{row.section || '-'}</td>
                         <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 text-sm">{row.desc}</td>
-                        <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400 text-xs font-mono break-all max-w-sm">{row.remediation}</td>
+                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-400 text-xs font-mono break-all max-w-sm">{row.remediation}</td>
                       </tr>
                     ))}
                   {cisData.list.filter(r => cisStatusFilters[r.status]).length === 0 && (
                     <tr><td colSpan="5" className="py-16 text-center">
-                      <ClipboardList className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No benchmarks found matching filters</p>
+                      <ClipboardList className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
+                      <p className="text-sm text-gray-900 dark:text-gray-400">No benchmarks found matching filters</p>
                     </td></tr>
                   )}
                 </tbody>
@@ -1067,7 +1066,7 @@ export default function PolicyReports() {
 
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
               <div className="flex flex-wrap gap-1.5">
                 {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                   <FilterPill key={sev} label={sev} active={clusterSeverityFilters[sev]}
@@ -1080,12 +1079,12 @@ export default function PolicyReports() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-1/3">Title</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-1/3">Message</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-14">Ref</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-40">Target</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Severity</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">ID</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-1/3">Title</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-1/3">Message</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-14">Ref</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-40">Target</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -1098,17 +1097,17 @@ export default function PolicyReports() {
                         </td>
                         <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.id}</td>
                         <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 text-sm">{row.title}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm max-w-xs break-words">{row.msg}</td>
+                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm max-w-xs break-words">{row.msg}</td>
                         <td className="px-3 py-2.5 text-blue-600 dark:text-blue-300 text-xs">
                           {row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" className="hover:underline">Link</a> : '—'}
                         </td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-xs break-all">{row.target}</td>
+                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-xs break-all">{row.target}</td>
                       </tr>
                     ))}
                   {clusterData.list.filter(row => clusterSeverityFilters[row.severity]).length === 0 && (
                     <tr><td colSpan="6" className="py-16 text-center">
-                      <Server className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No issues found matching filters</p>
+                      <Server className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
+                      <p className="text-sm text-gray-900 dark:text-gray-400">No issues found matching filters</p>
                     </td></tr>
                   )}
                 </tbody>
@@ -1127,7 +1126,7 @@ export default function PolicyReports() {
 
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
               <div className="flex flex-wrap gap-1.5">
                 {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                   <FilterPill key={sev} label={sev} active={sbomSeverityFilters[sev]}
@@ -1135,10 +1134,10 @@ export default function PolicyReports() {
                 ))}
               </div>
               <div className="flex-1 min-w-[200px] relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
                 <input type="text" placeholder="Search CVE or library…" value={sbomSearch} onChange={e => setSbomSearch(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-200 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
-                {sbomSearch && <button onClick={() => setSbomSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><XCircle className="w-4 h-4" /></button>}
+                  className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+                {sbomSearch && <button onClick={() => setSbomSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-900"><XCircle className="w-4 h-4" /></button>}
               </div>
             </div>
 
@@ -1146,13 +1145,13 @@ export default function PolicyReports() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">CVSS</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Library</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Vulnerability ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Installed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Fixed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Severity</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVSS</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Library</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Vulnerability ID</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Installed</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Fixed</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Title</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -1163,27 +1162,27 @@ export default function PolicyReports() {
                     .map((row, idx) => {
                       const suppressed = isSuppressed(row.id, row.library);
                       return (
-                      <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                        <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
-                        <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
-                        <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.library}</td>
-                        <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
-                        <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
-                        <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
-                        <td className="px-3 py-2.5">
-                          {suppressed
-                            ? <button onClick={() => removeSuppression(row.id, row.library)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
-                            : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.library, scan_type: 'sbom' })} className="text-xs text-gray-400 hover:text-red-500 transition-colors">Suppress</button>
-                          }
-                        </td>
-                      </tr>
+                        <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
+                          <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
+                          <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
+                          <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.library}</td>
+                          <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
+                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
+                          <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
+                          <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
+                          <td className="px-3 py-2.5">
+                            {suppressed
+                              ? <button onClick={() => removeSuppression(row.id, row.library)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
+                              : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.library, scan_type: 'sbom' })} className="text-xs text-gray-900 hover:text-red-500 transition-colors">Suppress</button>
+                            }
+                          </td>
+                        </tr>
                       );
                     })}
                   {sbomData.list.filter(row => sbomSeverityFilters[row.severity]).filter(row => !sbomSearch || row.id.toLowerCase().includes(sbomSearch.toLowerCase()) || row.library.toLowerCase().includes(sbomSearch.toLowerCase())).length === 0 && (
                     <tr><td colSpan="7" className="py-16 text-center">
-                      <Package className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No vulnerabilities found matching filters</p>
+                      <Package className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
+                      <p className="text-sm text-gray-900 dark:text-gray-400">No vulnerabilities found matching filters</p>
                     </td></tr>
                   )}
                 </tbody>
@@ -1203,7 +1202,7 @@ export default function PolicyReports() {
               {/* Top Row: Namespace and Report Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
-                  <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Reports by Namespace</div>
+                  <div className="text-xs font-bold text-gray-900 dark:text-gray-400 uppercase tracking-wider mb-2">Reports by Namespace</div>
                   <select
                     value={imageNs}
                     onChange={(e) => {
@@ -1217,7 +1216,7 @@ export default function PolicyReports() {
                       if (relevant.length > 0) setSelectedImageFile(relevant[0]);
                       else setSelectedImageFile(null);
                     }}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
+                    className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
                   >
                     <option value="">None</option>
                     <option value="ALL">All Namespaces</option>
@@ -1228,11 +1227,11 @@ export default function PolicyReports() {
                 </div>
 
                 <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
-                  <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Image Report</div>
+                  <div className="text-xs font-bold text-gray-900 dark:text-gray-400 uppercase tracking-wider mb-2">Image Report</div>
                   <select
                     value={selectedImageFile || ''}
                     onChange={(e) => setSelectedImageFile(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
+                    className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
                   >
                     {imageFiles
                       .filter(f => imageNs === 'ALL' || (imageNs && f.startsWith(imageNs + '/')))
@@ -1248,7 +1247,7 @@ export default function PolicyReports() {
 
               {/* Filters row */}
               <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
                 <div className="flex flex-wrap gap-1.5">
                   {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                     <FilterPill key={sev} label={sev} active={imageSeverityFilters[sev]}
@@ -1256,10 +1255,10 @@ export default function PolicyReports() {
                   ))}
                 </div>
                 <div className="flex-1 min-w-[180px] relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
                   <input type="text" placeholder="Search CVE or package…" value={imageSearch} onChange={e => setImageSearch(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-200 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
-                  {imageSearch && <button onClick={() => setImageSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><XCircle className="w-4 h-4" /></button>}
+                    className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+                  {imageSearch && <button onClick={() => setImageSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-900"><XCircle className="w-4 h-4" /></button>}
                 </div>
                 <a href="/new/trivy-reports/consolidated-report_images.xlsx" download="consolidated-report_images.xlsx"
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-blue-500/50 rounded-lg text-xs font-semibold transition-all">
@@ -1281,14 +1280,14 @@ export default function PolicyReports() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">CVSS</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">CVE</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Package</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Installed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Fixed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Target</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Title</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Severity</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVSS</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVE</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Package</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Installed</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Fixed</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Target</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Title</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -1299,28 +1298,32 @@ export default function PolicyReports() {
                     .map((row, idx) => {
                       const suppressed = isSuppressed(row.id, row.pkg);
                       return (
-                      <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                        <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
-                        <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
-                        <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
-                        <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
-                        <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
-                        <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400 text-xs break-all max-w-[120px]">{row.target}</td>
-                        <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
-                        <td className="px-3 py-2.5">
-                          {suppressed
-                            ? <button onClick={() => removeSuppression(row.id, row.pkg)} title="Remove suppression" className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
-                            : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'image' })} title="Suppress this finding" className="text-xs text-gray-400 hover:text-red-500 transition-colors">Suppress</button>
-                          }
-                        </td>
-                      </tr>
+                        <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
+                          <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
+                          <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
+                          <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
+                          <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
+                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
+                          <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
+                          <td className="px-3 py-2.5">
+                            <span className="inline-block px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-[10px] border border-gray-300 dark:border-gray-600 shadow-sm">
+                              {row.target}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
+                          <td className="px-3 py-2.5">
+                            {suppressed
+                              ? <button onClick={() => removeSuppression(row.id, row.pkg)} title="Remove suppression" className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
+                              : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'image' })} title="Suppress this finding" className="text-xs text-gray-900 hover:text-red-500 transition-colors">Suppress</button>
+                            }
+                          </td>
+                        </tr>
                       );
                     })}
                   {imageData.list.filter(row => imageSeverityFilters[row.severity]).filter(row => !imageSearch || row.id.toLowerCase().includes(imageSearch.toLowerCase()) || row.pkg.toLowerCase().includes(imageSearch.toLowerCase())).length === 0 && (
                     <tr><td colSpan="9" className="py-16 text-center">
-                      <ImageIcon className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No vulnerabilities found matching filters</p>
+                      <ImageIcon className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
+                      <p className="text-sm text-gray-900 dark:text-gray-400">No vulnerabilities found matching filters</p>
                     </td></tr>
                   )}
                 </tbody>
@@ -1336,11 +1339,11 @@ export default function PolicyReports() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Namespace</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">FQDN</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Port</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Accepted Ciphers</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Weak Ciphers</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Namespace</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">FQDN</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Port</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Accepted Ciphers</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Weak Ciphers</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -1350,27 +1353,27 @@ export default function PolicyReports() {
                       <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
                         <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm">{row.namespace}</td>
                         <td className="px-3 py-2.5 text-blue-600 dark:text-blue-300 text-sm">{row.fqdn}</td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 font-mono text-xs">{row.port}</td>
+                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 font-mono text-xs">{row.port}</td>
                         <td className="px-3 py-2.5">
                           <div className="flex flex-wrap gap-1">
                             {row.accepted.length > 0 ? row.accepted.map(c => (
                               <span key={c} className="px-1.5 py-0.5 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs rounded border border-green-200 dark:border-green-800">{c}</span>
-                            )) : <span className="text-gray-400 text-xs">None</span>}
+                            )) : <span className="text-gray-900 text-xs">None</span>}
                           </div>
                         </td>
                         <td className="px-3 py-2.5">
                           <div className="flex flex-wrap gap-1">
                             {row.weak.length > 0 ? row.weak.map(c => (
                               <span key={c} className="px-1.5 py-0.5 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs rounded border border-red-200 dark:border-red-800">{c}</span>
-                            )) : <span className="text-gray-400 text-xs">None</span>}
+                            )) : <span className="text-gray-900 text-xs">None</span>}
                           </div>
                         </td>
                       </tr>
                     ))}
                   {nmapData.length === 0 && (
                     <tr><td colSpan="5" className="py-16 text-center">
-                      <Globe className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No network scan data available</p>
+                      <Globe className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
+                      <p className="text-sm text-gray-900 dark:text-gray-400">No network scan data available</p>
                     </td></tr>
                   )}
                 </tbody>
@@ -1391,11 +1394,11 @@ export default function PolicyReports() {
 
 
             <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Report</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Report</span>
               <select
                 value={selectedTrivyRepoFile || ''}
                 onChange={(e) => setSelectedTrivyRepoFile(e.target.value)}
-                className="bg-gray-50 dark:bg-[#0e1116] border border-gray-200 dark:border-[#30363d] rounded px-3 py-1.5 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors"
+                className="bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-1.5 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors"
               >
                 {trivyRepoFiles.length === 0 && <option value="">No reports found</option>}
                 {trivyRepoFiles.map(f => (
@@ -1403,7 +1406,7 @@ export default function PolicyReports() {
                 ))}
               </select>
               <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 shrink-0">Filter</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
               <div className="flex flex-wrap gap-1.5">
                 {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
                   <FilterPill key={sev} label={sev} active={trivyRepoSeverityFilters[sev]}
@@ -1411,10 +1414,10 @@ export default function PolicyReports() {
                 ))}
               </div>
               <div className="flex-1 min-w-[180px] relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
                 <input type="text" placeholder="Search vulnerability or package…" value={trivyRepoSearch} onChange={e => setTrivyRepoSearch(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#0e1116] border border-gray-200 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
-                {trivyRepoSearch && <button onClick={() => setTrivyRepoSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><XCircle className="w-4 h-4" /></button>}
+                  className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
+                {trivyRepoSearch && <button onClick={() => setTrivyRepoSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-900"><XCircle className="w-4 h-4" /></button>}
               </div>
             </div>
 
@@ -1422,14 +1425,14 @@ export default function PolicyReports() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-24">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">CVSS</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Package</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Installed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Fixed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Target File</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Severity</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVSS</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Type</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">ID</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Package</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Installed</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Fixed</th>
+                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Target File</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -1440,28 +1443,28 @@ export default function PolicyReports() {
                     .map((row, idx) => {
                       const suppressed = isSuppressed(row.id, row.pkg);
                       return (
-                      <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                        <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
-                        <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
-                        <td className="px-3 py-2.5 text-gray-600 dark:text-gray-300 text-sm">{row.type}</td>
-                        <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
-                        <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
-                        <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400 font-mono text-xs">{row.installed}</td>
-                        <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
-                        <td className="px-3 py-2.5 text-gray-500 dark:text-gray-400 text-xs break-all">{row.target}</td>
-                        <td className="px-3 py-2.5">
-                          {suppressed
-                            ? <button onClick={() => removeSuppression(row.id, row.pkg)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
-                            : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'trivy-repo' })} className="text-xs text-gray-400 hover:text-red-500 transition-colors">Suppress</button>
-                          }
-                        </td>
-                      </tr>
+                        <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
+                          <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
+                          <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
+                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm">{row.type}</td>
+                          <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
+                          <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
+                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-400 font-mono text-xs">{row.installed}</td>
+                          <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
+                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-400 text-xs break-all">{row.target}</td>
+                          <td className="px-3 py-2.5">
+                            {suppressed
+                              ? <button onClick={() => removeSuppression(row.id, row.pkg)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
+                              : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'trivy-repo' })} className="text-xs text-gray-900 hover:text-red-500 transition-colors">Suppress</button>
+                            }
+                          </td>
+                        </tr>
                       );
                     })}
                   {trivyRepoData.list.filter(r => trivyRepoSeverityFilters[r.severity]).filter(r => !trivyRepoSearch || r.id.toLowerCase().includes(trivyRepoSearch.toLowerCase()) || r.pkg.toLowerCase().includes(trivyRepoSearch.toLowerCase())).length === 0 && (
                     <tr><td colSpan="8" className="py-16 text-center">
-                      <GitGraph className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No issues found — select a report above or adjust filters</p>
+                      <GitGraph className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
+                      <p className="text-sm text-gray-900 dark:text-gray-400">No issues found — select a report above or adjust filters</p>
                     </td></tr>
                   )}
                 </tbody>
