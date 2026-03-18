@@ -62,6 +62,12 @@ export default function PolicyReports() {
   const [suppressReason, setSuppressReason] = useState('accepted-risk');
   const [suppressNote, setSuppressNote] = useState('');
 
+  // Aggregate counts from backend (used when no file/namespace is selected)
+  const [dashboardCounts, setDashboardCounts] = useState({
+    trivyImage: { counts: {}, total: 0 },
+    trivyRepo: { counts: {}, total: 0 },
+  });
+
   // Fetch logic
   useEffect(() => {
     setError(null);
@@ -94,6 +100,19 @@ export default function PolicyReports() {
     fetch('/api/suppressions/')
       .then(r => r.ok ? r.json() : [])
       .then(data => setSuppressions(Array.isArray(data) ? data : []))
+      .catch(() => { });
+  }, []);
+
+  // Fetch aggregate totals for Image and Source Code "None" state
+  useEffect(() => {
+    fetch('/api/dashboard/stats')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) setDashboardCounts({
+          trivyImage: data.trivyImage || { counts: {}, total: 0 },
+          trivyRepo: data.trivyRepo || { counts: {}, total: 0 },
+        });
+      })
       .catch(() => { });
   }, []);
 
@@ -1267,13 +1286,18 @@ export default function PolicyReports() {
               </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
-                <StatusCard key={s} label={s} value={imageData.counts[s] || 0} />
-              ))}
-              <StatusCard label="TOTAL" value={Object.values(imageData.counts).reduce((a, b) => a + b, 0)} />
-            </div>
+            {/* Stats Cards — show aggregate totals when no namespace selected */}
+            {(() => {
+              const counts = imageNs === '' ? dashboardCounts.trivyImage.counts : imageData.counts;
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                  {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
+                    <StatusCard key={s} label={s} value={counts[s] || 0} />
+                  ))}
+                  <StatusCard label="TOTAL" value={Object.values(counts).reduce((a, b) => a + b, 0)} />
+                </div>
+              );
+            })()}
 
 
             <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
@@ -1386,10 +1410,18 @@ export default function PolicyReports() {
         {!loading && !error && activeView === 'trivy-repo' && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
-                <StatusCard key={s} label={s} value={trivyRepoData.counts[s] || 0} />
-              ))}
-              <StatusCard label="TOTAL" value={Object.values(trivyRepoData.counts).reduce((a, b) => a + b, 0)} />
+              {/* Show aggregate totals when no report file is selected */}
+              {(() => {
+                const counts = !selectedTrivyRepoFile ? dashboardCounts.trivyRepo.counts : trivyRepoData.counts;
+                return (
+                  <>
+                    {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
+                      <StatusCard key={s} label={s} value={counts[s] || 0} />
+                    ))}
+                    <StatusCard label="TOTAL" value={Object.values(counts).reduce((a, b) => a + b, 0)} />
+                  </>
+                );
+              })()}
             </div>
 
 
