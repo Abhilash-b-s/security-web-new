@@ -361,7 +361,7 @@ function Heatmap({ days }) {
 // ── Section ────────────────────────────────────────────────────────────────
 
 export default function HistoryCharts() {
-    const [range, setRange] = useState(30);
+    const [range, setRange] = useState(7);
     const [compare, setCompare] = useState(true);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);

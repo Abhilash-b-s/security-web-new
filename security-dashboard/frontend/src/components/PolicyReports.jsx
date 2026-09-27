@@ -28,7 +28,7 @@ export default function PolicyReports({ activeView }) {
   const [trivyRepoData, setTrivyRepoData] = useState({ list: [], counts: {} });
 
   // Image report namespace: '' shows aggregate totals, 'ALL' or a namespace lists its reports
-  const [imageNs, setImageNs] = useState('');
+  const [imageNs, setImageNs] = useState('ALL');
 
   // Suppressions
   const [suppressions, setSuppressions] = useState([]);
@@ -232,6 +232,8 @@ export default function PolicyReports({ activeView }) {
       if (!res.ok) throw new Error(`Failed to list image reports: ${res.status}`);
       const files = await res.json();
       setImageFiles(files);
+      // Default namespace is "All namespaces": open its first report straight away.
+      if (files.length > 0) setSelectedImageFile(f => f || files[0]);
     } catch (err) {
       console.error(err);
       setError(err.message);

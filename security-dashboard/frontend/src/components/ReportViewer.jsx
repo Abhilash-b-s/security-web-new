@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Download, Search } from 'lucide-react';
 import PageHead from './PageHead';
-import LogViewer, { RemoteLogViewer, lineStyle, lineLevel } from './LogViewer';
-import { SearchBox } from './reportParts';
+import LogViewer, { RemoteLogViewer, lineStyle } from './LogViewer';
 
 const statusBadge = (status) => (
     status === 'completed'
@@ -17,8 +16,6 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
     const [selectedReport, setSelectedReport] = useState(null);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [level, setLevel] = useState('all'); // all | warn | error
-    const [lineQ, setLineQ] = useState('');
     // Show the running scan by default when one is in progress.
     const [liveSelected, setLiveSelected] = useState(!!live?.isScanning);
     // A scan started elsewhere that is being followed; preselect one if nothing local is running.
@@ -215,27 +212,10 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
                                     <Download className="w-3 h-3" /> Download JSON
                                 </button>
                             </div>
-                            {(() => {
-                                const all = selectedReport.results.flatMap(r => (r.output || '').split('\n'));
-                                const n = { all: all.length, warn: all.filter(l => lineLevel(l) === 'warn').length, error: all.filter(l => lineLevel(l) === 'error').length };
-                                return (
-                                    <div className="flex flex-wrap items-center gap-3 px-3.5 py-2" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
-                                        <div className="seg" role="group" aria-label="Level">
-                                            {[['all', 'All'], ['warn', 'Warn'], ['error', 'Error']].map(([k, label]) => (
-                                                <button key={k} type="button" className={level === k ? 'on' : ''} aria-pressed={level === k} onClick={() => setLevel(k)}>
-                                                    {label} <span className="num" style={{ color: 'var(--mute-2)' }}>{n[k]}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <SearchBox value={lineQ} onChange={setLineQ} placeholder="Filter lines" width={240} />
-                                    </div>
-                                );
-                            })()}
                             <div className="flex-1 overflow-y-auto">
                                 {selectedReport.results.map((res, idx) => {
                                     const lines = (res.output || '').split('\n')
-                                        .map((text, i) => ({ text, i }))
-                                        .filter(l => (level === 'all' || lineLevel(l.text) === level) && (!lineQ || l.text.toLowerCase().includes(lineQ.toLowerCase())));
+                                        .map((text, i) => ({ text, i }));
                                     return (
                                         <div key={idx} style={{ borderBottom: '1px solid var(--line)' }}>
                                             <div className="flex items-center gap-2.5 px-3.5 py-2 sticky top-0 z-10" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
@@ -245,8 +225,6 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
                                             </div>
                                             {!res.output ? (
                                                 <p className="m-0 px-3.5 py-3 text-xs italic" style={{ color: 'var(--faint)' }}>No output captured for this scan section.</p>
-                                            ) : lines.length === 0 ? (
-                                                <p className="m-0 px-3.5 py-3 text-xs" style={{ color: 'var(--mute)' }}>No lines match.</p>
                                             ) : (
                                                 <div className="num text-xs leading-5 py-1.5">
                                                     {lines.map(l => (
