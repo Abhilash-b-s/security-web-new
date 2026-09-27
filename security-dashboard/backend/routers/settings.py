@@ -7,7 +7,10 @@ import os
 import uuid
 
 router = APIRouter()
-REGISTRIES_FILE = "registries.json"
+# Where runtime state is kept; point STATE_DIR at a persistent volume in Kubernetes.
+STATE_DIR = os.getenv("STATE_DIR", ".")
+os.makedirs(STATE_DIR, exist_ok=True)
+REGISTRIES_FILE = os.path.join(STATE_DIR, "registries.json")
 
 def load_registries():
     if not os.path.exists(REGISTRIES_FILE):
@@ -185,7 +188,7 @@ async def update_registry(reg_id: str, credential: RegistryCredential):
     # Return without password
     return {"id": reg_id, "url": credential.url, "username": credential.username}
 
-GIT_CONFIG_FILE = "git_config.json"
+GIT_CONFIG_FILE = os.path.join(STATE_DIR, "git_config.json")
 
 def load_git_config():
     if not os.path.exists(GIT_CONFIG_FILE):

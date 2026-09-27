@@ -1,9 +1,12 @@
+import PageHead from './PageHead';
 import React, { useState, useEffect } from 'react';
 import JSZip from 'jszip';
-import { Shield, FileJson, AlertTriangle, CheckCircle, XCircle, Info, Hash, Clock, Download, ChevronRight, ChevronDown, Package, Layers, Image as ImageIcon, Globe, ClipboardList, Server, Code, GitGraph, Search } from 'lucide-react';
+import { Download } from 'lucide-react';
+import FindingsView, { DEFAULT_FINDING_FILTERS } from './FindingsView';
+import { REPORT_TABS, Badge, SEV_ORDER, SEV_COLOR, countBy, FigureStrip, ToggleGroup, SearchBox, FilterLabel, MultiSelect, Chip, useSort, sortRows, SortTh, usePaging, Pager, EmptyRow } from './reportParts';
 
-export default function PolicyReports() {
-  const [activeView, setActiveView] = useState('kyverno'); // kyverno | sbom | image | nmap | cis | cluster | trivy-repo
+// activeView is owned by App so the left panel's report sub-items and this page stay in sync.
+export default function PolicyReports({ activeView }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -24,36 +27,8 @@ export default function PolicyReports() {
   const [selectedTrivyRepoFile, setSelectedTrivyRepoFile] = useState(null);
   const [trivyRepoData, setTrivyRepoData] = useState({ list: [], counts: {} });
 
-  // Filters
-  const [kyvernoNs, setKyvernoNs] = useState('');
-  const [kyvernoStatusFilters, setKyvernoStatusFilters] = useState({
-    PASS: true, FAIL: true, WARN: true, ERROR: true, SKIP: true
-  });
-  const [sbomSeverityFilters, setSbomSeverityFilters] = useState({
-    CRITICAL: true, HIGH: true, MEDIUM: true, LOW: true, UNKNOWN: true
-  });
-  const [cisStatusFilters, setCisStatusFilters] = useState({
-    PASS: true, FAIL: true, WARN: true, INFO: true
-  });
-  const [clusterSeverityFilters, setClusterSeverityFilters] = useState({
-    CRITICAL: true, HIGH: true, MEDIUM: true, LOW: true, UNKNOWN: true
-  });
-
-  // Image Filters
+  // Image report namespace: '' shows aggregate totals, 'ALL' or a namespace lists its reports
   const [imageNs, setImageNs] = useState('');
-  const [imageSeverityFilters, setImageSeverityFilters] = useState({
-    CRITICAL: true, HIGH: true, MEDIUM: true, LOW: true, UNKNOWN: true
-  });
-
-  // Git Repo Filters
-  const [trivyRepoSeverityFilters, setTrivyRepoSeverityFilters] = useState({
-    CRITICAL: true, HIGH: true, MEDIUM: true, LOW: true, UNKNOWN: true
-  });
-
-  // CVE / ID Search
-  const [imageSearch, setImageSearch] = useState('');
-  const [sbomSearch, setSbomSearch] = useState('');
-  const [trivyRepoSearch, setTrivyRepoSearch] = useState('');
 
   // Suppressions
   const [suppressions, setSuppressions] = useState([]);
@@ -61,12 +36,6 @@ export default function PolicyReports() {
   const [suppressModal, setSuppressModal] = useState(null); // { cve_id, pkg, scan_type }
   const [suppressReason, setSuppressReason] = useState('accepted-risk');
   const [suppressNote, setSuppressNote] = useState('');
-
-  // Aggregate counts from backend (used when no file/namespace is selected)
-  const [dashboardCounts, setDashboardCounts] = useState({
-    trivyImage: { counts: {}, total: 0 },
-    trivyRepo: { counts: {}, total: 0 },
-  });
 
   // Fetch logic
   useEffect(() => {
@@ -103,18 +72,19 @@ export default function PolicyReports() {
       .catch(() => { });
   }, []);
 
-  // Fetch aggregate totals for Image and Source Code "None" state
+
+  // Latest dashboard stats: tab counts and aggregate totals when no report file is selected
+  const [stats, setStats] = useState(null);
   useEffect(() => {
     fetch('/api/dashboard/stats')
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data) setDashboardCounts({
-          trivyImage: data.trivyImage || { counts: {}, total: 0 },
-          trivyRepo: data.trivyRepo || { counts: {}, total: 0 },
-        });
-      })
+      .then(data => { if (data) setStats(data); })
       .catch(() => { });
   }, []);
+  const dashboardCounts = {
+    trivyImage: stats?.trivyImage || { counts: {}, total: 0 },
+    trivyRepo: stats?.trivyRepo || { counts: {}, total: 0 },
+  };
 
   // Load Git Repo Data when file selected
   useEffect(() => {
@@ -638,62 +608,29 @@ export default function PolicyReports() {
   }
 
 
-  // --- Helpers ---
-  const getStatusColor = (status) => {
-    const map = {
-      FAIL: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-300 dark:border-red-400/20',
-      ERROR: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-300 dark:border-red-400/20',
-      WARN: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
-      PASS: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-400/10 border-green-300 dark:border-green-400/20',
-      SKIP: 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-400/10 border-slate-300 dark:border-slate-400/20',
-      CRITICAL: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-400/10 border-red-300 dark:border-red-400/20',
-      HIGH: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-400/10 border-orange-300 dark:border-orange-400/20',
-      MEDIUM: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 border-yellow-300 dark:border-yellow-400/20',
-      LOW: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 border-blue-300 dark:border-blue-400/20',
-      UNKNOWN: 'text-gray-900 dark:text-gray-400 bg-gray-50 dark:bg-gray-400/10 border-gray-300 dark:border-gray-400/20',
-      INFO: 'text-gray-900 dark:text-gray-400 bg-gray-50 dark:bg-gray-400/10 border-gray-300 dark:border-gray-400/20'
-    };
-    return map[status] || map.UNKNOWN;
-  };
+  // --- Suppressions ---
+  const isSuppressed = React.useCallback((cve_id, pkg) =>
+    suppressions.some(s => s.cve_id === cve_id && s.pkg === pkg), [suppressions]);
 
-  const SeverityBadge = ({ level }) => (
-    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(level)}`}>
-      {level}
-    </span>
-  );
-
-  const CVSS_BAR_COLORS = { CRITICAL: '#DC2626', HIGH: '#EA580C', MEDIUM: '#F59E0B', LOW: '#3B82F6', UNKNOWN: '#6B7280' };
-
-  const CvssBar = ({ score, severity }) => {
-    if (score === null || score === undefined) return <span className="text-gray-900 dark:text-gray-400 text-xs font-mono">—</span>;
-    return (
-      <div className="flex items-center gap-1.5 min-w-[72px]">
-        <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div className="h-full rounded-full" style={{ width: `${(score / 10) * 100}%`, backgroundColor: CVSS_BAR_COLORS[severity] || CVSS_BAR_COLORS.UNKNOWN }} />
-        </div>
-        <span className="text-xs font-mono text-gray-700 dark:text-gray-300 w-7 text-right">{score.toFixed(1)}</span>
-      </div>
-    );
-  };
-
-  // Suppression helpers
-  const isSuppressed = (cve_id, pkg) =>
-    suppressions.some(s => s.cve_id === cve_id && s.pkg === pkg);
+  // items: [{ cve_id, pkg, scan_type }]; onDone runs after the modal closes with a save.
+  const openSuppress = (items, onDone) => { if (items.length) setSuppressModal({ items, onDone }); };
 
   const addSuppression = async () => {
     if (!suppressModal) return;
-    const body = { cve_id: suppressModal.cve_id, pkg: suppressModal.pkg, scan_type: suppressModal.scan_type, reason: suppressReason, note: suppressNote };
-    try {
-      const res = await fetch('/api/suppressions/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) {
-        const created = await res.json();
-        setSuppressions(prev => [...prev, created]);
-      }
-    } catch { /* ignore */ }
-    setSuppressModal(null);
-    setSuppressNote('');
-    setSuppressReason('accepted-risk');
+    const created = [];
+    for (const it of suppressModal.items) {
+      const body = { cve_id: it.cve_id, pkg: it.pkg, scan_type: it.scan_type, reason: suppressReason, note: suppressNote };
+      try {
+        const res = await fetch('/api/suppressions/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (res.ok) created.push(await res.json());
+      } catch { /* ignore */ }
+    }
+    setSuppressions(prev => [...prev, ...created]);
+    suppressModal.onDone?.();
+    closeSuppress();
   };
+
+  const closeSuppress = () => { setSuppressModal(null); setSuppressNote(''); setSuppressReason('accepted-risk'); };
 
   const removeSuppression = async (cve_id, pkg) => {
     const sup = suppressions.find(s => s.cve_id === cve_id && s.pkg === pkg);
@@ -704,808 +641,464 @@ export default function PolicyReports() {
     } catch { /* ignore */ }
   };
 
+  const suppressProps = { isSuppressed, onSuppress: openSuppress, onUnsuppress: removeSuppression, showSuppressed, setShowSuppressed };
+
+  // --- Filter state per tab ---
+  const [filters, setFilters] = useState({
+    kyverno: { ns: [], policy: [], kind: [], severity: '', status: { FAIL: true, WARN: true, ERROR: true, SKIP: true, PASS: true }, q: '' },
+    cis: { status: { FAIL: true, WARN: true, INFO: true, PASS: true }, section: [], q: '' },
+    cluster: { sev: { CRITICAL: true, HIGH: true, MEDIUM: true, LOW: true, UNKNOWN: true }, q: '' },
+    nmap: { ns: [], weakOnly: false, q: '' },
+    image: DEFAULT_FINDING_FILTERS,
+    sbom: DEFAULT_FINDING_FILTERS,
+    'trivy-repo': DEFAULT_FINDING_FILTERS,
+  });
+  const setTab = (tab) => (patch) => setFilters(f => ({ ...f, [tab]: { ...f[tab], ...patch } }));
+
+  const TABS = REPORT_TABS;
+  const TAB_SUB = {
+    image: 'Container image vulnerabilities from Trivy',
+    sbom: 'Vulnerabilities in the software bill of materials',
+    cluster: 'Kubernetes misconfigurations and vulnerable workloads',
+    cis: 'CIS Kubernetes Benchmark results from kube-bench',
+    kyverno: 'Kyverno policy report results across namespaces',
+    nmap: 'TLS ciphers accepted by cluster services',
+    'trivy-repo': 'Vulnerabilities and secrets in configured Git repositories',
+  };
+
+  // --- Suppress dialog ---
   const SuppressModal = () => {
     if (!suppressModal) return null;
+    const items = suppressModal.items;
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-[#30363d] rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
-          <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Suppress Finding</h3>
-          <p className="text-xs text-gray-900 dark:text-gray-400 mb-4 font-mono">{suppressModal.cve_id}{suppressModal.pkg ? ` · ${suppressModal.pkg}` : ''}</p>
-          <div className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-2">Reason</p>
-            <div className="flex gap-3">
-              {['accepted-risk', 'false-positive'].map(r => (
-                <label key={r} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border-2 cursor-pointer text-sm font-semibold transition-all ${suppressReason === r ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300' : 'border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-400 hover:border-gray-300'}`}>
-                  <input type="radio" className="sr-only" value={r} checked={suppressReason === r} onChange={() => setSuppressReason(r)} />
-                  {r === 'accepted-risk' ? '✓ Accepted Risk' : '✗ False Positive'}
-                </label>
-              ))}
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'var(--scrim)' }} onClick={closeSuppress}>
+        <div role="dialog" aria-modal="true" aria-labelledby="suppress-title" className="sheet w-full max-w-md mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+          <div className="phead"><h2 id="suppress-title">{items.length > 1 ? `Suppress ${items.length} findings` : 'Suppress finding'}</h2></div>
+          <div className="p-4 flex flex-col gap-3.5">
+            <p className="num m-0 text-xs break-all" style={{ color: 'var(--mute)' }}>
+              {items.length > 1 ? items.slice(0, 4).map(i => i.cve_id).join(', ') + (items.length > 4 ? ` +${items.length - 4} more` : '') : `${items[0].cve_id}${items[0].pkg ? ` · ${items[0].pkg}` : ''}`}
+            </p>
+            <div>
+              <FilterLabel>Reason</FilterLabel>
+              <div className="seg mt-1.5 w-full">
+                {['accepted-risk', 'false-positive'].map(r => (
+                  <button key={r} type="button" className={`flex-1 ${suppressReason === r ? 'on' : ''}`} aria-pressed={suppressReason === r} onClick={() => setSuppressReason(r)}>
+                    {r === 'accepted-risk' ? 'Accepted risk' : 'False positive'}
+                  </button>
+                ))}
+              </div>
             </div>
+            <label className="field">Note <span className="hint">Optional: justification or ticket reference.</span>
+              <textarea className="inp resize-none" rows={3} value={suppressNote} onChange={e => setSuppressNote(e.target.value)} placeholder="Add justification or ticket reference…" />
+            </label>
           </div>
-          <div className="mb-5">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-2">Note <span className="normal-case font-normal">(optional)</span></p>
-            <textarea
-              value={suppressNote}
-              onChange={e => setSuppressNote(e.target.value)}
-              rows={3}
-              placeholder="Add justification or ticket reference…"
-              className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
-            />
-          </div>
-          <div className="flex gap-3 justify-end">
-            <button onClick={() => { setSuppressModal(null); setSuppressNote(''); setSuppressReason('accepted-risk'); }}
-              className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-              Cancel
-            </button>
-            <button onClick={addSuppression}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sm">
-              Suppress Finding
-            </button>
+          <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: '1px solid var(--line)', background: 'var(--panel-head)' }}>
+            <button type="button" className="btn" onClick={closeSuppress}>Cancel</button>
+            <button type="button" className="btn btn-primary" onClick={addSuppression}>{items.length > 1 ? `Suppress ${items.length}` : 'Suppress finding'}</button>
           </div>
         </div>
       </div>
     );
   };
 
-  // Remediation helpers
-  const NvdLink = ({ id }) => {
-    if (!id) return <span className="text-gray-900">—</span>;
-    const url = id.startsWith('CVE-') ? `https://nvd.nist.gov/vuln/detail/${id}` : null;
-    return url
-      ? <a href={url} target="_blank" rel="noopener noreferrer" className="font-mono text-blue-600 dark:text-blue-400 hover:underline text-xs">{id}</a>
-      : <span className="font-mono text-blue-600 dark:text-blue-300 text-xs">{id}</span>;
-  };
+  // ============================ Policies (Kyverno) ============================
+  const kf = filters.kyverno;
+  const setKf = setTab('kyverno');
+  const kyvernoOptions = React.useMemo(() => {
+    const uniq = (k) => Array.from(new Set(kyvernoData.rows.map(r => r[k]).filter(v => v !== undefined))).sort();
+    const nsFail = {};
+    kyvernoData.rows.forEach(r => { if (r.status === 'FAIL' || r.status === 'ERROR') nsFail[r.namespace] = (nsFail[r.namespace] || 0) + 1; else nsFail[r.namespace] ||= 0; });
+    return { ns: uniq('namespace'), policy: uniq('policy'), kind: uniq('type'), severity: uniq('severity'), nsFail };
+  }, [kyvernoData.rows]);
+  // Every filter except status; status counts are computed on this so toggles show what they would add.
+  const kyvernoBase = React.useMemo(() => {
+    const needle = kf.q.trim().toLowerCase();
+    return kyvernoData.rows.filter(r =>
+      (!kf.ns.length || kf.ns.includes(r.namespace)) &&
+      (!kf.policy.length || kf.policy.includes(r.policy)) &&
+      (!kf.kind.length || kf.kind.includes(r.type)) &&
+      (!kf.severity || r.severity === kf.severity) &&
+      (!needle || [r.name, r.message, r.policy].some(v => String(v || '').toLowerCase().includes(needle))));
+  }, [kyvernoData.rows, kf]);
+  const kyvernoRows = kyvernoBase.filter(r => kf.status[r.status] ?? true);
+  const [kSort, onKSort] = useSort('policy');
+  const kyvernoSorted = React.useMemo(() => sortRows(kyvernoRows, kSort, {
+    status: v => ['FAIL', 'ERROR', 'WARN', 'SKIP', 'PASS'].indexOf(v),
+    severity: v => SEV_ORDER.indexOf(v),
+  }), [kyvernoRows, kSort]);
+  const kPaging = usePaging(kyvernoSorted, JSON.stringify(kf));
+  const kStatusCounts = countBy(kyvernoBase, 'status');
+  const kAll = countBy(kyvernoData.rows, 'status');
+  const statusOff = Object.entries(kf.status).filter(([, v]) => !v).map(([k]) => k);
+  const resetK = () => setKf({ ns: [], policy: [], kind: [], severity: '', status: { FAIL: true, WARN: true, ERROR: true, SKIP: true, PASS: true }, q: '' });
+  const kActive = kf.ns.length || kf.policy.length || kf.kind.length || kf.severity || statusOff.length || kf.q;
 
-  const FixedCell = ({ version }) => {
-    if (version && version !== 'N/A') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30">
-          ↑ {version}
-        </span>
-      );
-    }
-    return <span className="text-xs text-gray-900 dark:text-gray-400">No fix</span>;
-  };
+  const renderKyverno = () => (
+    <div className="flex flex-col gap-3.5">
+      <FigureStrip items={[
+        { label: 'Fail', swatch: SEV_COLOR.FAIL, value: kAll.FAIL || 0, color: kAll.FAIL ? 'var(--crit)' : undefined },
+        { label: 'Warn', swatch: SEV_COLOR.WARN, value: kAll.WARN || 0 },
+        { label: 'Error', swatch: SEV_COLOR.ERROR, value: kAll.ERROR || 0 },
+        { label: 'Skip', swatch: SEV_COLOR.SKIP, value: kAll.SKIP || 0 },
+        { label: 'Pass', swatch: SEV_COLOR.PASS, value: kAll.PASS || 0, color: 'var(--ok)' },
+        { label: 'Total', value: kyvernoData.rows.length, note: `${kyvernoOptions.policy.length} policies · ${kyvernoOptions.ns.length} namespaces` },
+      ]} />
 
-  const ACCENT_BORDER = {
-    FAIL: 'border-l-red-500', ERROR: 'border-l-red-500', WARN: 'border-l-yellow-500',
-    PASS: 'border-l-green-500', SKIP: 'border-l-slate-400', INFO: 'border-l-slate-400',
-    CRITICAL: 'border-l-red-600', HIGH: 'border-l-orange-500', MEDIUM: 'border-l-yellow-400',
-    LOW: 'border-l-blue-500', UNKNOWN: 'border-l-gray-400', TOTAL: 'border-l-slate-400',
-  };
-  const NUM_COLOR = {
-    FAIL: 'text-red-600 dark:text-red-400', ERROR: 'text-red-600 dark:text-red-400',
-    WARN: 'text-yellow-600 dark:text-yellow-400', PASS: 'text-green-600 dark:text-green-400',
-    SKIP: 'text-slate-500 dark:text-slate-400', INFO: 'text-slate-500 dark:text-slate-400',
-    CRITICAL: 'text-red-700 dark:text-red-500', HIGH: 'text-orange-600 dark:text-orange-400',
-    MEDIUM: 'text-yellow-500 dark:text-yellow-400', LOW: 'text-blue-600 dark:text-blue-400',
-    UNKNOWN: 'text-gray-900 dark:text-gray-400', TOTAL: 'text-gray-700 dark:text-gray-200',
-  };
+      <section className="sheet !overflow-visible">
+        <div className="phead">
+          <h2>Filters</h2>
+          <span className="meta">Showing <span className="num">{kyvernoRows.length}</span> of <span className="num">{kyvernoData.rows.length}</span> results</span>
+          <div className="flex-1" />
+          {kActive ? <button type="button" className="lnk" onClick={resetK}>Reset filters</button> : null}
+        </div>
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-3 px-3.5 py-3">
+          <div className="flex flex-col gap-1"><FilterLabel>Namespace</FilterLabel>
+            <MultiSelect label="Namespace" options={kyvernoOptions.ns} selected={kf.ns} onChange={v => setKf({ ns: v })} counts={kyvernoOptions.nsFail} allLabel={`All namespaces (${kyvernoOptions.ns.length})`} width={210} /></div>
+          <div className="flex flex-col gap-1"><FilterLabel>Policy</FilterLabel>
+            <MultiSelect label="Policy" options={kyvernoOptions.policy} selected={kf.policy} onChange={v => setKf({ policy: v })} allLabel={`All policies (${kyvernoOptions.policy.length})`} width={210} /></div>
+          <div className="flex flex-col gap-1"><FilterLabel>Resource kind</FilterLabel>
+            <MultiSelect label="Resource kind" options={kyvernoOptions.kind} selected={kf.kind} onChange={v => setKf({ kind: v })} allLabel="All kinds" width={170} /></div>
+          <label className="flex flex-col gap-1"><FilterLabel>Severity</FilterLabel>
+            <select className="inp h-7 w-[120px] py-0" value={kf.severity} onChange={e => setKf({ severity: e.target.value })}>
+              <option value="">Any</option>
+              {kyvernoOptions.severity.map(s => <option key={s} value={s}>{s[0] + s.slice(1).toLowerCase()}</option>)}
+            </select>
+          </label>
+          <div className="flex flex-col gap-1"><FilterLabel>Status</FilterLabel>
+            <ToggleGroup label="Status" keys={['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS']} value={kf.status} onChange={v => setKf({ status: v })} counts={kStatusCounts} /></div>
+          <div className="flex flex-col gap-1 flex-1 min-w-[200px]"><FilterLabel>Search</FilterLabel>
+            <SearchBox value={kf.q} onChange={v => setKf({ q: v })} placeholder="Resource, message or policy" width="100%" /></div>
+        </div>
+        {kActive ? (
+          <div className="flex flex-wrap items-center gap-2 px-3.5 py-2" style={{ borderTop: '1px solid var(--line-soft)', background: 'var(--panel-head)' }}>
+            <FilterLabel>Active</FilterLabel>
+            {kf.ns.length > 0 && <Chip label="Namespace" value={kf.ns.join(', ')} onRemove={() => setKf({ ns: [] })} />}
+            {kf.policy.length > 0 && <Chip label="Policy" value={kf.policy.join(', ')} onRemove={() => setKf({ policy: [] })} />}
+            {kf.kind.length > 0 && <Chip label="Kind" value={kf.kind.join(', ')} onRemove={() => setKf({ kind: [] })} />}
+            {kf.severity && <Chip label="Severity" value={kf.severity} onRemove={() => setKf({ severity: '' })} />}
+            {statusOff.length > 0 && <Chip label="Status" value={Object.keys(kf.status).filter(k => kf.status[k]).join(', ') || 'none'} onRemove={() => setKf({ status: { FAIL: true, WARN: true, ERROR: true, SKIP: true, PASS: true } })} />}
+            {kf.q && <Chip label="Search" value={kf.q} onRemove={() => setKf({ q: '' })} />}
+            <button type="button" className="lnk" onClick={resetK}>Clear all</button>
+          </div>
+        ) : null}
+      </section>
 
-  const StatusCard = ({ label, value }) => (
-    <div className={`bg-white dark:bg-[#1a2332] border border-gray-200 dark:border-gray-700/60 border-l-4 ${ACCENT_BORDER[label] || 'border-l-gray-400'} rounded-lg p-4 flex flex-col gap-1 shadow-sm`}>
-      <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400">{label}</span>
-      <span className={`text-3xl font-black ${NUM_COLOR[label] || 'text-gray-800 dark:text-gray-200'}`}>{value}</span>
+      <section className="sheet">
+        <div className="overflow-x-auto">
+          <table className="ctable">
+            <thead><tr>
+              <SortTh label="Status" k="status" sort={kSort} onSort={onKSort} className="w-[92px]" />
+              <SortTh label="Severity" k="severity" sort={kSort} onSort={onKSort} className="w-[100px]" />
+              <SortTh label="Policy" k="policy" sort={kSort} onSort={onKSort} />
+              <SortTh label="Kind" k="type" sort={kSort} onSort={onKSort} />
+              <SortTh label="Resource" k="name" sort={kSort} onSort={onKSort} />
+              <SortTh label="Namespace" k="namespace" sort={kSort} onSort={onKSort} />
+              <th>Message</th>
+            </tr></thead>
+            <tbody>
+              {kPaging.slice.map((r, i) => (
+                <tr key={i}>
+                  <td><Badge value={r.status} /></td>
+                  <td><Badge value={r.severity} /></td>
+                  <td className="num text-xs whitespace-nowrap" style={{ color: 'var(--accent-text)' }}>{r.policy}</td>
+                  <td>{r.type}</td>
+                  <td className="font-medium">{r.name}</td>
+                  <td className="num text-xs">{r.namespace}</td>
+                  <td className="max-w-[420px] truncate" title={r.message}>{r.message}</td>
+                </tr>
+              ))}
+              {kyvernoRows.length === 0 && <EmptyRow cols={7}>{kyvernoData.rows.length ? 'No results match these filters.' : 'No policy report yet. Run the Policy compliance scan.'}</EmptyRow>}
+            </tbody>
+          </table>
+        </div>
+        <Pager p={kPaging} />
+      </section>
     </div>
   );
 
-  const DIST_COLORS = {
-    CRITICAL: 'bg-red-600', HIGH: 'bg-orange-500', MEDIUM: 'bg-yellow-400',
-    LOW: 'bg-blue-500', UNKNOWN: 'bg-gray-400', FAIL: 'bg-red-500',
-    WARN: 'bg-yellow-500', ERROR: 'bg-red-700', PASS: 'bg-green-500',
-    SKIP: 'bg-slate-400', INFO: 'bg-slate-400',
-  };
-  const DIST_TEXT = {
-    CRITICAL: 'text-red-500', HIGH: 'text-orange-400', MEDIUM: 'text-yellow-400',
-    LOW: 'text-blue-400', UNKNOWN: 'text-gray-900', FAIL: 'text-red-400',
-    WARN: 'text-yellow-400', ERROR: 'text-red-500', PASS: 'text-green-400',
-    SKIP: 'text-slate-400', INFO: 'text-slate-400',
-  };
+  // ============================ CIS benchmark ============================
+  const cf = filters.cis;
+  const setCf = setTab('cis');
+  const cisSections = React.useMemo(() => Array.from(new Set(cisData.list.map(r => r.section))).sort(), [cisData.list]);
+  const cisBase = cisData.list.filter(r => (!cf.section.length || cf.section.includes(r.section)) &&
+    (!cf.q || [r.id, r.desc, r.remediation].some(v => String(v || '').toLowerCase().includes(cf.q.toLowerCase()))));
+  const cisRows = cisBase.filter(r => cf.status[r.status] ?? true);
+  const [cSort, onCSort] = useSort('id');
+  const cisSorted = React.useMemo(() => sortRows(cisRows, cSort, { status: v => ['FAIL', 'WARN', 'INFO', 'PASS'].indexOf(v) }), [cisRows, cSort]);
+  const cPaging = usePaging(cisSorted, JSON.stringify(cf));
 
-  // eslint-disable-next-line no-unused-vars
-  const SeverityDistBar = ({ counts, keys }) => {
-    const total = keys.reduce((s, k) => s + (counts[k] || 0), 0);
-    if (!total) return null;
-    return (
-      <div className="bg-white dark:bg-[#1a2332] border border-gray-200 dark:border-gray-700/60 rounded-lg px-5 py-3 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400">Risk Distribution</span>
-          <span className="text-xs text-gray-900 dark:text-gray-400">{total.toLocaleString()} findings</span>
+  const renderCis = () => (
+    <div className="flex flex-col gap-3.5">
+      <FigureStrip items={[
+        { label: 'Fail', swatch: SEV_COLOR.FAIL, value: cisData.counts.FAIL || 0, color: cisData.counts.FAIL ? 'var(--crit)' : undefined },
+        { label: 'Warn', swatch: SEV_COLOR.WARN, value: cisData.counts.WARN || 0 },
+        { label: 'Info', swatch: SEV_COLOR.INFO, value: cisData.counts.INFO || 0 },
+        { label: 'Pass', swatch: SEV_COLOR.PASS, value: cisData.counts.PASS || 0, color: 'var(--ok)' },
+        { label: 'Total', value: cisData.list.length, note: `${cisSections.length} sections` },
+      ]} />
+      <section className="sheet !overflow-visible">
+        <div className="phead"><h2>Checks <span className="count">{cisRows.length}</span></h2><span className="meta">of {cisData.list.length}</span></div>
+        <div className="flex flex-wrap items-center gap-3 px-3.5 py-2" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
+          <ToggleGroup label="Status" keys={['FAIL', 'WARN', 'INFO', 'PASS']} value={cf.status} onChange={v => setCf({ status: v })} counts={countBy(cisBase, 'status')} />
+          <MultiSelect label="Section" options={cisSections} selected={cf.section} onChange={v => setCf({ section: v })} allLabel="All sections" width={220} />
+          <SearchBox value={cf.q} onChange={v => setCf({ q: v })} placeholder="Check ID, title or remediation" />
         </div>
-        <div className="flex h-2 rounded-full overflow-hidden gap-px">
-          {keys.filter(k => counts[k] > 0).map(k => (
-            <div key={k} title={`${k}: ${counts[k]}`}
-              className={`${DIST_COLORS[k] || 'bg-gray-400'} transition-all`}
-              style={{ width: `${(counts[k] / total) * 100}%` }} />
-          ))}
+        <div className="overflow-x-auto">
+          <table className="ctable">
+            <thead><tr>
+              <SortTh label="Status" k="status" sort={cSort} onSort={onCSort} className="w-[92px]" />
+              <SortTh label="Check" k="id" sort={cSort} onSort={onCSort} className="w-[90px]" />
+              <SortTh label="Section" k="section" sort={cSort} onSort={onCSort} />
+              <th>Title</th>
+              <th className="w-[38%]">Remediation</th>
+            </tr></thead>
+            <tbody>
+              {cPaging.slice.map((r, i) => (
+                <tr key={i}>
+                  <td><Badge value={r.status} /></td>
+                  <td className="num text-xs" style={{ color: 'var(--accent-text)' }}>{r.id}</td>
+                  <td className="font-medium">{r.section || '—'}</td>
+                  <td>{r.desc}</td>
+                  <td className="num text-[11.5px] whitespace-pre-wrap" style={{ color: 'var(--mute)' }}>{r.remediation || '—'}</td>
+                </tr>
+              ))}
+              {cisRows.length === 0 && <EmptyRow cols={5}>{cisData.list.length ? 'No checks match these filters.' : 'No CIS report yet. Run the CIS benchmark scan.'}</EmptyRow>}
+            </tbody>
+          </table>
         </div>
-        <div className="flex flex-wrap gap-4 mt-2.5">
-          {keys.filter(k => counts[k] > 0).map(k => (
-            <span key={k} className="flex items-center gap-1.5 text-xs">
-              <span className={`w-2 h-2 rounded-sm ${DIST_COLORS[k] || 'bg-gray-400'} shrink-0`} />
-              <span className={`font-semibold ${DIST_TEXT[k] || 'text-gray-900'}`}>{k}</span>
-              <span className="text-gray-900 dark:text-gray-400">{((counts[k] / total) * 100).toFixed(0)}%</span>
-            </span>
-          ))}
+        <Pager p={cPaging} />
+      </section>
+    </div>
+  );
+
+  // ============================ Cluster risks ============================
+  const clf = filters.cluster;
+  const setClf = setTab('cluster');
+  const clusterBase = clusterData.list.filter(r => !clf.q || [r.id, r.title, r.msg, r.target].some(v => String(v || '').toLowerCase().includes(clf.q.toLowerCase())));
+  const clusterRows = clusterBase.filter(r => clf.sev[r.severity] ?? true);
+  const [clSort, onClSort] = useSort('severity');
+  const clusterSorted = React.useMemo(() => sortRows(clusterRows, clSort, { severity: v => SEV_ORDER.indexOf(v) }), [clusterRows, clSort]);
+  const clPaging = usePaging(clusterSorted, JSON.stringify(clf));
+
+  const renderCluster = () => (
+    <div className="flex flex-col gap-3.5">
+      <FigureStrip items={[
+        ...['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(s => ({ label: s[0] + s.slice(1).toLowerCase(), swatch: SEV_COLOR[s], value: clusterData.counts[s] || 0, color: s === 'CRITICAL' && clusterData.counts[s] ? 'var(--crit)' : undefined })),
+        { label: 'Total', value: clusterData.list.length, note: `${clusterData.list.filter(r => r.type === 'Misconfig').length} misconfigurations` },
+      ]} />
+      <section className="sheet">
+        <div className="phead"><h2>Cluster findings <span className="count">{clusterRows.length}</span></h2><span className="meta">of {clusterData.list.length}</span></div>
+        <div className="flex flex-wrap items-center gap-3 px-3.5 py-2" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
+          <SearchBox value={clf.q} onChange={v => setClf({ q: v })} placeholder="ID, title, message or resource" />
+          <ToggleGroup label="Severity" keys={SEV_ORDER} value={clf.sev} onChange={v => setClf({ sev: v })} counts={countBy(clusterBase, 'severity')} />
         </div>
-      </div>
-    );
+        <div className="overflow-x-auto">
+          <table className="ctable">
+            <thead><tr>
+              <SortTh label="Severity" k="severity" sort={clSort} onSort={onClSort} className="w-[100px]" />
+              <SortTh label="ID" k="id" sort={clSort} onSort={onClSort} />
+              <SortTh label="Type" k="type" sort={clSort} onSort={onClSort} />
+              <th>Title</th>
+              <th>Message</th>
+              <SortTh label="Resource" k="target" sort={clSort} onSort={onClSort} />
+              <th className="w-[60px]">Ref</th>
+            </tr></thead>
+            <tbody>
+              {clPaging.slice.map((r, i) => (
+                <tr key={i}>
+                  <td><Badge value={r.severity} /></td>
+                  <td className="num text-xs" style={{ color: 'var(--accent-text)' }}>{r.id}</td>
+                  <td>{r.type}</td>
+                  <td className="font-medium">{r.title}</td>
+                  <td className="max-w-[320px] truncate" title={r.msg} style={{ color: 'var(--mute)' }}>{r.msg}</td>
+                  <td className="num text-xs break-all">{r.target}</td>
+                  <td>{r.link ? <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-xs" style={{ color: 'var(--accent-text)' }}>Link</a> : <span style={{ color: 'var(--faint)' }}>—</span>}</td>
+                </tr>
+              ))}
+              {clusterRows.length === 0 && <EmptyRow cols={7}>{clusterData.list.length ? 'No findings match these filters.' : 'No cluster report yet. Run the Cluster risks scan.'}</EmptyRow>}
+            </tbody>
+          </table>
+        </div>
+        <Pager p={clPaging} />
+      </section>
+    </div>
+  );
+
+  // ============================ Network ============================
+  const nf = filters.nmap;
+  const setNf = setTab('nmap');
+  const nmapAll = nmapData.filter(r => r.accepted && r.accepted.length > 0);
+  const nmapNs = React.useMemo(() => Array.from(new Set(nmapAll.map(r => r.namespace))).sort(), [nmapData]);
+  const nmapRows = nmapAll.filter(r => (!nf.ns.length || nf.ns.includes(r.namespace)) && (!nf.weakOnly || r.weak.length > 0) &&
+    (!nf.q || [r.fqdn, r.namespace, String(r.port)].some(v => v.toLowerCase().includes(nf.q.toLowerCase()))));
+  const [nSort, onNSort] = useSort('namespace');
+  const nmapSorted = React.useMemo(() => sortRows(nmapRows.map(r => ({ ...r, weakCount: r.weak.length })), nSort), [nmapRows, nSort]);
+  const nPaging = usePaging(nmapSorted, JSON.stringify(nf));
+  const weakServices = nmapAll.filter(r => r.weak.length > 0).length;
+
+  const renderNmap = () => (
+    <div className="flex flex-col gap-3.5">
+      <FigureStrip items={[
+        { label: 'Services', value: nmapAll.length, note: `${nmapNs.length} namespaces` },
+        { label: 'With weak ciphers', swatch: SEV_COLOR.WARN, value: weakServices, color: weakServices ? 'var(--warn)' : undefined },
+        { label: 'Secure', swatch: SEV_COLOR.PASS, value: nmapAll.length - weakServices, color: 'var(--ok)' },
+      ]} />
+      <section className="sheet !overflow-visible">
+        <div className="phead"><h2>Services <span className="count">{nmapRows.length}</span></h2><span className="meta">of {nmapAll.length}</span></div>
+        <div className="flex flex-wrap items-center gap-3 px-3.5 py-2" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
+          <SearchBox value={nf.q} onChange={v => setNf({ q: v })} placeholder="Host, namespace or port" />
+          <MultiSelect label="Namespace" options={nmapNs} selected={nf.ns} onChange={v => setNf({ ns: v })} allLabel="All namespaces" />
+          <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: 'var(--ink-2)' }}>
+            <input type="checkbox" checked={nf.weakOnly} onChange={e => setNf({ weakOnly: e.target.checked })} /> Weak ciphers only
+          </label>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="ctable">
+            <thead><tr>
+              <SortTh label="Namespace" k="namespace" sort={nSort} onSort={onNSort} />
+              <SortTh label="Host" k="fqdn" sort={nSort} onSort={onNSort} />
+              <SortTh label="Port" k="port" sort={nSort} onSort={onNSort} className="w-[80px]" />
+              <th>Accepted ciphers</th>
+              <SortTh label="Weak ciphers" k="weakCount" sort={nSort} onSort={onNSort} />
+            </tr></thead>
+            <tbody>
+              {nPaging.slice.map((r, i) => (
+                <tr key={i}>
+                  <td className="num text-xs">{r.namespace}</td>
+                  <td style={{ color: 'var(--accent-text)' }}>{r.fqdn}</td>
+                  <td className="num text-xs">{r.port}</td>
+                  <td className="max-w-[420px]"><div className="flex flex-wrap gap-1">{r.accepted.map(c => <span key={c} className="badge badge-ok num !font-normal !whitespace-normal break-all">{c}</span>)}</div></td>
+                  <td className="max-w-[320px]">{r.weak.length ? <div className="flex flex-wrap gap-1">{r.weak.map(c => <span key={c} className="badge badge-crit num !font-normal !whitespace-normal break-all">{c}</span>)}</div> : <span style={{ color: 'var(--faint)' }}>None</span>}</td>
+                </tr>
+              ))}
+              {nmapRows.length === 0 && <EmptyRow cols={5}>{nmapAll.length ? 'No services match these filters.' : 'No network scan data yet. Run the Network exposure scan.'}</EmptyRow>}
+            </tbody>
+          </table>
+        </div>
+        <Pager p={nPaging} />
+      </section>
+    </div>
+  );
+
+  // ============================ Findings tabs (Images / SBOM / Repositories) ============================
+  const aggFigures = (c) => [
+    ...['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(s => ({ label: s[0] + s.slice(1).toLowerCase(), swatch: SEV_COLOR[s], value: c.counts?.[s] || 0, color: s === 'CRITICAL' && c.counts?.[s] ? 'var(--crit)' : undefined })),
+    { label: 'Total', value: c.total || 0, note: 'All reports · pick one to see findings' },
+  ];
+  const imageScoped = imageFiles.filter(f => imageNs === 'ALL' || (imageNs && f.startsWith(imageNs + '/')));
+
+  const renderImage = () => (
+    <FindingsView
+      {...suppressProps}
+      rows={imageData.list}
+      scanType="image"
+      title="Image findings"
+      filters={filters.image}
+      onFilters={v => setFilters(f => ({ ...f, image: v }))}
+      figuresOverride={imageNs === '' ? aggFigures(dashboardCounts.trivyImage) : undefined}
+      emptyText={imageNs === '' ? 'Pick a namespace to load its image reports.' : 'No findings match these filters.'}
+      controls={(
+        <>
+          <select className="inp h-7 w-[170px] py-0" aria-label="Namespace" value={imageNs} onChange={(e) => {
+            const val = e.target.value;
+            setImageNs(val);
+            if (!val) { setSelectedImageFile(null); return; }
+            const relevant = imageFiles.filter(f => val === 'ALL' || f.startsWith(val + '/'));
+            setSelectedImageFile(relevant.length > 0 ? relevant[0] : null);
+          }}>
+            <option value="">Namespace: none</option>
+            <option value="ALL">All namespaces</option>
+            {Array.from(new Set(imageFiles.map(f => f.split('/')[0]))).sort().map(ns => <option key={ns} value={ns}>{ns}</option>)}
+          </select>
+          <select className="inp h-7 w-[220px] py-0" aria-label="Image report" value={selectedImageFile || ''} onChange={(e) => setSelectedImageFile(e.target.value)} disabled={!imageScoped.length}>
+            {imageScoped.map(f => <option key={f} value={f}>{f.replace(/^[^/]+\//, '').replace('.json', '')}</option>)}
+            {imageScoped.length === 0 && <option value="">No reports</option>}
+          </select>
+        </>
+      )}
+    />
+  );
+
+  const renderSbom = () => (
+    <FindingsView
+      {...suppressProps}
+      rows={sbomData.list.map(r => ({ ...r, pkg: r.library, refs: r.ref ? [r.ref] : [], target: r.status || '' }))}
+      scanType="sbom"
+      title="SBOM findings"
+      filters={filters.sbom}
+      onFilters={v => setFilters(f => ({ ...f, sbom: v }))}
+      emptyText={sbomData.list.length ? 'No findings match these filters.' : 'No SBOM report yet. Run the SBOM inventory scan.'}
+    />
+  );
+
+  const renderRepo = () => (
+    <FindingsView
+      {...suppressProps}
+      rows={trivyRepoData.list}
+      scanType="trivy-repo"
+      title="Repository findings"
+      showType
+      filters={filters['trivy-repo']}
+      onFilters={v => setFilters(f => ({ ...f, 'trivy-repo': v }))}
+      figuresOverride={!selectedTrivyRepoFile ? aggFigures(dashboardCounts.trivyRepo) : undefined}
+      emptyText={trivyRepoFiles.length ? 'No findings match these filters.' : 'No repository reports yet. Configure Git repositories in Settings, then run the Source code scan.'}
+      controls={(
+        <select className="inp h-7 w-[220px] py-0" aria-label="Repository report" value={selectedTrivyRepoFile || ''} onChange={(e) => setSelectedTrivyRepoFile(e.target.value)} disabled={!trivyRepoFiles.length}>
+          {trivyRepoFiles.length === 0 && <option value="">No reports</option>}
+          {trivyRepoFiles.map(f => <option key={f} value={f}>{f.replace('.json', '')}</option>)}
+        </select>
+      )}
+    />
+  );
+
+  // Report file offered in the page header, same place on every report screen.
+  const EXPORTS = {
+    kyverno: () => ({ href: '/new/kyverno-report/Policy_report.xlsx', file: 'Policy_report.xlsx', label: 'Export .xlsx' }),
+    image: () => ({ href: '/new/trivy-reports/consolidated-report_images.xlsx', file: 'consolidated-report_images.xlsx', label: 'Export .xlsx' }),
+    sbom: () => ({ href: '/new/trivy-sbom/sbom.json', file: 'sbom.json', label: 'Download .json' }),
+    cluster: () => ({ href: '/new/trivy-cluster-report/cluster.zip', file: 'cluster.zip', label: 'Download .zip' }),
+    cis: () => ({ href: '/new/kube-bench/kubebench.txt', file: 'kubebench.txt', label: 'Download .txt' }),
+    nmap: () => ({ href: '/new/nmap/nmap.json', file: 'nmap.json', label: 'Download .json' }),
+    'trivy-repo': () => (selectedTrivyRepoFile ? { href: `/new/trivy_repo_scan/${selectedTrivyRepoFile}`, file: selectedTrivyRepoFile.split('/').pop(), label: 'Download .json' } : null),
   };
 
-
-  const FilterPill = ({ label, active, onToggle }) => {
-    const activeStyle = {
-      FAIL: 'bg-red-100 dark:bg-red-500/20 border-red-400 dark:border-red-500/50 text-red-700 dark:text-red-300',
-      ERROR: 'bg-red-100 dark:bg-red-500/20 border-red-400 dark:border-red-500/50 text-red-700 dark:text-red-300',
-      WARN: 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-400 dark:border-yellow-500/50 text-yellow-700 dark:text-yellow-300',
-      PASS: 'bg-green-100 dark:bg-green-500/20 border-green-400 dark:border-green-500/50 text-green-700 dark:text-green-300',
-      SKIP: 'bg-slate-100 dark:bg-slate-500/20 border-slate-400 dark:border-slate-500/50 text-slate-600 dark:text-slate-300',
-      INFO: 'bg-slate-100 dark:bg-slate-500/20 border-slate-400 dark:border-slate-500/50 text-slate-600 dark:text-slate-300',
-      CRITICAL: 'bg-red-100 dark:bg-red-600/20 border-red-500 dark:border-red-600/50 text-red-800 dark:text-red-400',
-      HIGH: 'bg-orange-100 dark:bg-orange-500/20 border-orange-400 dark:border-orange-500/50 text-orange-700 dark:text-orange-300',
-      MEDIUM: 'bg-yellow-100 dark:bg-yellow-400/20 border-yellow-400 dark:border-yellow-400/50 text-yellow-700 dark:text-yellow-300',
-      LOW: 'bg-blue-100 dark:bg-blue-500/20 border-blue-400 dark:border-blue-500/50 text-blue-700 dark:text-blue-300',
-      UNKNOWN: 'bg-gray-100 dark:bg-gray-500/20 border-gray-400 dark:border-gray-500/50 text-gray-900 dark:text-gray-400',
-    };
-    return (
-      <button type="button" onClick={onToggle}
-        className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${active
-          ? (activeStyle[label] || 'bg-blue-100 dark:bg-blue-500/20 border-blue-400 text-blue-700')
-          : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-400'
-          }`}
-      >
-        {label}
-      </button>
-    );
-  };
-
-  // Calculate display counts dynamically based on namespace filter
-  const kyvernoDisplayCounts = React.useMemo(() => {
-    const c = { FAIL: 0, WARN: 0, ERROR: 0, SKIP: 0, PASS: 0 };
-    kyvernoData.rows.forEach(r => {
-      if (kyvernoNs && kyvernoNs !== 'ALL' && r.namespace !== kyvernoNs) return;
-      c[r.status] = (c[r.status] || 0) + 1;
-    });
-    return c;
-  }, [kyvernoData.rows, kyvernoNs]);
+  const VIEWS = { kyverno: renderKyverno, cis: renderCis, cluster: renderCluster, nmap: renderNmap, image: renderImage, sbom: renderSbom, 'trivy-repo': renderRepo };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 dark:bg-[#0e1116] text-gray-900 dark:text-[#c9d1d9] font-sans transition-colors duration-200">
-      {/* Header Tabs — pill button style */}
-      <div className="bg-white dark:bg-[#161b22] border-b border-gray-200 dark:border-[#30363d] transition-colors duration-200">
-        <div className="flex items-center gap-2 px-4 py-3 overflow-x-auto">
-          {[
-            { id: 'kyverno', label: 'Policy Compliance', icon: <Shield className="w-4 h-4" /> },
-            { id: 'sbom', label: 'SBOM Inventory', icon: <Package className="w-4 h-4" /> },
-            { id: 'trivy-repo', label: 'Source Code', icon: <GitGraph className="w-4 h-4" /> },
-            { id: 'image', label: 'Image Vulnerabilities', icon: <ImageIcon className="w-4 h-4" /> },
-            { id: 'nmap', label: 'Network Security', icon: <Globe className="w-4 h-4" /> },
-            { id: 'cis', label: 'CIS Benchmarks', icon: <ClipboardList className="w-4 h-4" /> },
-            { id: 'cluster', label: 'Cluster Risks', icon: <Server className="w-4 h-4" /> },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveView(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold whitespace-nowrap transition-all border-2 ${activeView === tab.id
-                  ? 'bg-green-600 dark:bg-green-600 border-green-600 dark:border-green-600 text-white shadow-sm shadow-green-500/30'
-                  : 'bg-slate-100 dark:bg-gray-800/60 border-slate-300 dark:border-gray-600 text-slate-600 dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-200 hover:border-slate-400 dark:hover:border-gray-500'
-                }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </div>
+    <div className="h-full min-h-0 flex flex-col">
+      <div className="shrink-0 px-7 pt-[18px]">
+        <PageHead title={TABS.find(t => t.id === activeView)?.label || 'Scan reports'} sub={TAB_SUB[activeView]}>
+          {(() => {
+            const e = EXPORTS[activeView]?.();
+            return e && stats?.[TABS.find(t => t.id === activeView)?.key]?.available !== false ? (
+              <a className="btn no-underline" href={e.href} download={e.file}><Download className="w-3 h-3" /> {e.label}</a>
+            ) : null;
+          })()}
+        </PageHead>
       </div>
 
       <SuppressModal />
 
       {suppressions.length > 0 && (
-        <div className="mx-6 mt-4 flex items-center gap-3 px-4 py-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg">
-          <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-            {suppressions.length} finding{suppressions.length !== 1 ? 's' : ''} suppressed
-          </span>
-          <button onClick={() => setShowSuppressed(v => !v)}
-            className="text-xs text-amber-600 dark:text-amber-400 hover:underline font-medium">
+        <div className="note note-warn mx-7 mt-3.5 items-center">
+          <span className="font-semibold">{suppressions.length} finding{suppressions.length !== 1 ? 's' : ''} suppressed</span>
+          <button type="button" className="lnk" style={{ color: 'inherit', textDecoration: 'underline' }} onClick={() => setShowSuppressed(v => !v)}>
             {showSuppressed ? 'Hide suppressed' : 'Show suppressed'}
           </button>
         </div>
       )}
 
-      <div className="flex-1 overflow-auto p-6">
-        {loading && (
-          <div className="flex items-center justify-center h-full text-blue-400 gap-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-            Loading Report...
-          </div>
-        )}
-
+      <div className="flex-1 overflow-auto px-7 pt-3.5 pb-6">
+        {loading && <div className="sheet px-4 py-10 text-center text-xs" style={{ color: 'var(--mute)' }}>Loading report…</div>}
         {error && (
-          <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-lg text-red-700 dark:text-red-200 flex items-center gap-3">
-            <AlertTriangle className="w-6 h-6" />
+          <div className="note note-crit">
             <div>
-              <h3 className="font-bold">Error Loading Report</h3>
-              <p className="text-sm opacity-80">{error}</p>
+              <div className="font-semibold">Error loading report</div>
+              <div>{error}</div>
             </div>
           </div>
         )}
-
-        {/* KYVERNO */}
-        {!loading && !error && activeView === 'kyverno' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'].map(s => (
-                <StatusCard key={s} label={s} value={kyvernoDisplayCounts[s] || 0} />
-              ))}
-              <StatusCard label="TOTAL" value={Object.values(kyvernoDisplayCounts).reduce((a, b) => a + b, 0)} />
-            </div>
-
-            <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Namespace</span>
-              <select
-                value={kyvernoNs}
-                onChange={(e) => setKyvernoNs(e.target.value)}
-                className="bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-1.5 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors"
-              >
-                <option value="">None</option>
-                <option value="ALL">All Namespaces</option>
-                {Array.from(new Set(kyvernoData.rows.map(r => r.namespace).filter(Boolean))).sort().map(ns => (
-                  <option key={ns} value={ns}>{ns}</option>
-                ))}
-              </select>
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
-              <div className="flex flex-wrap gap-1.5">
-                {['FAIL', 'WARN', 'ERROR', 'SKIP', 'PASS'].map(status => (
-                  <FilterPill key={status} label={status} active={kyvernoStatusFilters[status]}
-                    onToggle={() => setKyvernoStatusFilters(prev => ({ ...prev, [status]: !prev[status] }))} />
-                ))}
-              </div>
-              <a
-                href="/new/kyverno-report/Policy_report.xlsx"
-                download="Policy_report.xlsx"
-                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-blue-500/50 rounded-lg text-xs font-semibold transition-all"
-              >
-                <Download className="w-3.5 h-3.5" /> Export
-              </a>
-            </div>
-
-            <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-950 transition-colors">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Status</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Policy</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-32">Type</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Resource</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Message</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {kyvernoData.rows
-                    .filter(r => {
-                      if (kyvernoNs === "") return false;
-                      if (kyvernoNs === "ALL") return kyvernoStatusFilters[r.status];
-                      return r.namespace === kyvernoNs && kyvernoStatusFilters[r.status];
-                    })
-                    .map((row, idx) => (
-                      <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                        <td className="px-3 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.status)}`}>{row.status}</span>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.severity)}`}>{row.severity}</span>
-                        </td>
-                        <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.policy}</td>
-                        <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm">{row.type}</td>
-                        <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 text-sm font-medium">{row.name}</td>
-                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm break-words max-w-md">{row.message}</td>
-                      </tr>
-                    ))}
-                  {(!kyvernoNs || kyvernoData.rows.length === 0) && (
-                    <tr><td colSpan="6" className="py-16 text-center">
-                      <Shield className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
-                      <p className="text-sm text-gray-900 dark:text-gray-400">{!kyvernoNs ? "Select a namespace above to view policy results" : "No data available"}</p>
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* CIS BENCHMARK */}
-        {!loading && !error && activeView === 'cis' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-              {['FAIL', 'WARN', 'INFO', 'PASS'].map(s => (
-                <StatusCard key={s} label={s} value={cisData.counts[s] || 0} />
-              ))}
-              <StatusCard label="TOTAL" value={Object.values(cisData.counts).reduce((a, b) => a + b, 0)} />
-            </div>
-
-
-            <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
-              <div className="flex flex-wrap gap-1.5">
-                {['FAIL', 'WARN', 'INFO', 'PASS'].map(status => (
-                  <FilterPill key={status} label={status} active={cisStatusFilters[status]}
-                    onToggle={() => setCisStatusFilters(prev => ({ ...prev, [status]: !prev[status] }))} />
-                ))}
-              </div>
-            </div>
-
-            <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-950">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24 text-center">Status</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Check ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-56">Section</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Title</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-[38%]">Resolution</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {cisData.list
-                    .filter(r => cisStatusFilters[r.status])
-                    .map((row, idx) => (
-                      <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                        <td className="px-3 py-2.5 text-center">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.status)}`}>{row.status}</span>
-                        </td>
-                        <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.id}</td>
-                        <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm font-semibold">{row.section || '-'}</td>
-                        <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 text-sm">{row.desc}</td>
-                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-400 text-xs font-mono break-all max-w-sm">{row.remediation}</td>
-                      </tr>
-                    ))}
-                  {cisData.list.filter(r => cisStatusFilters[r.status]).length === 0 && (
-                    <tr><td colSpan="5" className="py-16 text-center">
-                      <ClipboardList className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
-                      <p className="text-sm text-gray-900 dark:text-gray-400">No benchmarks found matching filters</p>
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* CLUSTER REPORT */}
-        {!loading && !error && activeView === 'cluster' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
-                <StatusCard key={s} label={s} value={clusterData.counts[s] || 0} />
-              ))}
-              <StatusCard label="TOTAL" value={Object.values(clusterData.counts).reduce((a, b) => a + b, 0)} />
-            </div>
-
-
-            <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
-              <div className="flex flex-wrap gap-1.5">
-                {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                  <FilterPill key={sev} label={sev} active={clusterSeverityFilters[sev]}
-                    onToggle={() => setClusterSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))} />
-                ))}
-              </div>
-            </div>
-
-            <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-950">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-1/3">Title</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-1/3">Message</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-14">Ref</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-40">Target</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {clusterData.list
-                    .filter(row => clusterSeverityFilters[row.severity])
-                    .map((row, idx) => (
-                      <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                        <td className="px-3 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getStatusColor(row.severity)}`}>{row.severity}</span>
-                        </td>
-                        <td className="px-3 py-2.5 font-mono text-blue-600 dark:text-blue-300 text-xs">{row.id}</td>
-                        <td className="px-3 py-2.5 text-gray-800 dark:text-gray-200 text-sm">{row.title}</td>
-                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm max-w-xs break-words">{row.msg}</td>
-                        <td className="px-3 py-2.5 text-blue-600 dark:text-blue-300 text-xs">
-                          {row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" className="hover:underline">Link</a> : '—'}
-                        </td>
-                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-xs break-all">{row.target}</td>
-                      </tr>
-                    ))}
-                  {clusterData.list.filter(row => clusterSeverityFilters[row.severity]).length === 0 && (
-                    <tr><td colSpan="6" className="py-16 text-center">
-                      <Server className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
-                      <p className="text-sm text-gray-900 dark:text-gray-400">No issues found matching filters</p>
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-        {!loading && !error && activeView === 'sbom' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
-                <StatusCard key={s} label={s} value={sbomData.counts[s] || 0} />
-              ))}
-              <StatusCard label="TOTAL" value={Object.values(sbomData.counts).reduce((a, b) => a + b, 0)} />
-            </div>
-
-
-            <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
-              <div className="flex flex-wrap gap-1.5">
-                {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                  <FilterPill key={sev} label={sev} active={sbomSeverityFilters[sev]}
-                    onToggle={() => setSbomSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))} />
-                ))}
-              </div>
-              <div className="flex-1 min-w-[200px] relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
-                <input type="text" placeholder="Search CVE or library…" value={sbomSearch} onChange={e => setSbomSearch(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
-                {sbomSearch && <button onClick={() => setSbomSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-900"><XCircle className="w-4 h-4" /></button>}
-              </div>
-            </div>
-
-            <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-950">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVSS</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Library</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Vulnerability ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Installed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Fixed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Title</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {sbomData.list
-                    .filter(row => sbomSeverityFilters[row.severity])
-                    .filter(row => !sbomSearch || row.id.toLowerCase().includes(sbomSearch.toLowerCase()) || row.library.toLowerCase().includes(sbomSearch.toLowerCase()))
-                    .filter(row => showSuppressed || !isSuppressed(row.id, row.library))
-                    .map((row, idx) => {
-                      const suppressed = isSuppressed(row.id, row.library);
-                      return (
-                        <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                          <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
-                          <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
-                          <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.library}</td>
-                          <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
-                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
-                          <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
-                          <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
-                          <td className="px-3 py-2.5">
-                            {suppressed
-                              ? <button onClick={() => removeSuppression(row.id, row.library)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
-                              : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.library, scan_type: 'sbom' })} className="text-xs text-gray-900 hover:text-red-500 transition-colors">Suppress</button>
-                            }
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  {sbomData.list.filter(row => sbomSeverityFilters[row.severity]).filter(row => !sbomSearch || row.id.toLowerCase().includes(sbomSearch.toLowerCase()) || row.library.toLowerCase().includes(sbomSearch.toLowerCase())).length === 0 && (
-                    <tr><td colSpan="7" className="py-16 text-center">
-                      <Package className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
-                      <p className="text-sm text-gray-900 dark:text-gray-400">No vulnerabilities found matching filters</p>
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* IMAGE SCANS */}
-        {/* IMAGE SCANS */}
-        {!loading && !error && activeView === 'image' && (
-          <div className="space-y-6">
-
-            {/* Controls Area */}
-            {/* Controls Area */}
-            <div className="flex flex-col gap-4">
-              {/* Top Row: Namespace and Report Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
-                  <div className="text-xs font-bold text-gray-900 dark:text-gray-400 uppercase tracking-wider mb-2">Reports by Namespace</div>
-                  <select
-                    value={imageNs}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setImageNs(val);
-                      if (!val) {
-                        setSelectedImageFile(null);
-                        return;
-                      }
-                      const relevant = imageFiles.filter(f => val === 'ALL' || f.startsWith(val + '/'));
-                      if (relevant.length > 0) setSelectedImageFile(relevant[0]);
-                      else setSelectedImageFile(null);
-                    }}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
-                  >
-                    <option value="">None</option>
-                    <option value="ALL">All Namespaces</option>
-                    {Array.from(new Set(imageFiles.map(f => f.split('/')[0]))).sort().map(ns => (
-                      <option key={ns} value={ns}>{ns}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="bg-white dark:bg-[#161b22] p-4 rounded-lg border border-gray-300 dark:border-[#30363d] shadow-sm transition-colors duration-200">
-                  <div className="text-xs font-bold text-gray-900 dark:text-gray-400 uppercase tracking-wider mb-2">Image Report</div>
-                  <select
-                    value={selectedImageFile || ''}
-                    onChange={(e) => setSelectedImageFile(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-azure-500 transition-colors duration-200"
-                  >
-                    {imageFiles
-                      .filter(f => imageNs === 'ALL' || (imageNs && f.startsWith(imageNs + '/')))
-                      .map(f => (
-                        <option key={f} value={f}>{f.replace(/^[^/]+\//, '').replace('.json', '')}</option>
-                      ))}
-                    {imageFiles.filter(f => imageNs === 'ALL' || (imageNs && f.startsWith(imageNs + '/'))).length === 0 && (
-                      <option value="" disabled>No reports found</option>
-                    )}
-                  </select>
-                </div>
-              </div>
-
-              {/* Filters row */}
-              <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                    <FilterPill key={sev} label={sev} active={imageSeverityFilters[sev]}
-                      onToggle={() => setImageSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))} />
-                  ))}
-                </div>
-                <div className="flex-1 min-w-[180px] relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
-                  <input type="text" placeholder="Search CVE or package…" value={imageSearch} onChange={e => setImageSearch(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
-                  {imageSearch && <button onClick={() => setImageSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-900"><XCircle className="w-4 h-4" /></button>}
-                </div>
-                <a href="/new/trivy-reports/consolidated-report_images.xlsx" download="consolidated-report_images.xlsx"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200 dark:border-blue-500/50 rounded-lg text-xs font-semibold transition-all">
-                  <Download className="w-3.5 h-3.5" /> Export
-                </a>
-              </div>
-            </div>
-
-            {/* Stats Cards — show aggregate totals when no namespace selected */}
-            {(() => {
-              const counts = imageNs === '' ? dashboardCounts.trivyImage.counts : imageData.counts;
-              return (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                  {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
-                    <StatusCard key={s} label={s} value={counts[s] || 0} />
-                  ))}
-                  <StatusCard label="TOTAL" value={Object.values(counts).reduce((a, b) => a + b, 0)} />
-                </div>
-              );
-            })()}
-
-
-            <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-950">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVSS</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVE</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Package</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Installed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Fixed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Target</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Title</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {imageData.list
-                    .filter(row => imageSeverityFilters[row.severity])
-                    .filter(row => !imageSearch || row.id.toLowerCase().includes(imageSearch.toLowerCase()) || row.pkg.toLowerCase().includes(imageSearch.toLowerCase()))
-                    .filter(row => showSuppressed || !isSuppressed(row.id, row.pkg))
-                    .map((row, idx) => {
-                      const suppressed = isSuppressed(row.id, row.pkg);
-                      return (
-                        <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                          <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
-                          <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
-                          <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
-                          <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
-                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm font-mono">{row.installed}</td>
-                          <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
-                          <td className="px-3 py-2.5">
-                            <span className="inline-block px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-[10px] border border-gray-300 dark:border-gray-600 shadow-sm">
-                              {row.target}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm break-words">{row.title}</td>
-                          <td className="px-3 py-2.5">
-                            {suppressed
-                              ? <button onClick={() => removeSuppression(row.id, row.pkg)} title="Remove suppression" className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
-                              : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'image' })} title="Suppress this finding" className="text-xs text-gray-900 hover:text-red-500 transition-colors">Suppress</button>
-                            }
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  {imageData.list.filter(row => imageSeverityFilters[row.severity]).filter(row => !imageSearch || row.id.toLowerCase().includes(imageSearch.toLowerCase()) || row.pkg.toLowerCase().includes(imageSearch.toLowerCase())).length === 0 && (
-                    <tr><td colSpan="9" className="py-16 text-center">
-                      <ImageIcon className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
-                      <p className="text-sm text-gray-900 dark:text-gray-400">No vulnerabilities found matching filters</p>
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* NMAP / SSL */}
-        {!loading && !error && activeView === 'nmap' && (
-          <div className="space-y-4">
-            <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-950">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Namespace</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">FQDN</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Port</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Accepted Ciphers</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Weak Ciphers</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {nmapData
-                    .filter(row => row.accepted && row.accepted.length > 0)
-                    .map((row, idx) => (
-                      <tr key={idx} className={`transition-colors hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60 ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                        <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300 text-sm">{row.namespace}</td>
-                        <td className="px-3 py-2.5 text-blue-600 dark:text-blue-300 text-sm">{row.fqdn}</td>
-                        <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 font-mono text-xs">{row.port}</td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex flex-wrap gap-1">
-                            {row.accepted.length > 0 ? row.accepted.map(c => (
-                              <span key={c} className="px-1.5 py-0.5 bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs rounded border border-green-200 dark:border-green-800">{c}</span>
-                            )) : <span className="text-gray-900 text-xs">None</span>}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex flex-wrap gap-1">
-                            {row.weak.length > 0 ? row.weak.map(c => (
-                              <span key={c} className="px-1.5 py-0.5 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs rounded border border-red-200 dark:border-red-800">{c}</span>
-                            )) : <span className="text-gray-900 text-xs">None</span>}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  {nmapData.length === 0 && (
-                    <tr><td colSpan="5" className="py-16 text-center">
-                      <Globe className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
-                      <p className="text-sm text-gray-900 dark:text-gray-400">No network scan data available</p>
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TRIVY REPO SCAN */}
-        {!loading && !error && activeView === 'trivy-repo' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {/* Show aggregate totals when no report file is selected */}
-              {(() => {
-                const counts = !selectedTrivyRepoFile ? dashboardCounts.trivyRepo.counts : trivyRepoData.counts;
-                return (
-                  <>
-                    {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(s => (
-                      <StatusCard key={s} label={s} value={counts[s] || 0} />
-                    ))}
-                    <StatusCard label="TOTAL" value={Object.values(counts).reduce((a, b) => a + b, 0)} />
-                  </>
-                );
-              })()}
-            </div>
-
-
-            <div className="bg-white dark:bg-[#161b22] rounded-lg border border-gray-200 dark:border-[#30363d] px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 shadow-sm">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Report</span>
-              <select
-                value={selectedTrivyRepoFile || ''}
-                onChange={(e) => setSelectedTrivyRepoFile(e.target.value)}
-                className="bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded px-3 py-1.5 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:border-blue-500 transition-colors"
-              >
-                {trivyRepoFiles.length === 0 && <option value="">No reports found</option>}
-                {trivyRepoFiles.map(f => (
-                  <option key={f} value={f}>{f.replace('.json', '')}</option>
-                ))}
-              </select>
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-900 dark:text-gray-400 shrink-0">Filter</span>
-              <div className="flex flex-wrap gap-1.5">
-                {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'].map(sev => (
-                  <FilterPill key={sev} label={sev} active={trivyRepoSeverityFilters[sev]}
-                    onToggle={() => setTrivyRepoSeverityFilters(prev => ({ ...prev, [sev]: !prev[sev] }))} />
-                ))}
-              </div>
-              <div className="flex-1 min-w-[180px] relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
-                <input type="text" placeholder="Search vulnerability or package…" value={trivyRepoSearch} onChange={e => setTrivyRepoSearch(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-[#0e1116] border-[3px] border-gray-300 dark:border-[#30363d] rounded-lg pl-8 pr-8 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors" />
-                {trivyRepoSearch && <button onClick={() => setTrivyRepoSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-900"><XCircle className="w-4 h-4" /></button>}
-              </div>
-            </div>
-
-            <div className="border border-gray-200 dark:border-[#30363d] rounded-lg overflow-hidden bg-white dark:bg-[#020617] shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-gray-50 dark:bg-slate-950">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400 w-24">Severity</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">CVSS</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Type</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">ID</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Package</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Installed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Fixed</th>
-                    <th className="px-3 py-3 border-b border-gray-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-gray-400">Target File</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {trivyRepoData.list
-                    .filter(r => trivyRepoSeverityFilters[r.severity])
-                    .filter(r => !trivyRepoSearch || r.id.toLowerCase().includes(trivyRepoSearch.toLowerCase()) || r.pkg.toLowerCase().includes(trivyRepoSearch.toLowerCase()))
-                    .filter(r => showSuppressed || !isSuppressed(r.id, r.pkg))
-                    .map((row, idx) => {
-                      const suppressed = isSuppressed(row.id, row.pkg);
-                      return (
-                        <tr key={idx} className={`transition-colors ${suppressed ? 'opacity-40' : 'hover:bg-blue-50/30 dark:hover:bg-[#161b22]/60'} ${idx % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-white/[0.02]'}`}>
-                          <td className="px-3 py-2.5"><SeverityBadge level={row.severity} /></td>
-                          <td className="px-3 py-2.5"><CvssBar score={row.cvss} severity={row.severity} /></td>
-                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-300 text-sm">{row.type}</td>
-                          <td className="px-3 py-2.5"><NvdLink id={row.id} /></td>
-                          <td className="px-3 py-2.5 font-medium text-gray-800 dark:text-gray-200 text-sm">{row.pkg}</td>
-                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-400 font-mono text-xs">{row.installed}</td>
-                          <td className="px-3 py-2.5"><FixedCell version={row.fixed} /></td>
-                          <td className="px-3 py-2.5 text-gray-900 dark:text-gray-400 text-xs break-all">{row.target}</td>
-                          <td className="px-3 py-2.5">
-                            {suppressed
-                              ? <button onClick={() => removeSuppression(row.id, row.pkg)} className="text-xs text-amber-500 hover:text-amber-700 font-semibold">Unsuppress</button>
-                              : <button onClick={() => setSuppressModal({ cve_id: row.id, pkg: row.pkg, scan_type: 'trivy-repo' })} className="text-xs text-gray-900 hover:text-red-500 transition-colors">Suppress</button>
-                            }
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  {trivyRepoData.list.filter(r => trivyRepoSeverityFilters[r.severity]).filter(r => !trivyRepoSearch || r.id.toLowerCase().includes(trivyRepoSearch.toLowerCase()) || r.pkg.toLowerCase().includes(trivyRepoSearch.toLowerCase())).length === 0 && (
-                    <tr><td colSpan="8" className="py-16 text-center">
-                      <GitGraph className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-400" />
-                      <p className="text-sm text-gray-900 dark:text-gray-400">No issues found — select a report above or adjust filters</p>
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-
+        {!loading && !error && VIEWS[activeView]?.()}
       </div>
     </div>
   );

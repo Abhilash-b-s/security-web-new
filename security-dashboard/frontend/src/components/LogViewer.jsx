@@ -1,15 +1,41 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Terminal as TerminalIcon, Copy, Check, Download } from 'lucide-react';
+import { Copy, Check, Download } from 'lucide-react';
 
-export default function LogViewer({ logs }) {
+// Colour per line, same rules as before.
+export const lineLevel = (line) => (line.startsWith('Error') || line.includes('Failed') ? 'error' : line.includes('⚠') || line.includes('WARN') ? 'warn' : 'info');
+
+export function lineStyle(line) {
+    if (line.startsWith('$')) return { color: 'var(--warn)', fontWeight: 600 };
+    if (line.startsWith('Error') || line.includes('Failed')) return { color: 'var(--crit)', background: 'var(--crit-tint)' };
+    if (line.includes('===') || line.includes('---')) return { color: 'var(--accent-text)', fontWeight: 600 };
+    if (line.includes('SUCCESS') || line.includes('✓')) return { color: 'var(--ok)' };
+    if (line.includes('⚠') || line.includes('WARN')) return { color: 'var(--warn)', background: 'var(--warn-tint)' };
+    return { color: 'var(--ink-2)' };
+}
+
+const elapsed = (from, to) => {
+    const sec = Math.max(0, Math.floor(((to || Date.now()) - from) / 1000));
+    return `${Math.floor(sec / 60)}m ${String(sec % 60).padStart(2, '0')}s`;
+};
+
+// Live output of the current scan, shown inside the Event logs detail pane.
+export default function LogViewer({ logs, isScanning, scanLabel, scanId, startedAt, endedAt }) {
     const scrollRef = useRef(null);
     const [copied, setCopied] = useState(false);
+    const [follow, setFollow] = useState(true);
+    const [, tick] = useState(0);
 
     useEffect(() => {
-        if (scrollRef.current) {
+        if (!isScanning) return;
+        const id = setInterval(() => tick(n => n + 1), 1000);
+        return () => clearInterval(id);
+    }, [isScanning]);
+
+    useEffect(() => {
+        if (follow && scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [logs]);
+    }, [logs, follow]);
 
     const handleCopy = () => {
         const text = logs.join('\n');
@@ -29,75 +55,78 @@ export default function LogViewer({ logs }) {
     };
 
     return (
-        <div className="bg-white dark:bg-[#1e1e1e] rounded-lg border border-slate-200 dark:border-[#333] shadow-lg dark:shadow-2xl flex flex-col h-full overflow-hidden font-mono text-sm leading-6 transition-colors duration-200">
-            {/* Header */}
-            <div className="bg-slate-50 dark:bg-[#252526] px-4 py-3 border-b border-slate-200 dark:border-[#333] flex items-center justify-between shrink-0 transition-colors duration-200">
-                <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-gradient-blue rounded">
-                        <TerminalIcon className="w-4 h-4 text-azure-600" />
-                    </div>
-                    <span className="text-slate-900 dark:text-gray-300 font-semibold tracking-wide text-xs uppercase">Event Logs</span>
-                </div>
-                <div className="flex items-center gap-1">
-                    <button
-                        onClick={handleCopy}
-                        className="p-1.5 hover:bg-slate-200 dark:hover:bg-[#3c3c3c] rounded text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                        title="Copy All"
-                    >
-                        {copied ? <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                    <button
-                        onClick={handleDownload}
-                        className="p-1.5 hover:bg-slate-200 dark:hover:bg-[#3c3c3c] rounded text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                        title="Download Logs"
-                    >
-                        <Download className="w-3.5 h-3.5" />
-                    </button>
-                </div>
+        <>
+            <div className="phead flex-wrap py-1.5">
+                <h2>{scanLabel || 'Scan output'} <span className="count">{logs.length}</span></h2>
+                {isScanning
+                    ? <span className="badge badge-run">Running</span>
+                    : <span className="badge badge-mute">Finished</span>}
+                {startedAt && <span className="meta num">started {new Date(startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} · {elapsed(startedAt, isScanning ? null : endedAt)}</span>}
+                <div className="flex-1" />
+                <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: 'var(--ink-2)' }}>
+                    <input type="checkbox" checked={follow} onChange={e => setFollow(e.target.checked)} /> Follow output
+                </label>
+                <button type="button" className="btn h-[26px]" onClick={handleCopy} title="Copy All">
+                    {copied ? <Check className="w-3 h-3" style={{ color: 'var(--ok)' }} /> : <Copy className="w-3 h-3" />}
+                    {copied ? 'Copied' : 'Copy'}
+                </button>
+                <button type="button" className="btn h-[26px]" onClick={handleDownload} title="Download Logs">
+                    <Download className="w-3 h-3" /> Download .txt
+                </button>
             </div>
 
-            {/* Terminal Body */}
-            <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto p-4 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent bg-white dark:bg-[#1e1e1e]"
-                style={{ fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace" }}
-            >
+            <div ref={scrollRef} className="flex-1 overflow-y-auto py-1.5 num text-xs leading-5">
                 {logs.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-600 dark:text-gray-600">
-                        <TerminalIcon className="w-12 h-12 mb-4 opacity-20" />
-                        <p>Waiting for scan initialization...</p>
+                    <div className="h-full flex items-center justify-center" style={{ color: 'var(--faint)' }}>
+                        Waiting for scan initialization...
                     </div>
                 ) : (
-                    logs.map((log, i) => {
-                        // Replace tabs with 2 spaces for better wrapping
-                        const processedLog = log.replace(/\t/g, '  ');
-                        return (
-                        <div key={i} className="flex group hover:bg-slate-50/50 dark:hover:bg-white/5">
-                            {/* Line Number */}
-                            <span className="w-8 text-right text-slate-400 dark:text-gray-600 select-none mr-4 text-xs pt-[2px] opacity-50 group-hover:opacity-100">
-                                {i + 1}
-                            </span>
-                            {/* Log Content */}
-                            <div className="flex-1 overflow-hidden" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                                {processedLog.startsWith('$') ? (
-                                    <span className="text-amber-700 dark:text-amber-400 font-bold">{processedLog}</span>
-                                ) : processedLog.startsWith('Error') || processedLog.includes('Failed') ? (
-                                    <span className="text-red-700 dark:text-red-400">{processedLog}</span>
-                                ) : processedLog.includes('===') || processedLog.includes('---') ? (
-                                    <span className="text-azure-700 dark:text-azure-400 font-semibold">{processedLog}</span>
-                                ) : processedLog.includes('SUCCESS') || processedLog.includes('✓') ? (
-                                    <span className="text-green-700 dark:text-green-400">{processedLog}</span>
-                                ) : processedLog.includes('⚠') || processedLog.includes('WARN') ? (
-                                    <span className="text-yellow-700 dark:text-yellow-400">{processedLog}</span>
-                                ) : (
-                                    <span className="text-slate-700 dark:text-[#d4d4d4]">{processedLog}</span>
-                                )}
-                            </div>
+                    logs.map((log, i) => (
+                        <div key={i} className="grid grid-cols-[52px_1fr] hover:bg-[var(--row-hover)]" style={lineStyle(log)}>
+                            <span className="text-right pr-3 mr-3 select-none" style={{ color: 'var(--faint)', borderRight: '1px solid var(--line-soft)', background: 'var(--panel)' }}>{i + 1}</span>
+                            <span className="pr-3.5" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{log.replace(/\t/g, '  ')}</span>
                         </div>
-                        );
-                    })
+                    ))
                 )}
             </div>
-        </div>
+
+            <div className="num flex items-center gap-4 px-3.5 py-[7px] text-[11px]" style={{ borderTop: '1px solid var(--line)', background: 'var(--panel-head)', color: 'var(--mute)' }}>
+                <span className="flex items-center gap-2">
+                    <span className={`w-1.5 h-1.5 ${isScanning ? 'animate-pulse' : ''}`} style={{ background: isScanning ? 'var(--ok)' : 'var(--faint)' }} />
+                    {isScanning ? 'Receiving output' : 'Stream closed'}
+                </span>
+                {scanId && <span>scan_id {scanId.slice(0, 8)}</span>}
+                <span className="ml-auto">{isScanning ? 'The report is saved when the scan finishes' : 'Report saved to Event logs'}</span>
+            </div>
+        </>
     );
+}
+
+// Follows a scan running on the server (started from any browser): the backend replays
+// everything so far, then streams new lines until "__EOF__".
+export function RemoteLogViewer({ scanId, scanLabel, startedAt, onDone }) {
+    const [logs, setLogs] = useState([]);
+    const [running, setRunning] = useState(true);
+    const [endedAt, setEndedAt] = useState(null);
+
+    useEffect(() => {
+        setLogs([]);
+        setRunning(true);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/api/scans/ws/${scanId}`);
+        ws.onmessage = (event) => {
+            if (event.data === '__EOF__') {
+                setRunning(false);
+                setEndedAt(Date.now());
+                ws.close();
+                onDone?.(scanId);
+                return;
+            }
+            const lines = event.data.replace(/\n$/, '').split('\n').filter(l => l.trim());
+            if (lines.length) setLogs(prev => [...prev, ...lines]);
+        };
+        return () => ws.close();
+    }, [scanId]);
+
+    return <LogViewer logs={logs} isScanning={running} scanLabel={scanLabel} scanId={scanId} startedAt={startedAt} endedAt={endedAt} />;
 }

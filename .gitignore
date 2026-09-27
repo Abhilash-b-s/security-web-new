@@ -1,0 +1,24 @@
+# Dependencies and build output
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Runtime state written by the backend (registries.json and git_config.json hold credentials)
+registries.json
+git_config.json
+suppressions.json
+
+# Scan output (only the two committed assets under new/ are tracked)
+security-dashboard/backend/reports/
+new/*
+!new/logo-mobile.webp
+!new/security-policy-report.html
+
+# Local logs and editor noise
+*.log
+.DS_Store

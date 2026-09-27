@@ -2,5 +2,6 @@
   "css.lint.unknownAtRules": "ignore",
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "git.ignoreLimitWarning": true
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Terminal, Send, X } from 'lucide-react';
+import { Send, X } from 'lucide-react';
+import PageHead from './PageHead';
 
 export default function WebTerminal({ onClose }) {
     const [output, setOutput] = useState('');
@@ -28,6 +29,8 @@ export default function WebTerminal({ onClose }) {
         };
 
         ws.onclose = () => {
+            // Ignore a stale socket closing after its replacement opened (StrictMode double effect).
+            if (wsRef.current !== ws) return;
             setIsConnected(false);
             setOutput(prev => prev + "\n--- Terminal Disconnected ---\n");
         };
@@ -45,8 +48,9 @@ export default function WebTerminal({ onClose }) {
         e.preventDefault();
         if (!command.trim() || !wsRef.current) return;
 
-        if (!command.trim().startsWith("kubectl")) {
-            setError("Only kubectl commands are allowed");
+        // Mirrors the server rule (services/terminal.py), which is the one that is enforced.
+        if (!/^kubectl\s+get(\s|$)/.test(command.trim())) {
+            setError("Only 'kubectl get' commands are allowed");
             return;
         }
 
@@ -79,52 +83,85 @@ export default function WebTerminal({ onClose }) {
         }
     };
 
+    const QUICK = ['kubectl get pods -A', 'kubectl get nodes -o wide', 'kubectl get policyreports -A', 'kubectl get clusterpolicies', 'kubectl get events -A'];
+
     return (
-        <div className="flex flex-col h-full bg-[#0d1117] overflow-hidden">
-            {/* Title bar */}
-            <div className="flex items-center gap-2 px-4 py-2 bg-[#161b22] border-b border-gray-700/60 flex-shrink-0">
-                <Terminal className="w-4 h-4 text-green-400" />
-                <span className="text-sm font-mono text-gray-300">kubectl Terminal</span>
-                <span className={`w-2 h-2 rounded-full ml-1 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-                {onClose && (
-                    <button
-                        onClick={onClose}
-                        className="ml-auto p-1 rounded text-gray-500 hover:text-white hover:bg-gray-700 transition-colors"
-                        title="Close terminal"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                )}
-            </div>
+        <div className="flex-1 min-h-0 flex flex-col gap-3.5 px-7 pt-[18px] pb-6">
+            <PageHead title="Terminal" sub="Read-only kubectl get against the cluster the dashboard runs in">
+                <button type="button" className="btn" onClick={() => setOutput('')}>Clear</button>
+            </PageHead>
 
-            {/* Output area — takes all remaining space */}
-            <div className="flex-1 overflow-auto p-3 font-mono text-sm text-gray-300 whitespace-pre bg-[#0d1117]">
-                {output || <span className="text-gray-600 italic">Ready. Type a kubectl command below.</span>}
-                <div ref={endRef} />
-            </div>
+            <div className="flex-1 min-h-0 grid grid-cols-[1fr_300px] gap-[18px]">
+                <section className="sheet flex flex-col min-h-0" style={{ borderColor: 'var(--term-line)' }}>
+                    <div className="phead" style={{ background: 'var(--term-head)', borderBottomColor: 'var(--term-line)' }}>
+                        <h2 style={{ color: '#E9E7E1' }}>kubectl</h2>
+                        <div className="flex-1" />
+                        <span className="flex items-center gap-1.5 text-xs" style={{ color: '#E6E4DF' }}>
+                            <span className="w-1.5 h-1.5" style={{ background: isConnected ? '#5FA36F' : '#C25B5B' }} />
+                            {isConnected ? 'Connected' : 'Disconnected'}
+                        </span>
+                        {onClose && (
+                            <button type="button" onClick={onClose} className="btn h-[26px]" style={{ background: 'transparent', color: '#E9E7E1', borderColor: 'var(--term-line)' }} title="Close terminal">
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
 
-            {/* Input bar — pinned to bottom */}
-            <div className="flex-shrink-0 border-t border-gray-700/60 bg-[#161b22] px-3 py-2">
-                {error && <div className="text-red-400 text-xs font-mono mb-1.5">{error}</div>}
-                <form onSubmit={handleSend} className="flex gap-2 items-center">
-                    <span className="text-green-500 font-mono font-bold select-none text-sm">$</span>
-                    <input
-                        type="text"
-                        value={command}
-                        onChange={(e) => { setCommand(e.target.value); if (error) setError(null); }}
-                        onKeyDown={handleKeyDown}
-                        className="flex-1 bg-[#0d1117] border border-gray-700 rounded py-1.5 px-3 text-sm text-gray-200 font-mono focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600/40 placeholder-gray-600"
-                        placeholder="Enter command (e.g., kubectl get pods)"
-                        autoFocus
-                    />
-                    <button
-                        type="submit"
-                        disabled={!isConnected}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center"
-                    >
-                        <Send className="w-4 h-4" />
-                    </button>
-                </form>
+                    <div className="flex-1 overflow-auto px-4 py-3 num text-[12.5px] leading-[19px] whitespace-pre" style={{ background: 'var(--term)', color: 'var(--term-ink)' }}>
+                        {output || <span className="italic" style={{ color: '#D2D0CB' }}>Ready. Type a kubectl command below.</span>}
+                        <div ref={endRef} />
+                    </div>
+
+                    <div className="shrink-0 px-3.5 py-2.5" style={{ background: 'var(--term-head)', borderTop: '1px solid var(--term-line)' }}>
+                        {error && <div className="num text-xs mb-1.5" style={{ color: '#E58C8C' }} role="alert">{error}</div>}
+                        <form onSubmit={handleSend} className="flex gap-2.5 items-center">
+                            <label htmlFor="term-cmd" className="num text-[12.5px] select-none" style={{ color: '#7FA3D6' }}>$</label>
+                            <input
+                                id="term-cmd"
+                                type="text"
+                                value={command}
+                                onChange={(e) => { setCommand(e.target.value); if (error) setError(null); }}
+                                onKeyDown={handleKeyDown}
+                                className="inp mono flex-1"
+                                style={{ background: 'var(--term)', color: '#E9E7E1', borderColor: 'var(--term-line)' }}
+                                placeholder="kubectl get pods -A"
+                                autoFocus
+                            />
+                            <span className="num text-[11px] hidden lg:inline" style={{ color: '#D2D0CB' }}>↑↓ history</span>
+                            <button type="submit" disabled={!isConnected} className="btn btn-primary">
+                                <Send className="w-3.5 h-3.5" /> Run
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <aside className="flex flex-col gap-3.5 min-h-0">
+                    <section className="sheet">
+                        <div className="phead"><h2>Quick commands</h2></div>
+                        <div className="flex flex-col gap-[5px] p-3">
+                            {QUICK.map(q => (
+                                <button key={q} type="button" className="navlink num !m-0 !w-full text-xs" onClick={() => { setCommand(q); setError(null); document.getElementById('term-cmd')?.focus(); }}>
+                                    <span style={{ color: 'var(--faint)' }}>$</span>{q}
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="sheet flex-1 min-h-0 flex flex-col">
+                        <div className="phead"><h2>History <span className="count">{history.length}</span></h2></div>
+                        {history.length === 0 ? (
+                            <p className="m-0 px-3.5 py-2.5 text-xs" style={{ color: 'var(--mute)' }}>Commands you run appear here.</p>
+                        ) : (
+                            <ol className="m-0 px-3.5 py-1.5 list-none overflow-y-auto num text-xs leading-6">
+                                {[...history].reverse().map((h, i) => (
+                                    <li key={i}>
+                                        <button type="button" className="lnk num truncate max-w-full text-left" style={{ color: 'var(--ink-2)' }} onClick={() => setCommand(h)}>{h}</button>
+                                    </li>
+                                ))}
+                            </ol>
+                        )}
+                    </section>
+                </aside>
             </div>
         </div>
     );

@@ -7,7 +7,9 @@ import uuid
 from datetime import datetime
 
 router = APIRouter()
-SUPPRESSIONS_FILE = "suppressions.json"
+STATE_DIR = os.getenv("STATE_DIR", ".")
+os.makedirs(STATE_DIR, exist_ok=True)
+SUPPRESSIONS_FILE = os.path.join(STATE_DIR, "suppressions.json")
 
 
 def load_suppressions():

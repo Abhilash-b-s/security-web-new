@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Globe, Database, Settings as SettingsIcon, Edit, X } from 'lucide-react';
+import { Edit } from 'lucide-react';
+import PageHead from './PageHead';
 
 export default function Settings({ initialSection = null }) {
     const [registries, setRegistries] = useState([]);
-    const [activeSection, setActiveSection] = useState(null); // Default to null (no section selected)
+    const [activeSection, setActiveSection] = useState(initialSection || 'registry');
     const [editingId, setEditingId] = useState(null);
 
     // Registry Form State
@@ -23,6 +24,26 @@ export default function Settings({ initialSection = null }) {
 
     const [gitSuccess, setGitSuccess] = useState(null);
     const [isEditingGit, setIsEditingGit] = useState(false);
+
+    // Suppressions (managed here; created from Scan reports)
+    const [suppressions, setSuppressions] = useState([]);
+    const fetchSuppressions = async () => {
+        try {
+            const res = await fetch('/api/suppressions/');
+            if (res.ok) setSuppressions(await res.json());
+        } catch (err) {
+            console.error("Failed to fetch suppressions:", err);
+        }
+    };
+    const removeSuppression = async (id) => {
+        try {
+            const res = await fetch(`/api/suppressions/${id}`, { method: 'DELETE' });
+            if (res.ok) setSuppressions(prev => prev.filter(x => x.id !== id));
+        } catch (err) {
+            console.error("Failed to remove suppression:", err);
+        }
+    };
+    useEffect(() => { fetchSuppressions(); }, []);
 
     useEffect(() => {
         if (initialSection) {
@@ -152,7 +173,7 @@ export default function Settings({ initialSection = null }) {
         setUrl(reg.url);
         setUsername(reg.username);
         setPassword(''); // Clear password for security, user can leave blank to keep existing
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('registry-form')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
 
     const handleCancelEdit = () => {
@@ -165,284 +186,196 @@ export default function Settings({ initialSection = null }) {
 
     // Navigation Items
     const navItems = [
-        { id: 'registry', label: 'Registry Management', icon: <Database className="w-4 h-4" /> },
-        { id: 'git', label: 'Git Configuration', icon: <SettingsIcon className="w-4 h-4" /> }
+        { id: 'registry', label: 'Container registries', count: registries.length || null },
+        { id: 'git', label: 'Git repositories' },
+        { id: 'suppressions', label: 'Suppressions', count: suppressions.length || null },
     ];
 
-    const baseButtonClasses = 'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ';
+    const repoCount = gitRepos.split('\n').filter(r => r.trim() && !r.trim().startsWith('#')).length;
 
     return (
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden h-full">
-            {/* Left Sidebar - Full height, extends to left margin */}
-            <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 flex flex-col">
-                <div className="p-6 border-b border-slate-200 dark:border-gray-700">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
-                        <div className="p-2 bg-gradient-blue rounded-lg">
-                            <SettingsIcon className="w-5 h-5 text-azure-600" />
-                        </div>
-                        Settings
-                    </h2>
-                </div>
-                <nav className="flex-1 flex flex-col overflow-y-auto bg-white dark:bg-gray-800">
-                    {navItems.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => setActiveSection(item.id)}
-                            className={`flex items-center gap-3 py-3 px-6 border-b border-slate-200 dark:border-gray-700 transition-all duration-150 w-full font-medium text-sm transform ${activeSection === item.id
-                                ? 'bg-azure-100 dark:bg-azure-600/20 text-azure-800 dark:text-azure-100 border-l-4 border-l-azure-500 shadow-md'
-                                : 'bg-white dark:bg-gray-800 hover:bg-azure-100 dark:hover:bg-azure-600/20 text-slate-900 dark:text-gray-200 hover:text-azure-800 dark:hover:text-azure-100 hover:border-l-4 hover:border-l-azure-500 hover:shadow-xl hover:shadow-azure-500/30 hover:scale-[1.02] hover:-translate-x-1 active:scale-[0.98] active:shadow-inner'
-                                }`}
-                        >
-                            <div className={`p-2 rounded-lg transition-all duration-200 ${activeSection === item.id ? 'bg-azure-100 dark:bg-azure-500/20 text-azure-700 dark:text-azure-400' : 'bg-slate-100 dark:bg-gray-700 text-azure-700 dark:text-azure-400'}`}>
-                                {item.icon}
-                            </div>
-                            <span>{item.label}</span>
-                        </button>
-                    ))}
+        <div className="flex-1 min-h-0 overflow-auto px-7 pt-[18px] pb-6">
+            <PageHead title="Settings" sub="Credentials used by the scanners, stored on the dashboard server" />
+
+            <div className="mt-3.5 grid grid-cols-[200px_1fr] gap-[18px] items-start">
+                <nav className="flex flex-col gap-1" aria-label="Settings sections">
+                    {navItems.map((item) => {
+                        const on = activeSection === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => setActiveSection(item.id)}
+                                aria-current={on ? 'true' : undefined}
+                                className="flex justify-between items-center px-2.5 py-[7px] text-[13px] text-left rounded-md cursor-pointer"
+                                style={{
+                                    font: 'inherit',
+                                    color: on ? 'var(--ink)' : 'var(--ink-2)',
+                                    fontWeight: on ? 600 : 400,
+                                    background: on ? 'var(--panel)' : 'transparent',
+                                    border: `1px solid ${on ? 'var(--btn-line)' : 'transparent'}`,
+                                    borderLeft: on ? '3px solid var(--accent-text)' : '1px solid transparent',
+                                }}
+                            >
+                                {item.label}
+                                {item.count && <span className="num text-[11px] font-normal" style={{ color: 'var(--mute-2)' }}>{item.count}</span>}
+                            </button>
+                        );
+                    })}
                 </nav>
-            </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 min-w-0 overflow-auto bg-gray-50 dark:bg-gray-900 p-6 transition-colors duration-200">
-                <div className="max-w-4xl mx-auto space-y-8">
-
-                    {/* Render Content Based on Active Section */}
-                    {!activeSection && (
-                        <div className="flex flex-col items-center justify-center h-[50vh] text-black dark:text-gray-500">
-                            <SettingsIcon className="w-16 h-16 mb-4 opacity-20" />
-                            <p className="text-lg">Select a category from the sidebar to configure settings.</p>
-                        </div>
-                    )}
-
-                    {activeSection === 'git' && (
-                        <div className="space-y-6 animate-in fade-in duration-300">
-                            <div>
-                                <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Git Configuration</h1>
-                                <p className="text-black dark:text-gray-400">Configure credentials for Git Repository scanning. The token will be used to clone private repositories.</p>
+                {activeSection === 'registry' && (
+                    <div className="flex flex-col gap-[18px] max-w-4xl">
+                        <section className="sheet">
+                            <div className="phead">
+                                <h2>Container registries <span className="count">{registries.length}</span></h2>
+                                <span className="meta">Trivy logs in to each registry before scanning</span>
                             </div>
-
-                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 p-6 shadow-sm">
-                                <form onSubmit={handleSaveGitConfig} className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-black dark:text-gray-400 mb-1">Git Username</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                disabled={!isEditingGit}
-                                                placeholder="e.g. abhilash-armada-ai"
-                                                value={gitUsername}
-                                                onChange={(e) => setGitUsername(e.target.value)}
-                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-black dark:text-gray-400 mb-1">Git Access Token</label>
-                                            <input
-                                                type="password"
-                                                required
-                                                disabled={!isEditingGit}
-                                                placeholder="Access Token"
-                                                value={gitToken}
-                                                onChange={(e) => setGitToken(e.target.value)}
-                                                className={`w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-black dark:text-gray-400 mb-1">Repository URLs (One per line)</label>
-                                        <textarea
-                                            required
-                                            disabled={!isEditingGit}
-                                            rows={6}
-                                            placeholder="https://gitlab.com/example/repo.git"
-                                            value={gitRepos}
-                                            onChange={(e) => setGitRepos(e.target.value)}
-                                            className={`w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm font-mono focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white ${!isEditingGit ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        />
-                                        <p className="text-xs text-black dark:text-gray-500 mt-1">Comments starting with # are ignored.</p>
-                                    </div>
-
-                                    {gitError && <p className="text-red-500 dark:text-red-400 text-sm">{gitError}</p>}
-                                    {gitSuccess && <p className="text-green-600 dark:text-green-400 text-sm">{gitSuccess}</p>}
-
-                                    <div className="flex justify-end gap-3">
-                                        {!isEditingGit ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsEditingGit(true)}
-                                                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
-                                            >
-                                                <Edit className="w-4 h-4" /> Edit Configuration
-                                            </button>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setIsEditingGit(false);
-                                                        fetchGitConfig(); // Revert changes
-                                                    }}
-                                                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white rounded-lg text-sm font-medium transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    disabled={gitLoading}
-                                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20"
-                                                >
-                                                    {gitLoading ? 'Saving...' : 'Save Configuration'}
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeSection === 'registry' && (
-                        <div className="space-y-6 animate-in fade-in duration-300">
-                            <div>
-                                <h1 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Registry Management</h1>
-                                <p className="text-black dark:text-gray-400">Configure container registries for Trivy authentication. The scanner will attempt to log in to all configured registries before scanning.</p>
-                            </div>
-
-                            {/* Add Registry Form */}
-                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 p-6 shadow-sm">
-                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                                    <Plus className="w-5 h-5 text-green-600 dark:text-green-400" />
-                                    {editingId ? 'Edit Registry' : 'Add New Registry'}
-                                </h3>
-                                <form onSubmit={handleAddRegistry} className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-black dark:text-gray-400 mb-1">Registry URL</label>
-                                            <div className="relative">
-                                                <Globe className="absolute left-3 top-2.5 w-4 h-4 text-gray-900" />
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    placeholder="e.g. docker.io"
-                                                    value={url}
-                                                    onChange={(e) => setUrl(e.target.value)}
-                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-black dark:text-gray-400 mb-1">Username</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Username"
-                                                value={username}
-                                                onChange={(e) => setUsername(e.target.value)}
-                                                className="w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-black dark:text-gray-400 mb-1">Password / Token</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type={showPassword ? "text" : "password"}
-                                                    required
-                                                    placeholder="• • • • • • • •"
-                                                    value={password}
-                                                    onChange={(e) => setPassword(e.target.value)}
-                                                    className="w-full bg-gray-50 dark:bg-gray-900 border-[3px] border-slate-400 dark:border-gray-600 rounded-lg py-2 px-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-colors text-gray-900 dark:text-white"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-black dark:text-gray-200"
-                                                >
-                                                    {showPassword ? "Hide" : "Show"}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
-                                    <div className="flex justify-end gap-3">
-                                        {editingId && (
-                                            <button
-                                                type="button"
-                                                onClick={handleCancelEdit}
-                                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white rounded-lg text-sm font-medium transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
-                                        )}
-                                        <button
-                                            type="submit"
-                                            disabled={loading}
-                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20"
-                                        >
-                                            {loading ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update Credential' : 'Save Credential')}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            {/* Existing Registries Table */}
-                            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 overflow-hidden shadow-sm">
-                                <div className="px-6 py-4 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                                    <h3 className="font-semibold text-gray-900 dark:text-gray-200">Configured Registries</h3>
-                                </div>
-                                {registries.length === 0 ? (
-                                    <div className="p-8 text-center text-gray-400 dark:text-gray-500">
-                                        <Database className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                                        <p>No registries configured yet.</p>
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-sm">
-                                            <thead>
-                                                <tr className="bg-gray-100 dark:bg-gray-900/50 text-black dark:text-gray-400 border-b border-gray-300 dark:border-gray-700">
-                                                    <th className="px-6 py-3 font-medium">URL</th>
-                                                    <th className="px-6 py-3 font-medium">Username</th>
-                                                    <th className="px-6 py-3 font-medium">Password</th>
-                                                    <th className="px-6 py-3 font-medium text-right">Actions</th>
+                            {registries.length === 0 ? (
+                                <p className="m-0 px-3.5 py-4 text-[13px]" style={{ color: 'var(--mute)' }}>No registries configured yet.</p>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="ctable">
+                                        <thead><tr><th>Registry URL</th><th>Username</th><th>Password</th><th className="r">Actions</th></tr></thead>
+                                        <tbody>
+                                            {Array.isArray(registries) && registries.map((reg) => (
+                                                <tr key={reg.id} style={editingId === reg.id ? { boxShadow: 'inset 3px 0 0 var(--accent-text)' } : undefined}>
+                                                    <td className="num text-xs">{reg.url}</td>
+                                                    <td>{reg.username}</td>
+                                                    <td className="num" style={{ color: 'var(--faint)' }}>••••••••</td>
+                                                    <td className="r whitespace-nowrap">
+                                                        <button type="button" className="lnk" onClick={() => handleEditRegistry(reg)} title="Edit Registry">Edit</button>
+                                                        <span className="mx-1.5" style={{ color: 'var(--line-strong)' }}>·</span>
+                                                        <button type="button" className="lnk del" onClick={() => handleDeleteRegistry(reg.id)} title="Delete Registry">Delete</button>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                                {Array.isArray(registries) && registries.map((reg) => (
-                                                    <tr key={reg.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group text-black dark:text-gray-200">
-                                                        <td className="px-6 py-4 font-medium">{reg.url}</td>
-                                                        <td className="px-6 py-4 text-black dark:text-gray-300">{reg.username}</td>
-                                                        <td className="px-6 py-4 text-black dark:text-gray-500 font-mono text-xs">••••••••</td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <div className="flex items-center justify-end gap-2">
-                                                                <button
-                                                                    onClick={() => handleEditRegistry(reg)}
-                                                                    className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                                                    title="Edit Registry"
-                                                                >
-                                                                    <Edit className="w-4 h-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteRegistry(reg.id)}
-                                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                                                    title="Delete Registry"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </section>
+
+                        <section className="sheet" id="registry-form">
+                            <div className="phead"><h2>{editingId ? 'Edit registry' : 'Add registry'}</h2></div>
+                            <form onSubmit={handleAddRegistry} className="flex flex-col gap-3 p-3.5">
+                                <label className="field">Registry URL
+                                    <input type="text" required className="inp mono" placeholder="e.g. docker.io" value={url} onChange={(e) => setUrl(e.target.value)} />
+                                </label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className="field">Username
+                                        <input type="text" required className="inp" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                                    </label>
+                                    <label className="field">Password / token
+                                        <span className="flex">
+                                            <input type={showPassword ? "text" : "password"} required className="inp rounded-r-none" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                            <button type="button" className="btn h-[30px] rounded-l-none border-l-0" onClick={() => setShowPassword(!showPassword)}>
+                                                {showPassword ? "Hide" : "Show"}
+                                            </button>
+                                        </span>
+                                    </label>
+                                </div>
+                                {error && <div className="note note-crit">{error}</div>}
+                                <div className="flex items-center gap-2.5 pt-3" style={{ borderTop: '1px solid var(--line-soft)' }}>
+                                    <span className="text-[11.5px]" style={{ color: 'var(--mute-2)' }}>Saved to registries.json on the server.</span>
+                                    <div className="flex-1" />
+                                    {editingId && <button type="button" className="btn" onClick={handleCancelEdit}>Cancel</button>}
+                                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                                        {loading ? (editingId ? 'Updating...' : 'Adding...') : (editingId ? 'Update credential' : 'Save credential')}
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+                    </div>
+                )}
+
+                {activeSection === 'suppressions' && (
+                    <section className="sheet">
+                        <div className="phead">
+                            <h2>Suppressions <span className="count">{suppressions.length}</span></h2>
+                            <span className="meta">Findings hidden from Scan reports. Add them from a finding's Suppress action.</span>
+                        </div>
+                        {suppressions.length === 0 ? (
+                            <p className="m-0 px-3.5 py-4 text-[13px]" style={{ color: 'var(--mute)' }}>No findings are suppressed.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="ctable">
+                                    <thead><tr><th>Finding</th><th>Package</th><th>Scan</th><th>Reason</th><th>Note</th><th>Added</th><th className="r">Actions</th></tr></thead>
+                                    <tbody>
+                                        {suppressions.map(x => (
+                                            <tr key={x.id}>
+                                                <td className="num text-xs">{x.cve_id}</td>
+                                                <td>{x.pkg || '—'}</td>
+                                                <td className="num text-xs">{x.scan_type}</td>
+                                                <td><span className={`badge ${x.reason === 'false-positive' ? 'badge-low' : 'badge-warn'}`}>{x.reason === 'false-positive' ? 'False positive' : 'Accepted risk'}</span></td>
+                                                <td className="max-w-[280px] truncate" title={x.note} style={{ color: 'var(--mute)' }}>{x.note || '—'}</td>
+                                                <td className="num text-xs whitespace-nowrap" style={{ color: 'var(--mute)' }}>{x.created_at ? new Date(x.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</td>
+                                                <td className="r"><button type="button" className="lnk del" onClick={() => removeSuppression(x.id)}>Remove</button></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                {activeSection === 'git' && (
+                    <section className="sheet max-w-3xl">
+                        <div className="phead">
+                            <h2>Git repositories</h2>
+                            <span className="meta">Used by the Source code scan</span>
+                            <div className="flex-1" />
+                            {!isEditingGit && <span className="badge badge-mute">Read only</span>}
+                        </div>
+                        <p className="m-0 px-3.5 py-2.5 text-[12.5px]" style={{ color: 'var(--mute)', borderBottom: '1px solid var(--line-soft)' }}>
+                            The token is used to clone private repositories.
+                        </p>
+                        <form onSubmit={handleSaveGitConfig} className="flex flex-col gap-3 p-3.5">
+                            <div className="grid grid-cols-2 gap-3">
+                                <label className="field">Git username
+                                    <input type="text" required disabled={!isEditingGit} className="inp" placeholder="e.g. abhilash-armada-ai" value={gitUsername} onChange={(e) => setGitUsername(e.target.value)} />
+                                </label>
+                                <label className="field">Access token
+                                    <input type="password" required disabled={!isEditingGit} className="inp" placeholder="Access Token" value={gitToken} onChange={(e) => setGitToken(e.target.value)} />
+                                </label>
+                            </div>
+                            <label className="field">Repository URLs <span className="hint">One per line. Lines starting with # are ignored.</span>
+                                <textarea required disabled={!isEditingGit} rows={8} className="inp mono resize-y" placeholder="https://gitlab.com/example/repo.git" value={gitRepos} onChange={(e) => setGitRepos(e.target.value)} />
+                            </label>
+
+                            {gitError && <div className="note note-crit">{gitError}</div>}
+                            {gitSuccess && <div className="note note-ok">{gitSuccess}</div>}
+
+                            <div className="flex items-center gap-2.5 pt-3" style={{ borderTop: '1px solid var(--line-soft)' }}>
+                                <span className="num text-[11.5px]" style={{ color: 'var(--mute-2)' }}>{repoCount} {repoCount === 1 ? 'repository' : 'repositories'}</span>
+                                <div className="flex-1" />
+                                {!isEditingGit ? (
+                                    <button type="button" className="btn btn-primary" onClick={() => setIsEditingGit(true)}>
+                                        <Edit className="w-3.5 h-3.5" /> Edit configuration
+                                    </button>
+                                ) : (
+                                    <>
+                                        <button
+                                            type="button"
+                                            className="btn"
+                                            onClick={() => {
+                                                setIsEditingGit(false);
+                                                fetchGitConfig(); // Revert changes
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button type="submit" className="btn btn-primary" disabled={gitLoading}>
+                                            {gitLoading ? 'Saving...' : 'Save configuration'}
+                                        </button>
+                                    </>
                                 )}
                             </div>
-                        </div>
-                    )}
-                </div>
+                        </form>
+                    </section>
+                )}
             </div>
         </div>
     );
 }
-

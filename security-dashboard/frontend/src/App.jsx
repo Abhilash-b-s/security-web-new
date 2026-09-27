@@ -1,14 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { LogOut } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 import Login from './components/Login';
 import ScanControl from './components/ScanControl';
-import LogViewer from './components/LogViewer';
 import ReportViewer from './components/ReportViewer';
 import WebTerminal from './components/WebTerminal';
 import PolicyReports from './components/PolicyReports';
 import Settings from './components/Settings';
 import DashboardCharts from './components/DashboardCharts';
-import { ShieldAlert, LayoutDashboard, FileText, Terminal, FileCheck, Settings as SettingsIcon } from 'lucide-react';
+import { REPORT_TABS } from './components/reportParts';
+import { LayoutGrid, FileText, Terminal, FileCheck, SlidersHorizontal, Sun, Moon, LogOut, ChevronDown } from 'lucide-react';
 
 function App() {
     const [user, setUser] = useState(() => {
@@ -28,6 +27,11 @@ function App() {
     const [logs, setLogs] = useState([]);
     const [isScanning, setIsScanning] = useState(false);
     const [activeScanType, setActiveScanType] = useState(null);
+    // Scan started from this browser; its live output is shown in Event logs
+    const [liveScan, setLiveScan] = useState(null); // { scanId, type, startedAt, endedAt }
+    const [statsVersion, setStatsVersion] = useState(0); // bumps when a scan ends so Overview reloads
+    // Scans running on the server, started from any browser (GET /api/scans/active)
+    const [serverRuns, setServerRuns] = useState([]);
     const [settingsSection, setSettingsSection] = useState(null);
     const [theme, setTheme] = useState(() => {
         if (typeof window !== 'undefined' && window.localStorage) {
@@ -36,6 +40,41 @@ function App() {
         return 'dark';
     });
     const wsRef = useRef(null);
+
+    // Nav counts and API status; refreshed on login and whenever a scan finishes.
+    const [navRuns, setNavRuns] = useState(null);
+    const [reportView, setReportView] = useState('kyverno'); // which Scan reports page is open
+    const [reportsOpen, setReportsOpen] = useState(true); // Scan reports sub-menu slid out
+    const [apiUp, setApiUp] = useState(null);
+    useEffect(() => {
+        if (!user || isScanning) return;
+        fetch('/api/reports/').then(r => (r.ok ? r.json() : null)).catch(() => null)
+            .then(reps => setNavRuns(Array.isArray(reps) ? reps.length : null));
+    }, [user, isScanning]);
+    useEffect(() => {
+        if (!user) return;
+        const ping = () => fetch('/api/suppressions/', { cache: 'no-store' }).then(r => setApiUp(r.ok)).catch(() => setApiUp(false));
+        ping();
+        const id = setInterval(ping, 30000);
+        return () => clearInterval(id);
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+        let last = 0;
+        const poll = () => fetch('/api/scans/active', { cache: 'no-store' })
+            .then(r => (r.ok ? r.json() : []))
+            .then(list => {
+                const runs = Array.isArray(list) ? list : [];
+                if (runs.length < last) setStatsVersion(v => v + 1); // a scan finished somewhere: reload Overview
+                last = runs.length;
+                setServerRuns(runs);
+            })
+            .catch(() => { });
+        poll();
+        const id = setInterval(poll, 5000);
+        return () => clearInterval(id);
+    }, [user, isScanning]);
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -83,6 +122,7 @@ function App() {
         'kyverno': 'Policy Scan',
         'kube-bench': 'CIS Benchmarks',
         'trivy-cluster': 'Cluster Scan',
+        'all': 'All scans',
     };
 
     // Safe ID generator that works in all contexts (http/https/older browsers)
@@ -100,6 +140,7 @@ function App() {
 
         // Generate ID client-side to coordinate WS connection before trigger
         const scanId = generateScanId();
+        setLiveScan({ scanId, type, startedAt: Date.now(), endedAt: null });
 
         try {
             setLogs(prev => [...prev, "Initializing connection..."]);
@@ -125,6 +166,7 @@ function App() {
             setLogs(prev => [...prev, `Error: ${error.message}`]);
             setIsScanning(false);
             setActiveScanType(null);
+            setLiveScan(l => l && { ...l, endedAt: Date.now() });
             if (wsRef.current) wsRef.current.close();
         }
     };
@@ -162,6 +204,8 @@ function App() {
                     ws.close();
                     setIsScanning(false);
                     setActiveScanType(null);
+                    setLiveScan(l => l && { ...l, endedAt: Date.now() });
+                    setStatsVersion(v => v + 1);
                 } else {
                     // Handle messages that may contain newlines or partial lines
                     // Remove only the trailing newline, preserve internal structure
@@ -208,155 +252,168 @@ function App() {
         return <Login onLogin={handleLogin} />;
     }
 
+    const goOverview = () => setActiveTab('dashboard');
+    const runningCount = Math.max(serverRuns.length, isScanning ? 1 : 0);
+    const anyRunning = runningCount > 0;
+    const remoteRun = !isScanning && serverRuns[0];
+
+    const NAV = [
+        { id: 'dashboard', label: 'Overview', Icon: LayoutGrid, superOnly: true, onClick: goOverview },
+        { id: 'policy', label: 'Scan reports', Icon: FileCheck, onClick: () => { if (activeTab === 'policy') setReportsOpen(o => !o); else { setActiveTab('policy'); setReportsOpen(true); } }, },
+        { id: 'reports', label: 'Event logs', Icon: FileText, superOnly: true, count: anyRunning ? `${runningCount} running` : navRuns || null, countRun: anyRunning },
+        { id: 'terminal', label: 'Terminal', Icon: Terminal, superOnly: true },
+        { id: 'settings', label: 'Settings', Icon: SlidersHorizontal, superOnly: true },
+    ].filter(n => user.role === 'superuser' || !n.superOnly);
+
     return (
-        <div className="h-screen overflow-hidden bg-gradient-light dark:bg-none dark:bg-[#0b1220] text-slate-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
-            {/* Header */}
-            <header className="bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-4 py-3 shadow-base dark:shadow-md transition-colors duration-200">
-                <div className="flex items-center justify-between px-0">
-                    <button
-                        onClick={() => {
-                            setActiveTab('dashboard');
-                            setLogs([]);
-                            setIsScanning(false);
-                        }}
-                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-                    >
-                        <ShieldAlert className="w-8 h-8 text-azure-600 dark:text-azure-500" />
-                        <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">DevSecOps Dashboard</span>
-                    </button>
-                    <nav className="flex gap-3 items-center">
-                        {user.role === 'superuser' && (
-                            <>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('dashboard');
-                                        setLogs([]);
-                                        setIsScanning(false);
-                                    }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                        }`}
-                                >
-                                    <LayoutDashboard className="w-4 h-4" />
-                                    Dashboard
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('reports')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'reports' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                        }`}
-                                >
-                                    <FileText className="w-4 h-4" />
-                                    Event Logs
-                                </button>
-                            </>
-                        )}
-                        <button
-                            onClick={() => setActiveTab('policy')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'policy' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                }`}
-                        >
-                            <FileCheck className="w-4 h-4" />
-                            Scan Reports
+        <div className="h-screen overflow-hidden flex flex-col" style={{ background: 'var(--page)', color: 'var(--ink)' }}>
+            <header className="h-16 shrink-0 flex items-center gap-5 px-4" style={{ background: 'var(--header)', color: 'var(--header-ink)', borderBottom: '1px solid var(--header-line)' }}>
+                <button type="button" onClick={goOverview} className="flex items-center gap-2.5 bg-transparent border-0 p-0 cursor-pointer" style={{ color: 'inherit' }}>
+                    <svg width="26" height="26" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.5 17 4v5.5c0 4.2-2.9 7.4-7 9-4.1-1.6-7-4.8-7-9V4l7-2.5Z" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M10 5v10M6 8.5h8" stroke="#7FA3D6" strokeWidth="1.4" /></svg>
+                    <span className="text-[17px] font-semibold tracking-[.06em]">DEVSECOPS</span>
+                    <span className="text-[17px]" style={{ color: 'var(--header-mute)' }}>Security Console</span>
+                </button>
+
+                {apiUp === false && (
+                    <>
+                        <div className="w-px h-[18px]" style={{ background: 'var(--header-line)' }} />
+                        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--header-mute)' }} role="status">
+                            <span className="w-1.5 h-1.5" style={{ background: '#E58C8C' }} />
+                            API unreachable
+                        </span>
+                    </>
+                )}
+
+                {remoteRun && (
+                    <>
+                        <div className="w-px h-[18px]" style={{ background: 'var(--header-line)' }} />
+                        <button type="button" onClick={() => setActiveTab('reports')} title="Show progress in Event logs"
+                            className="flex items-center gap-2 text-xs bg-transparent border-0 p-0 cursor-pointer underline-offset-2 hover:underline" style={{ color: 'var(--header-ink)' }}>
+                            <span className="w-1.5 h-1.5 animate-pulse" style={{ background: '#7FA3D6' }} />
+                            {SCAN_LABELS[remoteRun.scan_type] ?? remoteRun.scan_type} running{serverRuns.length > 1 ? ` (+${serverRuns.length - 1})` : ''}… <span style={{ color: 'var(--header-mute)' }}>View progress</span>
                         </button>
-                        {user.role === 'superuser' && (
-                            <>
-                                <button
-                                    onClick={() => setActiveTab('terminal')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'terminal' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                        }`}
-                                >
-                                    <Terminal className="w-4 h-4" />
-                                    Terminal
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('settings')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-azure-600 text-white shadow-md shadow-azure-200 dark:shadow-azure-900' : 'bg-slate-100 dark:bg-transparent text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-300 dark:border-transparent'
-                                        }`}
-                                >
-                                    <SettingsIcon className="w-4 h-4" />
-                                    Settings
-                                </button>
-                            </>
-                        )}
+                    </>
+                )}
 
-                        {isScanning && activeScanType && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-full text-xs font-semibold text-blue-700 dark:text-blue-300">
-                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" />
-                                {SCAN_LABELS[activeScanType] ?? activeScanType} running…
-                            </div>
-                        )}
-
-                        <div className="w-px h-6 bg-slate-300 dark:bg-gray-700 mx-2"></div>
-
-                        <button
-                            onClick={toggleTheme}
-                            className="p-2 rounded-lg text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors"
-                            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                        >
-                            {theme === 'dark' ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sun"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
-                            )}
+                {isScanning && activeScanType && (
+                    <>
+                        <div className="w-px h-[18px]" style={{ background: 'var(--header-line)' }} />
+                        <button type="button" onClick={() => setActiveTab('reports')} title="Show progress in Event logs"
+                            className="flex items-center gap-2 text-xs bg-transparent border-0 p-0 cursor-pointer underline-offset-2 hover:underline" style={{ color: 'var(--header-ink)' }}>
+                            <span className="w-1.5 h-1.5 animate-pulse" style={{ background: '#7FA3D6' }} />
+                            {SCAN_LABELS[activeScanType] ?? activeScanType} running… <span style={{ color: 'var(--header-mute)' }}>View progress</span>
                         </button>
+                    </>
+                )}
 
-                        <div className="flex items-center gap-1 ml-2">
-                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">
-                                {user?.username || 'User'}
-                            </span>
-                            <button
-                                onClick={handleLogout}
-                                className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                title="Logout"
-                            >
-                                <LogOut className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </nav>
-                </div>
-            </header >
+                <div className="flex-1" />
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden min-h-0">
-                {/* Tab Content */}
-                <div className={`flex-1 flex flex-col overflow-hidden min-h-0 ${activeTab === 'policy' ? 'p-2' : ''}`}>
-                    {activeTab === 'dashboard' ? (
-                        <div className="flex-1 flex flex-col lg:flex-row min-h-0">
-                            <div className="w-full lg:w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 relative z-30 h-full">
-                                <ScanControl
-                                    onStartScan={startScan}
-                                    isScanning={isScanning}
-                                    onNavigateToSettings={(section) => {
-                                        setSettingsSection(section);
-                                        setActiveTab('settings');
-                                    }}
-                                />
-                            </div>
-                            <div className="flex-1 min-w-0 overflow-auto p-6">
-                                {!isScanning && logs.length === 0 ? (
-                                    <DashboardCharts />
-                                ) : (
-                                    <div className="h-full">
-                                        <LogViewer logs={logs} />
+                <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="btn h-[26px]"
+                    style={{ background: 'transparent', color: 'var(--header-ink)', borderColor: 'var(--header-line)' }}
+                    title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                    {theme === 'dark' ? <Sun className="w-3.5 h-3.5" strokeWidth={1.5} /> : <Moon className="w-3.5 h-3.5" strokeWidth={1.5} />}
+                    {theme === 'dark' ? 'Light' : 'Dark'}
+                </button>
+                <span className="text-xs" style={{ color: 'var(--header-mute)' }}>{user?.username || 'User'} · {user.role}</span>
+                <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="btn h-[26px]"
+                    style={{ background: 'transparent', color: 'var(--header-ink)', borderColor: 'var(--header-line)' }}
+                    title="Logout"
+                >
+                    <LogOut className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    Sign out
+                </button>
+            </header>
+
+            <div className="flex-1 flex min-h-0">
+                <aside className="rail w-[264px] shrink-0 flex flex-col pt-3 pb-3 overflow-y-auto relative z-30" aria-label="Primary">
+                    <nav>
+                        {NAV.map(({ id, label, Icon, onClick, count, countRun }) => (
+                            <React.Fragment key={id}>
+                                <button
+                                    type="button"
+                                    onClick={onClick || (() => setActiveTab(id))}
+                                    className={`navlink ${activeTab === id ? 'on' : ''}`}
+                                    aria-current={activeTab === id ? 'page' : undefined}
+                                    aria-expanded={id === 'policy' ? activeTab === 'policy' && reportsOpen : undefined}
+                                >
+                                    <Icon className="w-4 h-4" strokeWidth={1.5} />
+                                    {label}
+                                    {count != null && (
+                                        <span className="num ml-auto text-[11px]" style={{ color: activeTab === id ? '#D6E1F0' : countRun ? 'var(--accent-text)' : 'var(--mute-2)' }}>{count}</span>
+                                    )}
+                                    {id === 'policy' && (
+                                        <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${count != null ? 'ml-1' : 'ml-auto'}`} strokeWidth={1.8}
+                                            style={{ transform: activeTab === 'policy' && reportsOpen ? 'rotate(180deg)' : 'none' }} aria-hidden="true" />
+                                    )}
+                                </button>
+                                {id === 'policy' && (
+                                    <div className={`subnav ${activeTab === 'policy' && reportsOpen ? 'open' : ''}`}>
+                                        <div className="subnav-inner" aria-label="Report type">
+                                            {REPORT_TABS.map(t => {
+                                                const on = activeTab === 'policy' && reportView === t.id;
+                                                return (
+                                                    <button
+                                                        key={t.id}
+                                                        type="button"
+                                                        tabIndex={activeTab === 'policy' && reportsOpen ? 0 : -1}
+                                                        className={`subnav-item ${on ? 'on' : ''}`}
+                                                        aria-current={on ? 'page' : undefined}
+                                                        onClick={() => { setReportView(t.id); setActiveTab('policy'); }}
+                                                    >
+                                                        <span className="truncate">{t.label}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )}
-                            </div>
+                            </React.Fragment>
+                        ))}
+                    </nav>
+
+                    {user.role === 'superuser' && (
+                        <ScanControl
+                            onStartScan={startScan}
+                            isScanning={anyRunning}
+                            runningTypes={new Set([...serverRuns.map(r => r.scan_type), isScanning && activeScanType])}
+                            onNavigateToSettings={(section) => {
+                                setSettingsSection(section);
+                                setActiveTab('settings');
+                            }}
+                        />
+                    )}
+
+
+                </aside>
+
+                <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
+                    {activeTab === 'dashboard' ? (
+                        <div className="flex-1 min-h-0 overflow-auto px-7 pt-[18px] pb-6">
+                            <DashboardCharts key={statsVersion} />
                         </div>
                     ) : activeTab === 'reports' ? (
-                        <div className="p-6">
-                            <ReportViewer />
-                        </div>
+                        <ReportViewer
+                            live={liveScan && { ...liveScan, label: SCAN_LABELS[liveScan.type] ?? liveScan.type, logs, isScanning }}
+                            active={serverRuns}
+                            labelFor={(t) => SCAN_LABELS[t] ?? t}
+                        />
                     ) : activeTab === 'policy' ? (
-                        <PolicyReports />
+                        <PolicyReports activeView={reportView} />
                     ) : activeTab === 'settings' ? (
                         <Settings initialSection={settingsSection} />
                     ) : activeTab === 'terminal' ? (
-                        <div className="flex-1 h-full overflow-hidden">
-                            <WebTerminal />
-                        </div>
+                        <WebTerminal />
                     ) : null}
-                </div>
-            </main>
-        </div >
+                </main>
+            </div>
+        </div>
     );
 }
 

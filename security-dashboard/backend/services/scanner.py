@@ -1,4 +1,5 @@
 import asyncio
+from collections import deque
 import json
 import os
 from datetime import datetime
@@ -6,6 +7,7 @@ from routers.settings import load_registries
 import uuid
 from fastapi import WebSocket
 from models import ScanRequest, ScanType, ScanStatus, ScanResult
+from services.history import record_snapshot
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -14,16 +16,45 @@ logger = logging.getLogger("uvicorn")
 REPORTS_DIR = "security-dashboard/backend/reports"
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
+MAX_BUFFERED_LINES = 20000  # per scan; oldest output is dropped beyond this
+
+
 class ConnectionManager:
+    """Fans scan output out to WebSockets and keeps the output of running scans
+    in memory, so a client that connects mid-scan gets the whole run replayed."""
+
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
+        self.runs: dict[str, dict] = {}  # scan_id -> {scan_id, scan_type, started_at, lines}
+        # Serialises replay and broadcast so a joining client never misses or reorders lines.
+        self.lock = asyncio.Lock()
+
+    def start_run(self, scan_id: str, scan_type: str):
+        self.runs[scan_id] = {
+            "scan_id": scan_id,
+            "scan_type": scan_type,
+            "started_at": datetime.now().isoformat(),
+            "lines": deque(maxlen=MAX_BUFFERED_LINES),
+        }
+
+    def end_run(self, scan_id: str):
+        self.runs.pop(scan_id, None)
+
+    def list_runs(self):
+        return [{k: v for k, v in r.items() if k != "lines"} | {"lines": len(r["lines"])} for r in self.runs.values()]
 
     async def connect(self, websocket: WebSocket, scan_id: str):
         await websocket.accept()
         logger.info(f"WS Connected: {scan_id}")
-        if scan_id not in self.active_connections:
-            self.active_connections[scan_id] = []
-        self.active_connections[scan_id].append(websocket)
+        async with self.lock:
+            run = self.runs.get(scan_id)
+            if run:
+                for line in list(run["lines"]):
+                    await websocket.send_text(line)
+            elif os.path.exists(os.path.join(REPORTS_DIR, f"{scan_id}.json")):
+                # Scan already finished: tell the client straight away instead of leaving it waiting.
+                await websocket.send_text("__EOF__")
+            self.active_connections.setdefault(scan_id, []).append(websocket)
 
     def disconnect(self, websocket: WebSocket, scan_id: str):
         logger.info(f"WS Disconnected: {scan_id}")
@@ -34,8 +65,11 @@ class ConnectionManager:
                 del self.active_connections[scan_id]
 
     async def broadcast(self, message: str, scan_id: str):
-        if scan_id in self.active_connections:
-            for connection in self.active_connections[scan_id]:
+        async with self.lock:
+            run = self.runs.get(scan_id)
+            if run is not None and message != "__EOF__":
+                run["lines"].append(message)
+            for connection in list(self.active_connections.get(scan_id, [])):
                 try:
                     await connection.send_text(message)
                 except Exception as e:
@@ -228,27 +262,35 @@ async def run_single_scan(scan_type: ScanType, scan_id: str, request: ScanReques
 
 async def run_scan_task(scan_id: str, request: ScanRequest):
     results = []
-    
-    if request.scan_type == ScanType.ALL:
+    if scan_id not in manager.runs:
+        manager.start_run(scan_id, request.scan_type.value)
+    try:
+        if request.scan_type == ScanType.ALL:
 
-        scans_to_run = [ScanType.TRIVY_SBOM, ScanType.KYVERNO, ScanType.KUBE_BENCH, ScanType.TRIVY_IMAGE, ScanType.NMAP, ScanType.TRIVY_CLUSTER]
-        for s_type in scans_to_run:
-            res = await run_single_scan(s_type, scan_id, request)
+            scans_to_run = [ScanType.TRIVY_SBOM, ScanType.KYVERNO, ScanType.KUBE_BENCH, ScanType.TRIVY_IMAGE, ScanType.NMAP, ScanType.TRIVY_CLUSTER]
+            for s_type in scans_to_run:
+                res = await run_single_scan(s_type, scan_id, request)
+                results.append(res)
+        else:
+            res = await run_single_scan(request.scan_type, scan_id, request)
             results.append(res)
-    else:
-        res = await run_single_scan(request.scan_type, scan_id, request)
-        results.append(res)
 
-    # Save Report
-    report_file = os.path.join(REPORTS_DIR, f"{scan_id}.json")
-    final_report = {
-        "id": scan_id,
-        "request": request.dict(),
-        "timestamp": datetime.now().isoformat(),
-        "results": results
-    }
+        # Save Report
+        report_file = os.path.join(REPORTS_DIR, f"{scan_id}.json")
+        final_report = {
+            "id": scan_id,
+            "request": request.dict(),
+            "timestamp": datetime.now().isoformat(),
+            "results": results
+        }
     
-    with open(report_file, "w") as f:
-        json.dump(final_report, f, indent=2)
-    
-    await manager.broadcast("__EOF__", scan_id)
+        with open(report_file, "w") as f:
+            json.dump(final_report, f, indent=2)
+
+        # Record a history snapshot for the Overview charts before telling clients the scan is done.
+        overall = "completed" if results and all(str(getattr(r["status"], "value", r["status"])) == "completed" for r in results) else "failed"
+        await record_snapshot(scan_id, request.scan_type.value, overall)
+
+        await manager.broadcast("__EOF__", scan_id)
+    finally:
+        manager.end_run(scan_id)

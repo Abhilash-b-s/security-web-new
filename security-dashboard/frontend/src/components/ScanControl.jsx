@@ -1,28 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Shield, Activity, Layers, Terminal, GitGraph, AlertCircle, X } from 'lucide-react';
+import { AlertTriangle, X, ChevronDown, Radar } from 'lucide-react';
 import ScanConfirmationPanel from './ScanConfirmationPanel';
 
-const SCAN_TYPES = [
-    { id: 'trivy-image', label: 'Image Vulnerabilities', icon: <Layers className="w-4 h-4" /> },
-    { id: 'trivy-sbom', label: 'SBOM Inventory', icon: <Layers className="w-4 h-4" /> },
-    { id: 'trivy-repo', label: 'Source Code Scan', icon: <GitGraph className="w-4 h-4" /> },
-    { id: 'nmap', label: 'Network Security Scan', icon: <Terminal className="w-4 h-4" /> },
-    { id: 'kyverno', label: 'Policy Compliance', icon: <Activity className="w-4 h-4" /> },
-    { id: 'kube-bench', label: 'CIS Benchmarks', icon: <Shield className="w-4 h-4" /> },
-    { id: 'trivy-cluster', label: 'Cluster Risks Scan', icon: <Layers className="w-4 h-4" /> },
+export const SCAN_TYPES = [
+    { id: 'trivy-image', label: 'Image vulnerabilities', tool: 'trivy image', group: 'Workloads', script: '2_run_trivy_image.sh', about: 'Scans the container images running in the cluster for known CVEs.' },
+    { id: 'trivy-sbom', label: 'SBOM inventory', tool: 'trivy sbom', group: 'Workloads', script: '1_run_trivy_sbom.sh', about: 'Builds a software bill of materials for each image and checks it for vulnerabilities.' },
+    { id: 'trivy-cluster', label: 'Cluster risks', tool: 'trivy k8s', group: 'Cluster', script: '5_run_trivy_cluster.sh', about: 'Checks Kubernetes resources for misconfigurations, secrets and vulnerable workloads.' },
+    { id: 'kube-bench', label: 'CIS benchmark', tool: 'kube-bench', group: 'Cluster', script: '4_run_kube_bench.sh', about: 'Runs the CIS Kubernetes Benchmark checks against the cluster nodes.' },
+    { id: 'kyverno', label: 'Policy compliance', tool: 'kyverno', group: 'Cluster', script: '6_run_kyverno.sh', about: 'Collects Kyverno policy reports for every namespace.' },
+    { id: 'nmap', label: 'Network exposure', tool: 'nmap', group: 'Network', script: '3_run_nmap.sh', about: 'Probes cluster services for open ports and weak TLS ciphers.' },
+    { id: 'trivy-repo', label: 'Source code', tool: 'trivy repo', group: 'Source', script: '7_run_trivy_repo.sh', about: 'Clones the configured Git repositories and scans them for vulnerabilities and secrets.' },
 ];
 
-export default function ScanControl({ onStartScan, isScanning, onNavigateToSettings }) {
+const PlayIcon = () => (
+    <svg width="8" height="8" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l6 4-6 4z" fill="currentColor" /></svg>
+);
+
+export default function ScanControl({ onStartScan, isScanning, runningTypes = new Set(), onNavigateToSettings }) {
     const [showPanel, setShowPanel] = useState(false);
     const [selectedScan, setSelectedScan] = useState(null);
     const [gitConfigReady, setGitConfigReady] = useState(null); // null=loading, true/false
     const [registryConfigReady, setRegistryConfigReady] = useState(null); // null=loading, true/false
+    const [registryCount, setRegistryCount] = useState(0);
     const [prereqWarning, setPrereqWarning] = useState(null); // null | 'git' | 'registry'
+    const [open, setOpen] = useState(true); // scan list slides out from the Start scanning button
+
+    const [lastRuns, setLastRuns] = useState({}); // scan_type -> latest report
 
     useEffect(() => {
         checkGitConfig();
         checkRegistryConfig();
-    }, []);
+        fetch('/api/reports/')
+            .then(r => (r.ok ? r.json() : []))
+            .then(list => {
+                const latest = {};
+                (Array.isArray(list) ? list : []).forEach(r => {
+                    if (!latest[r.scan_type] || new Date(r.timestamp) > new Date(latest[r.scan_type].timestamp)) latest[r.scan_type] = r;
+                });
+                setLastRuns(latest);
+            })
+            .catch(() => { });
+    }, [isScanning]);
 
     const checkGitConfig = async () => {
         try {
@@ -43,7 +61,9 @@ export default function ScanControl({ onStartScan, isScanning, onNavigateToSetti
             const response = await fetch('/api/settings/registries');
             if (!response.ok) { setRegistryConfigReady(false); return; }
             const data = await response.json();
-            setRegistryConfigReady(Array.isArray(data) && data.length > 0);
+            const ok = Array.isArray(data) && data.length > 0;
+            setRegistryConfigReady(ok);
+            setRegistryCount(ok ? data.length : 0);
         } catch {
             setRegistryConfigReady(false);
         }
@@ -75,101 +95,81 @@ export default function ScanControl({ onStartScan, isScanning, onNavigateToSetti
         setSelectedScan(null);
     };
 
+    const goSettings = (section) => { setPrereqWarning(null); onNavigateToSettings?.(section); };
+
     return (
-        <div className="h-full flex flex-col relative z-0">
-            <div className="flex-col flex h-full relative z-20 bg-white dark:bg-gray-800">
-                <div className="p-6 border-b border-slate-200 dark:border-gray-700">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                        <div className="p-2 bg-gradient-blue rounded-lg">
-                            <Activity className="w-5 h-5 text-azure-600" />
-                        </div>
-                        Security Operations
-                    </h2>
-                </div>
+        <>
+            <button
+                type="button"
+                className={`navlink mt-3 ${open ? 'expanded' : ''}`}
+                aria-expanded={open}
+                aria-controls="scan-list"
+                onClick={() => setOpen(v => !v)}
+            >
+                <Radar className="w-4 h-4" strokeWidth={1.5} />
+                Start scanning
+                <ChevronDown className="w-3.5 h-3.5 ml-auto transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
+            </button>
+            <div id="scan-list" className={`subnav ${open ? 'open' : ''}`}>
+                <div className="subnav-inner flat">
 
-                {/* Prerequisite warning */}
-                {prereqWarning && (
-                    <div className="mx-4 mt-3 flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3">
-                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                            {prereqWarning === 'git' ? (
-                                <>
-                                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">Git Config Required</p>
-                                    <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                                        Go to{' '}
-                                        <button
-                                            type="button"
-                                            onClick={() => { setPrereqWarning(null); onNavigateToSettings?.('git'); }}
-                                            className="font-semibold underline hover:text-amber-900 dark:hover:text-amber-200"
-                                        >
-                                            Settings → Git Configuration
-                                        </button>
-                                        {' '}to add your credentials and Repo list before running a source code scan.
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">Registry Config Required</p>
-                                    <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                                        Go to{' '}
-                                        <button
-                                            type="button"
-                                            onClick={() => { setPrereqWarning(null); onNavigateToSettings?.('registry'); }}
-                                            className="font-semibold underline hover:text-amber-900 dark:hover:text-amber-200"
-                                        >
-                                            Settings → Registry Management
-                                        </button>
-                                        {' '}to add your credentials before running an image vulnerability scan.
-                                    </p>
-                                </>
-                            )}
+            {prereqWarning && (
+                <div className="note note-warn mx-3 mt-2" role="alert">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" strokeWidth={1.8} />
+                    <div className="flex-1 min-w-0">
+                        <div className="font-semibold">{prereqWarning === 'git' ? 'Git configuration required' : 'Registry credentials required'}</div>
+                        <div className="mt-0.5">
+                            Add them in{' '}
+                            <button type="button" className="underline font-semibold bg-transparent border-0 p-0 cursor-pointer" style={{ color: 'inherit' }}
+                                onClick={() => goSettings(prereqWarning === 'git' ? 'git' : 'registry')}>
+                                {prereqWarning === 'git' ? 'Settings → Git repositories' : 'Settings → Container registries'}
+                            </button>
+                            {prereqWarning === 'git' ? ' before running a source code scan.' : ' before running an image scan.'}
                         </div>
-                        <button
-                            onClick={() => setPrereqWarning(null)}
-                            className="text-amber-500 hover:text-amber-700 dark:hover:text-amber-300 flex-shrink-0"
-                        >
-                            <X className="w-3.5 h-3.5" />
-                        </button>
                     </div>
-                )}
-
-                <div className="flex-1 flex flex-col overflow-y-auto">
-                    {SCAN_TYPES.map((type) => {
-                        const isMissingConfig = (type.id === 'trivy-repo' && gitConfigReady === false)
-                            || (type.id === 'trivy-image' && registryConfigReady === false);
-
-                        return (
-                            <React.Fragment key={type.id}>
-                                <button
-                                    onClick={() => handleStartScan(type)}
-                                    disabled={isScanning}
-                                    className={`flex items-center gap-3 py-3 px-6 border-b border-slate-200 dark:border-gray-700 transition-all duration-150 w-full font-medium text-sm transform ${isScanning
-                                        ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400'
-                                        : isMissingConfig
-                                            ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:border-l-4 hover:border-l-amber-500 hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.02] hover:-translate-x-1 active:scale-[0.98] active:shadow-inner'
-                                            : 'bg-white dark:bg-gray-800 hover:bg-azure-100 dark:hover:bg-azure-600/20 text-slate-900 dark:text-gray-200 hover:text-azure-800 dark:hover:text-azure-100 hover:border-l-4 hover:border-l-azure-500 hover:shadow-xl hover:shadow-azure-500/30 hover:scale-[1.02] hover:-translate-x-1 active:scale-[0.98] active:shadow-inner'
-                                        }`}
-                                >
-                                    <div className={`p-2 rounded-lg transition-all duration-200 ${isMissingConfig ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-gray-700 text-azure-700 dark:text-azure-400'}`}>
-                                        {React.cloneElement(type.icon, { className: "w-4 h-4" })}
-                                    </div>
-                                    <span>{type.label}</span>
-                                </button>
-                            </React.Fragment>
-                        );
-                    })}
-                </div>
-
-                <div className="p-4 bg-slate-50 dark:bg-gray-900/50 border-t border-slate-200 dark:border-gray-700 mt-auto">
-                    <button
-                        onClick={() => { }}
-                        disabled={true}
-                        className="w-full py-3 px-4 text-sm font-medium rounded-lg flex items-center justify-center gap-2 transition-all bg-slate-200 dark:bg-gray-700/50 border border-slate-300 dark:border-gray-600 opacity-50 cursor-not-allowed text-slate-400 dark:text-gray-400"
-                        title="Run All Scans (Disabled)"
-                    >
-                        <Play className="w-4 h-4 fill-current" />
-                        Run All Scans
+                    <button type="button" onClick={() => setPrereqWarning(null)} aria-label="Dismiss" className="bg-transparent border-0 p-0 cursor-pointer self-start" style={{ color: 'inherit' }}>
+                        <X className="w-3.5 h-3.5" />
                     </button>
+                </div>
+            )}
+
+            {SCAN_TYPES.map(type => {
+                const isMissingConfig = (type.id === 'trivy-repo' && gitConfigReady === false)
+                    || (type.id === 'trivy-image' && registryConfigReady === false);
+                const picked = showPanel && selectedScan?.id === type.id;
+                // Different scans can run in parallel; the same scan can't (its script writes to a fixed output path).
+                // An "all" run (e.g. the scheduled CronJob) runs every scan except source code.
+                const running = runningTypes.has(type.id) || (runningTypes.has('all') && type.id !== 'trivy-repo');
+                // Trivy scans share one cache/DB and block each other, so only one runs at a time.
+                const trivyBusy = !running && type.id.startsWith('trivy-') && [...runningTypes].some(t => t === 'all' || (typeof t === 'string' && t.startsWith('trivy-')));
+                return (
+                    <button
+                        key={type.id}
+                        type="button"
+                        onClick={() => handleStartScan(type)}
+                        disabled={running || trivyBusy}
+                        tabIndex={open ? 0 : -1}
+                        className={`scanrow ${isMissingConfig ? 'unset' : ''} ${picked ? 'picked' : ''}`}
+                        aria-expanded={picked}
+                    >
+                        <span className="sl"><span className="sn">{type.label}</span></span>
+                        {running
+                            ? <span className="go">Running…</span>
+                            : trivyBusy
+                            ? <span className="go" title="Another Trivy scan is running">Trivy busy</span>
+                            : isMissingConfig
+                            ? <span className="go setup">Set up</span>
+                            : <span className="go"><PlayIcon />Run</span>}
+                    </button>
+                );
+            })}
+
+            <div className="mx-3 mt-4">
+                <button type="button" className="btn w-full" disabled title="Run All Scans (Disabled)">
+                    <PlayIcon /> Run all scans
+                </button>
+            </div>
+
                 </div>
             </div>
 
@@ -178,7 +178,10 @@ export default function ScanControl({ onStartScan, isScanning, onNavigateToSetti
                 onClose={cancelScan}
                 onConfirm={confirmScan}
                 scanLabel={selectedScan?.label}
+                scan={selectedScan}
+                lastRun={selectedScan ? lastRuns[selectedScan.id] : null}
+                registryCount={registryCount}
             />
-        </div>
+        </>
     );
 }

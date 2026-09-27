@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Mail, Lock, ShieldCheck } from 'lucide-react';
 
 const Login = ({ onLogin }) => {
     const [username, setUsername] = useState('');
@@ -20,7 +19,7 @@ const Login = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen w-full flex bg-[#0b1220] text-white font-sans">
+        <div className="min-h-screen w-full flex" style={{ background: 'var(--page)', color: 'var(--ink)' }}>
             {/* Left Section - Abstract Background */}
             <div className="hidden lg:flex lg:w-[70%] relative overflow-hidden bg-[#05101a]">
                 {/* Abstract CSS Pattern to mimic topographic/wave lines */}
@@ -43,66 +42,27 @@ const Login = ({ onLogin }) => {
             </div>
 
             {/* Right Section - Login Form */}
-            <div className="w-full lg:w-[30%] flex items-center justify-center p-8 bg-[#0b1220]">
-                <div className="w-full max-w-md space-y-8">
-                    <div className="space-y-2 flex flex-col items-center text-center">
-                        <div className="flex items-center gap-3 mb-2">
-                            <ShieldCheck className="w-10 h-10 text-blue-500" />
-                            <h1 className="text-4xl font-semibold !text-white tracking-tight" style={{ color: 'white' }}>Login</h1>
-                        </div>
-                        <p className="text-gray-400">Sign in to your account</p>
+            <section className="w-full lg:w-[30%] lg:min-w-[420px] flex items-center justify-center p-8">
+                <form onSubmit={handleSubmit} className="w-full max-w-[380px]">
+                    <div className="eyebrow">Sign in</div>
+                    <h1 className="mt-1 font-serif text-[28px] leading-9 font-medium" style={{ color: 'var(--ink)' }}>Welcome back</h1>
+                    <p className="mt-1.5 text-[13px]" style={{ color: 'var(--mute)' }}>Use the account your administrator gave you.</p>
+
+                    <div className="sheet mt-6 p-5 flex flex-col gap-3.5">
+                        <label className="field">Username or email
+                            <input type="text" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} className="inp h-9" placeholder="Enter your username" autoFocus />
+                        </label>
+                        <label className="field">Password
+                            <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="inp h-9" placeholder="Enter your password" />
+                        </label>
+                        {error && <div className="note note-crit" role="alert">{error}</div>}
+                        <button type="submit" className="btn btn-primary h-[38px] text-[13.5px] font-semibold">Sign in</button>
                     </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6 mt-8">
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-2 text-left">Username or email</label>
-                                <div className="relative group">
-                                    <span className="absolute left-4 top-2 text-gray-400 group-focus-within:text-white transition-colors">
-                                        <Mail className="w-6 h-6" />
-                                    </span>
-                                    <input
-                                        type="text"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="w-full h-9 bg-[#020b14] text-white pl-14 pr-4 rounded-lg border border-gray-700/50 focus:border-[#14b8a6] focus:ring-1 focus:ring-[#14b8a6] outline-none transition-all placeholder-transparent"
-                                        placeholder="Enter your username"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-400 mb-2 text-left">Password</label>
-                                <div className="relative group">
-                                    <span className="absolute left-4 top-2 text-gray-400 group-focus-within:text-white transition-colors">
-                                        <Lock className="w-6 h-6" />
-                                    </span>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full h-9 bg-[#020b14] text-white pl-14 pr-4 rounded-lg border border-gray-700/50 focus:border-[#14b8a6] focus:ring-1 focus:ring-[#14b8a6] outline-none transition-all placeholder-transparent"
-                                        placeholder="Enter your password"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
-                                {error}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            className="w-full h-9 bg-[#157e74] hover:bg-[#115e59] text-white font-medium px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[#0b1220] mt-4 flex items-center justify-center"
-                        >
-                            Continue
-                        </button>
-                    </form>
-                </div>
-            </div>
+                    <p className="mt-3.5 text-xs leading-[18px]" style={{ color: 'var(--mute-2)' }}>
+                        Superusers can run scans and use the terminal. Other users can read scan reports.
+                    </p>
+                </form>
+            </section>
         </div>
     );
 };

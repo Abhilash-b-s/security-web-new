@@ -1,15 +1,54 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, CheckCircle, XCircle, Clock, ChevronRight, Download, Activity, Search, Shield, Layers, Terminal as TerminalIcon } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
+import PageHead from './PageHead';
+import LogViewer, { RemoteLogViewer, lineStyle, lineLevel } from './LogViewer';
+import { SearchBox } from './reportParts';
 
-export default function ReportViewer() {
+const statusBadge = (status) => (
+    status === 'completed'
+        ? <span className="badge badge-ok">Completed</span>
+        : <span className="badge badge-crit">{status ? status[0].toUpperCase() + status.slice(1) : 'Failed'}</span>
+);
+
+// live: the scan started from this browser, if any: { scanId, type, label, logs, isScanning, startedAt, endedAt }
+// active: scans running on the server (any browser), from /api/scans/active; labelFor maps scan_type to a label
+export default function ReportViewer({ live, active = [], labelFor = (t) => t }) {
     const [reports, setReports] = useState([]);
     const [selectedReport, setSelectedReport] = useState(null);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [level, setLevel] = useState('all'); // all | warn | error
+    const [lineQ, setLineQ] = useState('');
+    // Show the running scan by default when one is in progress.
+    const [liveSelected, setLiveSelected] = useState(!!live?.isScanning);
+    // A scan started elsewhere that is being followed; preselect one if nothing local is running.
+    const [remoteId, setRemoteId] = useState(() => (!live?.isScanning && active[0] ? active[0].scan_id : null));
 
     useEffect(() => {
         fetchReports();
     }, []);
+
+    // When the live scan finishes its report is saved; refresh the list so it appears.
+    useEffect(() => {
+        if (live && !live.isScanning) fetchReports();
+    }, [live?.isScanning]);
+
+    // The live row is shown until its saved report is in the list, then that report takes over.
+    const liveSaved = live && reports.some(r => r.id === live.scanId);
+    const showLive = live && !liveSaved;
+    useEffect(() => {
+        if (liveSaved && liveSelected) { setLiveSelected(false); loadReportDetails(live.scanId); }
+    }, [liveSaved]);
+
+    // Scans running on the server that are not this browser's own live scan and not saved yet.
+    const remote = active.filter(r => r.scan_id !== live?.scanId && !reports.some(x => x.id === r.scan_id));
+    // When a followed scan's report appears, switch to it; refresh the list whenever a run ends.
+    useEffect(() => {
+        if (remoteId && reports.some(r => r.id === remoteId)) { const id = remoteId; setRemoteId(null); loadReportDetails(id); }
+    }, [reports]);
+    useEffect(() => { fetchReports(); }, [active.length]);
+    const pick = (kind, id) => { setLiveSelected(kind === 'live'); setRemoteId(kind === 'remote' ? id : null); if (kind !== 'report') setSelectedReport(null); };
+    const runningCount = remote.length + (live?.isScanning ? 1 : 0);
 
     const fetchReports = async () => {
         try {
@@ -36,13 +75,13 @@ export default function ReportViewer() {
         }
     };
 
-    const getScanIcon = (type) => {
-        const lower = type?.toLowerCase() || '';
-        if (lower.includes('kube-bench')) return <Shield className="w-5 h-5 text-purple-400" />;
-        if (lower.includes('kyverno')) return <Activity className="w-5 h-5 text-pink-400" />;
-        if (lower.includes('trivy')) return <Layers className="w-5 h-5 text-blue-400" />;
-        if (lower.includes('nmap')) return <TerminalIcon className="w-5 h-5 text-orange-400" />;
-        return <FileText className="w-5 h-5 text-black dark:text-gray-400" />;
+    const downloadJson = () => {
+        const blob = new Blob([JSON.stringify(selectedReport, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report-${selectedReport.id}.json`;
+        a.click();
     };
 
     const filteredReports = reports.filter(r =>
@@ -51,172 +90,187 @@ export default function ReportViewer() {
     );
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 shadow-xl dark:shadow-2xl overflow-hidden flex h-[calc(100vh-140px)] transition-colors duration-200">
+        <div className="flex-1 min-h-0 flex flex-col gap-3.5 px-7 pt-[18px] pb-6">
+            <PageHead title="Event logs" sub="Output captured from each scan run" />
 
-            {/* Sidebar List */}
-            <div className="w-80 border-r border-slate-200 dark:border-gray-800 bg-gradient-light dark:bg-none dark:bg-[#0d0f12] flex flex-col shadow-lg dark:shadow-2xl z-10 transition-colors duration-200">
-                <div className="p-5 border-b border-slate-200 dark:border-gray-800 bg-white dark:bg-[#0f1115] transition-colors duration-200">
-                    <h3 className="text-slate-900 dark:text-white font-bold text-sm tracking-wider uppercase mb-4 flex items-center gap-2">
-                        <div className="p-1.5 bg-gradient-blue rounded-lg">
-                            <Activity className="w-4 h-4 text-azure-600" />
-                        </div>
-                        Scan History
-                    </h3>
-                    <div className="relative group">
-                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-700 dark:text-gray-500 group-focus-within:text-azure-600 dark:group-focus-within:text-azure-400 transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Filter reports..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-[#1a1d23] border border-slate-300 dark:border-gray-800 rounded-lg py-2 pl-9 pr-4 text-sm text-slate-900 dark:text-gray-300 focus:ring-1 focus:ring-azure-500 focus:border-azure-500 outline-none placeholder-slate-500 dark:placeholder-gray-600 transition-all shadow-sm"
-                        />
+            <div className="flex-1 min-h-0 grid grid-cols-[380px_1fr] gap-[18px]">
+                {/* Runs */}
+                <section className="sheet flex flex-col min-h-0">
+                    <div className="phead">
+                        <h2>Runs <span className="count">{reports.length}</span></h2>
+                        {runningCount > 0 && <span className="badge badge-run">{runningCount} running</span>}
                     </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-gray-800">
-                    {filteredReports.map((report) => (
-                        <button
-                            key={report.id}
-                            onClick={() => loadReportDetails(report.id)}
-                            className={`w-full group relative text-left p-3 rounded-lg border transition-all duration-300 ease-out overflow-hidden hover:shadow-md ${selectedReport?.id === report.id
-                                ? 'bg-azure-50 dark:bg-azure-900/30 border-azure-200 dark:border-azure-500/60 shadow-azure-200/50 dark:shadow-azure-900/20'
-                                : 'bg-white dark:bg-[#16181d] border-slate-200 dark:border-gray-800 hover:border-slate-300 dark:hover:border-gray-700 hover:bg-slate-50 dark:hover:bg-[#1c1f26]'
-                                }`}
-                        >
-                            {/* Card Content */}
-                            <div className="flex items-start gap-4 relative z-10">
-                                {/* Icon Container */}
-                                <div className={`p-2 rounded-lg shrink-0 transition-colors ${selectedReport?.id === report.id ? 'bg-azure-100 dark:bg-azure-500/10' : 'bg-slate-100 dark:bg-gray-800/50 group-hover:bg-slate-200 dark:group-hover:bg-gray-800'
-                                    }`}>
-                                    {getScanIcon(report.scan_type)}
-                                </div>
-
-                                <div className="flex-1 min-w-0 py-0.5">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <div className={`font-semibold text-sm truncate pr-2 ${selectedReport?.id === report.id ? 'text-azure-700 dark:text-azure-400' : 'text-slate-900 dark:text-gray-200 group-hover:text-slate-950 dark:group-hover:text-white'
-                                            }`}>
-                                            {report.scan_type || 'Unknown Scan'}
-                                        </div>
-                                        {/* Status Dot */}
-                                        <div className={`w-2 h-2 rounded-full shadow-sm mt-1.5 ${report.status === 'completed' ? 'bg-green-500 shadow-green-500/50' : 'bg-red-500 shadow-red-500/50'
-                                            }`} />
-                                    </div>
-
-                                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-500 font-mono">
-                                        <span>{new Date(report.timestamp).toLocaleDateString()}</span>
-                                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-gray-700" />
-                                        <span>{new Date(report.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Active Indicator Bar */}
-                            {selectedReport?.id === report.id && (
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-azure-500 to-azure-600" />
-                            )}
-                        </button>
-                    ))}
-
-                    {filteredReports.length === 0 && (
-                        <div className="flex flex-col items-center justify-center p-8 text-slate-500 dark:text-gray-500/50">
-                            <FileText className="w-8 h-8 mb-2" />
-                            <p className="text-xs">No reports found</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Report Detail View */}
-            <div className="flex-1 bg-gradient-light dark:bg-none dark:bg-gray-950 overflow-y-auto transition-colors duration-200">
-                {selectedReport ? (
-                    <div className="p-8 max-w-5xl mx-auto">
-                        {/* Detail Header */}
-                        <div className="flex justify-between items-start mb-8 bg-white dark:bg-gray-900/50 backdrop-blur p-8 rounded-xl border border-slate-200 dark:border-gray-800/50 shadow-lg dark:shadow-2xl transition-colors duration-200">
-                            <div>
-                                <div className="flex items-center gap-4 mb-3">
-                                    <div className="p-3 bg-gradient-blue dark:bg-gray-800 rounded-lg">
-                                        {getScanIcon(selectedReport.request.scan_type)}
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white capitalize tracking-tight mb-1">
-                                            {selectedReport.request.scan_type}
-                                        </h2>
-                                        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
-                                            <span className="font-mono text-slate-700 dark:text-gray-500">ID: {selectedReport.id.slice(0, 8)}</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-gray-700" />
-                                            <span className="text-slate-700 dark:text-gray-400">Full Report</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <div className="text-right mr-4">
-                                    <div className="text-sm text-slate-600 dark:text-gray-400 mb-1">Scanned on</div>
-                                    <div className="text-slate-900 dark:text-white font-medium flex items-center gap-2 justify-end">
-                                        <Clock className="w-4 h-4 text-azure-600 dark:text-azure-500" />
-                                        {new Date(selectedReport.timestamp).toLocaleString()}
-                                    </div>
-                                </div>
+                    <div className="px-3 py-2" style={{ borderBottom: '1px solid var(--line)', background: 'var(--panel-head)' }}>
+                        <label className="relative block">
+                            <span className="sr-only">Filter reports</span>
+                            <Search className="absolute left-2.5 top-2 w-3.5 h-3.5" style={{ color: 'var(--faint)' }} />
+                            <input type="text" className="inp h-[28px] pl-8" placeholder="Filter by scan type or ID" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        </label>
+                    </div>
+                    <div className="grid grid-cols-[88px_1fr_auto] gap-3 px-3.5 py-2 text-[11px] font-bold tracking-[.06em] uppercase" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
+                        <span>Started</span><span>Scan</span><span>Result</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        {showLive && (
+                            <button
+                                type="button"
+                                onClick={() => pick('live')}
+                                aria-current={liveSelected ? 'true' : undefined}
+                                className="w-full grid grid-cols-[88px_1fr_auto] gap-3 items-center px-3.5 py-[7px] text-left border-0 cursor-pointer hover:!bg-[var(--row-hover)]"
+                                style={{ font: 'inherit', color: 'var(--ink)', borderBottom: '1px solid var(--line)', background: liveSelected ? 'var(--accent-tint)' : 'var(--panel)', boxShadow: liveSelected ? 'inset 3px 0 0 var(--accent-text)' : 'none' }}
+                            >
+                                <span className="num text-xs leading-4" style={{ color: 'var(--mute)' }}>
+                                    {new Date(live.startedAt).toLocaleDateString([], { day: '2-digit', month: 'short' })}<br />
+                                    {new Date(live.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                                <span className="min-w-0">
+                                    <span className="block font-medium text-[13px] truncate">{live.type}</span>
+                                    <span className="block num text-[10.5px]" style={{ color: 'var(--faint)' }}>{live.scanId.slice(0, 8)} · live</span>
+                                </span>
+                                {live.isScanning
+                                    ? <span className="badge badge-run flex items-center gap-1.5"><span className="w-1.5 h-1.5 animate-pulse" style={{ background: 'currentColor' }} />Running</span>
+                                    : <span className="badge badge-mute">Finished</span>}
+                            </button>
+                        )}
+                        {remote.map(r => {
+                            const on = remoteId === r.scan_id;
+                            return (
                                 <button
-                                    onClick={() => {
-                                        const blob = new Blob([JSON.stringify(selectedReport, null, 2)], { type: 'application/json' });
-                                        const url = URL.createObjectURL(blob);
-                                        const a = document.createElement('a');
-                                        a.href = url;
-                                        a.download = `report-${selectedReport.id}.json`;
-                                        a.click();
-                                    }}
-                                    className="h-fit px-4 py-2 bg-azure-600 hover:bg-azure-700 text-white rounded-lg transition-all shadow-lg shadow-azure-600/20 flex items-center gap-2 font-medium"
+                                    key={r.scan_id}
+                                    type="button"
+                                    onClick={() => pick('remote', r.scan_id)}
+                                    aria-current={on ? 'true' : undefined}
+                                    className="w-full grid grid-cols-[88px_1fr_auto] gap-3 items-center px-3.5 py-[7px] text-left border-0 cursor-pointer hover:!bg-[var(--row-hover)]"
+                                    style={{ font: 'inherit', color: 'var(--ink)', borderBottom: '1px solid var(--line)', background: on ? 'var(--accent-tint)' : 'var(--panel)', boxShadow: on ? 'inset 3px 0 0 var(--accent-text)' : 'none' }}
                                 >
-                                    <Download className="w-4 h-4" />
-                                    <span>JSON</span>
+                                    <span className="num text-xs leading-4" style={{ color: 'var(--mute)' }}>
+                                        {new Date(r.started_at).toLocaleDateString([], { day: '2-digit', month: 'short' })}<br />
+                                        {new Date(r.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span className="block font-medium text-[13px] truncate">{r.scan_type}</span>
+                                        <span className="block num text-[10.5px]" style={{ color: 'var(--faint)' }}>{r.scan_id.slice(0, 8)} · live</span>
+                                    </span>
+                                    <span className="badge badge-run flex items-center gap-1.5"><span className="w-1.5 h-1.5 animate-pulse" style={{ background: 'currentColor' }} />Running</span>
+                                </button>
+                            );
+                        })}
+                        {filteredReports.map((report, i) => {
+                            const sel = !liveSelected && !remoteId && selectedReport?.id === report.id;
+                            const d = new Date(report.timestamp);
+                            return (
+                                <button
+                                    key={report.id}
+                                    type="button"
+                                    onClick={() => { pick('report'); loadReportDetails(report.id); }}
+                                    aria-current={sel ? 'true' : undefined}
+                                    className="w-full grid grid-cols-[88px_1fr_auto] gap-3 items-center px-3.5 py-[7px] text-left border-0 cursor-pointer hover:!bg-[var(--row-hover)]"
+                                    style={{
+                                        font: 'inherit',
+                                        color: 'var(--ink)',
+                                        borderBottom: '1px solid var(--line-soft)',
+                                        background: sel ? 'var(--accent-tint)' : i % 2 ? 'var(--zebra)' : 'var(--panel)',
+                                        boxShadow: sel ? 'inset 3px 0 0 var(--accent-text)' : 'none',
+                                    }}
+                                >
+                                    <span className="num text-xs leading-4" style={{ color: 'var(--mute)' }}>
+                                        {d.toLocaleDateString([], { day: '2-digit', month: 'short' })}<br />
+                                        {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span className="block font-medium text-[13px] truncate">{report.scan_type || 'Unknown Scan'}</span>
+                                        <span className="block num text-[10.5px]" style={{ color: 'var(--faint)' }}>{report.id.slice(0, 8)}</span>
+                                    </span>
+                                    {statusBadge(report.status)}
+                                </button>
+                            );
+                        })}
+
+                        {filteredReports.length === 0 && !showLive && remote.length === 0 && (
+                            <p className="m-0 p-4 text-xs text-center" style={{ color: 'var(--mute)' }}>No reports found</p>
+                        )}
+                    </div>
+                </section>
+
+                {/* Report detail */}
+                <section className="sheet flex flex-col min-h-0">
+                    {remoteId && active.some(r => r.scan_id === remoteId) ? (
+                        <RemoteLogViewer
+                            scanId={remoteId}
+                            scanLabel={labelFor(active.find(r => r.scan_id === remoteId).scan_type)}
+                            startedAt={new Date(active.find(r => r.scan_id === remoteId).started_at).getTime()}
+                            onDone={fetchReports}
+                        />
+                    ) : liveSelected && showLive ? (
+                        <LogViewer logs={live.logs} isScanning={live.isScanning} scanLabel={live.label} scanId={live.scanId} startedAt={live.startedAt} endedAt={live.endedAt} />
+                    ) : selectedReport ? (
+                        <>
+                            <div className="phead flex-wrap py-1.5">
+                                <h2 className="capitalize">{selectedReport.request.scan_type}</h2>
+                                <span className="num text-[11px] px-1.5" style={{ border: '1px solid var(--line-strong)', color: 'var(--mute)' }}>{selectedReport.id.slice(0, 8)}</span>
+                                <span className="meta">Scanned {new Date(selectedReport.timestamp).toLocaleString()}</span>
+                                <div className="flex-1" />
+                                {loading && <span className="meta">Loading…</span>}
+                                <button type="button" className="btn h-[26px]" onClick={downloadJson}>
+                                    <Download className="w-3 h-3" /> Download JSON
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Detail Content */}
-                        <div className="space-y-6">
-                            {selectedReport.results.map((res, idx) => (
-                                <div key={idx} className="bg-white dark:bg-[#0f1115] rounded-lg border border-slate-200 dark:border-gray-800/50 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">
-                                    <div className="px-6 py-4 border-b border-slate-200 dark:border-gray-800/50 flex justify-between items-center bg-slate-50 dark:bg-gray-800/20 group-hover:bg-slate-100 dark:group-hover:bg-gray-800/30 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            {res.status === 'completed' ? (
-                                                <div className="p-1.5 bg-green-100 dark:bg-green-500/10 rounded-full ring-1 ring-green-300 dark:ring-green-500/20">
-                                                    <CheckCircle className="w-5 h-5 text-green-700 dark:text-green-500" />
-                                                </div>
+                            {(() => {
+                                const all = selectedReport.results.flatMap(r => (r.output || '').split('\n'));
+                                const n = { all: all.length, warn: all.filter(l => lineLevel(l) === 'warn').length, error: all.filter(l => lineLevel(l) === 'error').length };
+                                return (
+                                    <div className="flex flex-wrap items-center gap-3 px-3.5 py-2" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
+                                        <div className="seg" role="group" aria-label="Level">
+                                            {[['all', 'All'], ['warn', 'Warn'], ['error', 'Error']].map(([k, label]) => (
+                                                <button key={k} type="button" className={level === k ? 'on' : ''} aria-pressed={level === k} onClick={() => setLevel(k)}>
+                                                    {label} <span className="num" style={{ color: 'var(--mute-2)' }}>{n[k]}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <SearchBox value={lineQ} onChange={setLineQ} placeholder="Filter lines" width={240} />
+                                    </div>
+                                );
+                            })()}
+                            <div className="flex-1 overflow-y-auto">
+                                {selectedReport.results.map((res, idx) => {
+                                    const lines = (res.output || '').split('\n')
+                                        .map((text, i) => ({ text, i }))
+                                        .filter(l => (level === 'all' || lineLevel(l.text) === level) && (!lineQ || l.text.toLowerCase().includes(lineQ.toLowerCase())));
+                                    return (
+                                        <div key={idx} style={{ borderBottom: '1px solid var(--line)' }}>
+                                            <div className="flex items-center gap-2.5 px-3.5 py-2 sticky top-0 z-10" style={{ background: 'var(--panel-head)', borderBottom: '1px solid var(--line)' }}>
+                                                <span className="text-[13px] font-semibold">{res.scan_type}</span>
+                                                {statusBadge(res.status)}
+                                                <span className="num text-[11px]" style={{ color: 'var(--mute-2)' }}>{lines.length} lines</span>
+                                            </div>
+                                            {!res.output ? (
+                                                <p className="m-0 px-3.5 py-3 text-xs italic" style={{ color: 'var(--faint)' }}>No output captured for this scan section.</p>
+                                            ) : lines.length === 0 ? (
+                                                <p className="m-0 px-3.5 py-3 text-xs" style={{ color: 'var(--mute)' }}>No lines match.</p>
                                             ) : (
-                                                <div className="p-1.5 bg-red-100 dark:bg-red-500/10 rounded-full ring-1 ring-red-300 dark:ring-red-500/20">
-                                                    <XCircle className="w-5 h-5 text-red-700 dark:text-red-500" />
+                                                <div className="num text-xs leading-5 py-1.5">
+                                                    {lines.map(l => (
+                                                        <div key={l.i} className="grid grid-cols-[52px_1fr]" style={lineStyle(l.text)}>
+                                                            <span className="text-right pr-3 mr-3 select-none" style={{ color: 'var(--faint)', borderRight: '1px solid var(--line-soft)', background: 'var(--panel)' }}>{l.i + 1}</span>
+                                                            <span className="pr-3.5" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{l.text}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             )}
-                                            <span className="font-semibold text-slate-900 dark:text-gray-200 text-lg tracking-wide">
-                                                {res.scan_type}
-                                            </span>
                                         </div>
-                                    </div>
-
-                                    <div className="relative">
-                                        <pre className="p-6 text-xs font-mono text-slate-700 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap bg-slate-50 dark:bg-[#0a0c10] leading-relaxed border-t border-slate-200 dark:border-black/20">
-                                            {res.output || <span className="text-slate-500 dark:text-gray-600 italic">No output captured for this scan section.</span>}
-                                        </pre>
-                                    </div>
-                                </div>
-                            ))}
+                                    );
+                                })}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+                            <div className="font-serif text-lg" style={{ color: 'var(--ink)' }}>{loading ? 'Loading report…' : 'Select a run'}</div>
+                            <p className="mt-1 text-xs max-w-sm" style={{ color: 'var(--mute)' }}>
+                                Pick a run from the list to read its captured output and download the full report.
+                            </p>
                         </div>
-                    </div>
-                ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-600 dark:text-gray-600 bg-gradient-light dark:bg-none dark:bg-gray-950/50">
-                        <div className="w-32 h-32 bg-slate-200 dark:bg-gray-900/50 rounded-full flex items-center justify-center mb-6 ring-1 ring-slate-300 dark:ring-gray-800">
-                            <Activity className="w-12 h-12 text-slate-400 dark:text-gray-800" />
-                        </div>
-                        <h3 className="text-xl font-medium text-slate-700 dark:text-gray-500 mb-2">Select a Report</h3>
-                        <p className="text-slate-600 dark:text-gray-600 max-w-sm text-center text-sm">
-                            Click on any report in the sidebar to inspect detailed security analysis and metrics.
-                        </p>
-                    </div>
-                )}
+                    )}
+                </section>
             </div>
         </div>
     );

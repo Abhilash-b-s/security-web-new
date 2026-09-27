@@ -60,9 +60,21 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     after completion.
     """
     scan_id = request.scan_id or str(uuid.uuid4())
-    # In a real app, you'd save initial state to DB here
+    # Register the run now so it is listed as active before the background task starts.
+    scanner.manager.start_run(scan_id, request.scan_type.value)
     background_tasks.add_task(scanner.run_scan_task, scan_id, request)
     return {"scan_id": scan_id, "status": "initiated"}
+
+@router.get(
+    "/active",
+    summary="List running scans",
+    description="Scans currently running on this server, with the number of output lines buffered so far. "
+                "Connect to `/api/scans/ws/{scan_id}` to replay the output and follow it live.",
+    tags=["scans"],
+)
+async def active_scans():
+    return scanner.manager.list_runs()
+
 
 @router.websocket("/ws/{scan_id}")
 async def websocket_endpoint(websocket: WebSocket, scan_id: str):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any
 import os
 import json
@@ -8,8 +8,21 @@ from pathlib import Path
 router = APIRouter()
 
 # Base paths for reports
-BASE_DIR = Path("/app")
-NEW_DIR = BASE_DIR / "new"
+NEW_DIR = Path(os.getenv("NEW_DIR", "/app/new"))
+
+
+def load_cluster_report():
+    """The Trivy cluster report: cluster.json if present, otherwise the cluster.zip the scan script leaves."""
+    import zipfile
+    base = NEW_DIR / "trivy-cluster-report"
+    if (base / "cluster.json").exists():
+        return json.loads((base / "cluster.json").read_text())
+    if (base / "cluster.zip").exists():
+        with zipfile.ZipFile(base / "cluster.zip") as z:
+            names = [n for n in z.namelist() if n.lower().endswith(".json")]
+            if names:
+                return json.loads(z.read(names[0]))
+    return None
 
 @router.get(
     "/stats",
@@ -219,37 +232,54 @@ async def get_dashboard_stats():
     except Exception as e:
         print(f"Error loading Kube-bench data: {e}")
 
-    # Load Cluster scan data
+    # Load Cluster scan data (the scan script leaves cluster.zip; cluster.json is read if present)
     try:
-        cluster_json = NEW_DIR / "trivy-cluster-report" / "cluster.json"
-        if cluster_json.exists():
-            with open(cluster_json, 'r') as f:
-                json_data = json.load(f)
-                counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "UNKNOWN": 0}
+        json_data = load_cluster_report()
+        if json_data is not None:
+            counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "UNKNOWN": 0}
 
-                # Handle different Trivy cluster JSON structures
-                findings = json_data.get('Findings', json_data.get('findings', []))
-                resources = json_data.get('Resources', json_data.get('resources', []))
-                results = json_data.get('Results', json_data.get('results', []))
+            # Handle different Trivy cluster JSON structures
+            findings = json_data.get('Findings', json_data.get('findings', []))
+            resources = json_data.get('Resources', json_data.get('resources', []))
+            results = json_data.get('Results', json_data.get('results', []))
 
-                all_results = []
-                for finding in findings:
-                    all_results.extend(finding.get('Results', finding.get('results', [])))
-                for resource in resources:
-                    all_results.extend(resource.get('Results', resource.get('results', [])))
-                all_results.extend(results)
+            all_results = []
+            for finding in findings:
+                all_results.extend(finding.get('Results', finding.get('results', [])) or [])
+            for resource in resources:
+                all_results.extend(resource.get('Results', resource.get('results', [])) or [])
+            all_results.extend(results)
 
-                for result in all_results:
-                    misconfigs = result.get('Misconfigurations', result.get('misconfigurations', []))
-                    for misconfig in misconfigs:
-                        severity = str(misconfig.get('Severity', misconfig.get('severity', 'UNKNOWN'))).upper()
-                        if severity in counts:
-                            counts[severity] += 1
+            # Misconfigurations and workload vulnerabilities, as listed in Scan reports > Cluster
+            for result in all_results:
+                for item in (result.get('Misconfigurations') or result.get('misconfigurations') or []) + \
+                            (result.get('Vulnerabilities') or result.get('vulnerabilities') or []):
+                    severity = str(item.get('Severity', item.get('severity', 'UNKNOWN'))).upper()
+                    if severity in counts:
+                        counts[severity] += 1
 
-                stats["cluster"]["counts"] = counts
-                stats["cluster"]["total"] = sum(counts.values())
-                stats["cluster"]["available"] = True
+            stats["cluster"]["counts"] = counts
+            stats["cluster"]["total"] = sum(counts.values())
+            stats["cluster"]["available"] = True
     except Exception as e:
         print(f"Error loading Cluster data: {e}")
 
     return stats
+
+
+@router.get(
+    "/history",
+    summary="Get daily history for the Overview charts",
+    description="""
+    Daily series for the last `days` days and the `days` before them (for period comparison).
+
+    Each day carries the dashboard statistics from the last scan of that day (or the last known
+    state if nothing ran), new and resolved findings compared with the previous scan, and the
+    number of runs and failed runs per scanner. History is collected from the first scan after
+    this feature was deployed; run counts come from the saved run reports.
+    """,
+    tags=["dashboard"]
+)
+async def get_dashboard_history(days: int = Query(30, ge=1, le=180)):
+    from services.history import build_history
+    return build_history(days)

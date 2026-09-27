@@ -9,7 +9,7 @@ cp "$PPWD/logo-mobile.webp" "$OUTPUT_DIR/" 2>/dev/null || true
 
 mkdir -p "$OUTPUT_DIR/trivy-cluster-report"
 
-trivy k8s --timeout 300m --disable-node-collector --report summary --format json > "$OUTPUT_DIR/trivy-cluster-report/cluster.json" || true
+trivy k8s --no-progress --timeout 300m --disable-node-collector --report summary --format json > "$OUTPUT_DIR/trivy-cluster-report/cluster.json" || true
 
 cd "$OUTPUT_DIR/trivy-cluster-report"
 zip -q cluster.zip cluster.json

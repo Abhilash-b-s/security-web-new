@@ -44,6 +44,20 @@ roleRef:
   name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
 ---
+# Persistent storage for scan output, run reports and settings, so a redeploy keeps them.
+# No storageClassName: uses the cluster default (local-path on the lab cluster).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: security-dashboard-data
+  namespace: security-ops
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
 # Security Dashboard Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -52,6 +66,9 @@ metadata:
   namespace: security-ops
 spec:
   replicas: 1
+  # One writer on the ReadWriteOnce volume: stop the old pod before starting the new one.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: security-dashboard
@@ -62,6 +79,16 @@ spec:
     spec:
       hostPID: true
       serviceAccountName: security-dashboard-sa
+      initContainers:
+        # The image ships two static files in /app/new; copy them onto the volume
+        # without overwriting anything already there.
+        - name: seed-data
+          image: quay.io/abhilash_bs1/security-dashboard:latest
+          imagePullPolicy: Always
+          command: ["sh", "-c", "mkdir -p /data/new /data/reports /data/state && cp -rn /app/new/. /data/new/"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
       containers:
         - name: security-dashboard
           image: quay.io/abhilash_bs1/security-dashboard:latest
@@ -69,6 +96,12 @@ spec:
           env:
             - name: APP_HOME
               value: "/app"
+            - name: STATE_DIR
+              value: "/app/state"
+            # Trivy reads images from the node's containerd store; Kubernetes keeps them in the
+            # "k8s.io" namespace (Trivy's default is "default"). Lets it scan images it cannot pull.
+            - name: CONTAINERD_NAMESPACE
+              value: "k8s.io"
           ports:
             - containerPort: 8000
             - containerPort: 8081
@@ -87,7 +120,20 @@ spec:
             - name: etc-systemd
               mountPath: /etc/systemd
               readOnly: true
+            # Persistent data (see PersistentVolumeClaim above)
+            - name: data
+              mountPath: /app/new
+              subPath: new
+            - name: data
+              mountPath: /app/security-dashboard/backend/reports
+              subPath: reports
+            - name: data
+              mountPath: /app/state
+              subPath: state
       volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: security-dashboard-data
         - name: containerd-socket
           hostPath:
             path: /run/containerd/containerd.sock
@@ -134,3 +180,35 @@ spec:
                 name: security-dashboard
                 port:
                   number: 8081
+---
+# Runs every scan (scan_type "all", sequential) twice a day through the dashboard API.
+# The scans execute inside the dashboard pod; this job only triggers them.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: security-dashboard-scheduled-scans
+  namespace: security-ops
+spec:
+  schedule: "0 2,14 * * *" # 02:00 and 14:00 in the controller's timezone (UTC unless spec.timeZone is set)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: trigger
+              image: quay.io/abhilash_bs1/security-dashboard:latest
+              imagePullPolicy: IfNotPresent
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  API=http://security-dashboard.security-ops.svc:8000/api/scans
+                  # Skip if scans are already running: the same scan twice would overwrite its output files.
+                  if [ "$(curl -sf "$API/active" | tr -d ' ')" != "[]" ]; then echo "Scans already running, skipping"; exit 0; fi
+                  curl -sf -X POST "$API/start" -H 'Content-Type: application/json' -d '{"scan_type":"all"}'
