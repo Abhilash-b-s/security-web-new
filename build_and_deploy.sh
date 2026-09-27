@@ -24,7 +24,8 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
 fi
 
 
-echo "[3/4] Restarting Kubernetes Deployment..."
+echo "[3/4] Applying manifests and restarting Deployment..."
+kubectl apply -f "$(dirname "$0")/security-dashboard/k8s/dashboard.yaml"
 kubectl rollout restart deployment/"$DEPLOYMENT" -n "$NAMESPACE"
 
 echo "[4/4] Waiting for Rollout..."

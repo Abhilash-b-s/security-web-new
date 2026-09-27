@@ -101,3 +101,36 @@ spec:
         - name: etc-systemd
           hostPath:
             path: /etc/systemd
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: security-dashboard
+  namespace: security-ops
+  annotations:
+    # Keep scan-log and terminal WebSockets open past nginx's 60s default
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: security-dashboard.10.10.0.35.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: security-dashboard
+                port:
+                  number: 8000
+    - host: security-reports.10.10.0.35.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: security-dashboard
+                port:
+                  number: 8081
