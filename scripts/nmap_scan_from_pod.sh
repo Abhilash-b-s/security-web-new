@@ -21,8 +21,9 @@ if [ ! -f "$INPUT_FILE" ]; then
   exit 1
 fi
 
-echo "[" > "$OUTPUT_FILE"
-first_entry=true
+# Collect one JSON object per line, then build the array atomically at the end
+ENTRIES_FILE=$(mktemp)
+trap 'rm -f "$ENTRIES_FILE"' EXIT
 
 echo "-"
 echo "Nmap SSL/TLS Cipher Suite Scanner"
@@ -108,22 +109,15 @@ scan_service() {
 
   rm -f "$tmp"
 
-  # append comma if needed
-  if [ "$first_entry" = true ]; then
-    first_entry=false
-  else
-    echo "," >> "$OUTPUT_FILE"
-  fi
-
   # write JSON object
-  jq -n \
+  jq -cn \
     --arg ns "$ns" \
     --arg fqdn "$fqdn" \
     --arg port "$port" \
     --argjson accepted "$accepted_json" \
     --argjson weak "$weak_json" \
     --argjson safe "$safe_json" \
-    '{namespace: $ns, fqdn: $fqdn, port: ($port | tonumber), accepted_ciphers: $accepted, weak_ciphers: $weak, safe_ciphers: $safe}' >> "$OUTPUT_FILE"
+    '{namespace: $ns, fqdn: $fqdn, port: ($port | tonumber), accepted_ciphers: $accepted, weak_ciphers: $weak, safe_ciphers: $safe}' >> "$ENTRIES_FILE"
 
   echo "  ✓ Scan completed for $fqdn:$port"
   echo
@@ -146,8 +140,8 @@ while IFS= read -r line || [ -n "$line" ]; do
   scan_service "$ns" "$fqdn" "$port"
 done < "$INPUT_FILE"
 
-# close JSON array
-echo "]" >> "$OUTPUT_FILE"
+# build JSON array; write-then-rename so readers never see a partial file
+jq -s . "$ENTRIES_FILE" > "$OUTPUT_FILE.tmp" && mv "$OUTPUT_FILE.tmp" "$OUTPUT_FILE"
 
 echo
 echo "========================================================================"

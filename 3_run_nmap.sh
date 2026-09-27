@@ -9,6 +9,10 @@ cp "$PPWD/logo-mobile.webp" "$OUTPUT_DIR/" 2>/dev/null || true
 
 mkdir -p "$OUTPUT_DIR/nmap"
 
+# Serialize runs: concurrent scans (e.g. "all" + "nmap") share k8s-services.txt and nmap.json
+exec 9>"$OUTPUT_DIR/nmap/.lock"
+flock 9
+
 echo "1. Setting up Scanning Environment (Local Nmap)"
 echo "   - Using local nmap installation."
 
