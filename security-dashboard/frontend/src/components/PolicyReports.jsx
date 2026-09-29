@@ -266,7 +266,7 @@ export default function PolicyReports({ activeView }) {
       if (!res.ok) throw new Error(`Failed to list repo reports: ${res.status}`);
       const files = await res.json();
       setTrivyRepoFiles(files);
-      if (files.length > 0) setSelectedTrivyRepoFile(files[0]);
+      if (files.length > 0) setSelectedTrivyRepoFile('ALL');
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -278,11 +278,24 @@ export default function PolicyReports({ activeView }) {
   const loadTrivyRepoReport = async (filename) => {
     setLoading(true);
     try {
-      const res = await fetch(`/new/trivy_repo_scan/${filename}`);
-      if (!res.ok) throw new Error(`Failed to load report ${filename}: ${res.status}`);
-      const json = await res.json();
-      const parsed = parseTrivyRepo(json);
-      setTrivyRepoData(parsed);
+      const fetchOne = async (f) => {
+        const res = await fetch(`/new/trivy_repo_scan/${f}`);
+        if (!res.ok) throw new Error(`Failed to load report ${f}: ${res.status}`);
+        return parseTrivyRepo(await res.json());
+      };
+      if (filename === 'ALL') {
+        // Merge every repo report; prefix targets with the repo so rows stay distinguishable.
+        const parts = await Promise.all(trivyRepoFiles.map(async f => {
+          const repo = f.replace('.json', '');
+          return (await fetchOne(f)).list.map(r => ({ ...r, target: `${repo}: ${r.target}` }));
+        }));
+        const list = parts.flat();
+        const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0 };
+        list.forEach(item => { counts[item.severity] = (counts[item.severity] || 0) + 1; });
+        setTrivyRepoData({ list, counts });
+      } else {
+        setTrivyRepoData(await fetchOne(filename));
+      }
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -1047,6 +1060,7 @@ export default function PolicyReports({ activeView }) {
       controls={(
         <select className="inp h-7 w-[220px] py-0" aria-label="Repository report" value={selectedTrivyRepoFile || ''} onChange={(e) => setSelectedTrivyRepoFile(e.target.value)} disabled={!trivyRepoFiles.length}>
           {trivyRepoFiles.length === 0 && <option value="">No reports</option>}
+          {trivyRepoFiles.length > 0 && <option value="ALL">All repositories</option>}
           {trivyRepoFiles.map(f => <option key={f} value={f}>{f.replace('.json', '')}</option>)}
         </select>
       )}
@@ -1061,7 +1075,10 @@ export default function PolicyReports({ activeView }) {
     cluster: () => ({ href: '/new/trivy-cluster-report/cluster.zip', file: 'cluster.zip', label: 'Download .zip' }),
     cis: () => ({ href: '/new/kube-bench/kubebench.txt', file: 'kubebench.txt', label: 'Download .txt' }),
     nmap: () => ({ href: '/new/nmap/nmap.json', file: 'nmap.json', label: 'Download .json' }),
-    'trivy-repo': () => (selectedTrivyRepoFile ? { href: `/new/trivy_repo_scan/${selectedTrivyRepoFile}`, file: selectedTrivyRepoFile.split('/').pop(), label: 'Download .json' } : null),
+    'trivy-repo': () => [
+      { href: '/api/files/trivy-repo.xlsx', file: 'git-repository-findings.xlsx', label: 'Export .xlsx' },
+      ...(selectedTrivyRepoFile && selectedTrivyRepoFile !== 'ALL' ? [{ href: `/new/trivy_repo_scan/${selectedTrivyRepoFile}`, file: selectedTrivyRepoFile.split('/').pop(), label: 'Download .json' }] : []),
+    ],
   };
 
   const VIEWS = { kyverno: renderKyverno, cis: renderCis, cluster: renderCluster, nmap: renderNmap, image: renderImage, sbom: renderSbom, 'trivy-repo': renderRepo };
@@ -1073,7 +1090,7 @@ export default function PolicyReports({ activeView }) {
           {(() => {
             const e = EXPORTS[activeView]?.();
             return e && stats?.[TABS.find(t => t.id === activeView)?.key]?.available !== false ? (
-              <a className="btn no-underline" href={e.href} download={e.file}><Download className="w-3 h-3" /> {e.label}</a>
+              [].concat(e).map(x => <a key={x.href} className="btn btn-accent no-underline" href={x.href} download={x.file}><Download className="w-3.5 h-3.5" /> {x.label}</a>)
             ) : null;
           })()}
         </PageHead>

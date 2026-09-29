@@ -42,6 +42,13 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
             .catch(() => { });
     }, [isScanning]);
 
+    // Settings fires this after a git/registry save so "Set up" clears without a reload.
+    useEffect(() => {
+        const recheck = () => { checkGitConfig(); checkRegistryConfig(); };
+        window.addEventListener('scan-settings-changed', recheck);
+        return () => window.removeEventListener('scan-settings-changed', recheck);
+    }, []);
+
     const checkGitConfig = async () => {
         try {
             const response = await fetch('/api/settings/git-config');
@@ -138,8 +145,8 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
                     || (type.id === 'trivy-image' && registryConfigReady === false);
                 const picked = showPanel && selectedScan?.id === type.id;
                 // Different scans can run in parallel; the same scan can't (its script writes to a fixed output path).
-                // An "all" run (e.g. the scheduled CronJob) runs every scan except source code.
-                const running = runningTypes.has(type.id) || (runningTypes.has('all') && type.id !== 'trivy-repo');
+                // An "all" run (e.g. the scheduled CronJob) runs every scan; source code only when Git settings are complete.
+                const running = runningTypes.has(type.id) || (runningTypes.has('all') && (type.id !== 'trivy-repo' || gitConfigReady));
                 // Trivy scans share one cache/DB and block each other, so only one runs at a time.
                 const trivyBusy = !running && type.id.startsWith('trivy-') && [...runningTypes].some(t => t === 'all' || (typeof t === 'string' && t.startsWith('trivy-')));
                 return (

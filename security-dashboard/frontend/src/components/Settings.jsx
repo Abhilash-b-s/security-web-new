@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Edit } from 'lucide-react';
 import PageHead from './PageHead';
+import PasswordInput from './PasswordInput';
 
 export default function Settings({ initialSection = null }) {
     const [registries, setRegistries] = useState([]);
@@ -11,7 +12,6 @@ export default function Settings({ initialSection = null }) {
     const [url, setUrl] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -89,6 +89,7 @@ export default function Settings({ initialSection = null }) {
 
             if (response.ok) {
                 setGitSuccess("Git configuration saved successfully!");
+                window.dispatchEvent(new Event('scan-settings-changed'));
                 setIsEditingGit(false);
                 setTimeout(() => setGitSuccess(null), 3000);
             } else {
@@ -140,6 +141,7 @@ export default function Settings({ initialSection = null }) {
             }
 
             if (response.ok) {
+                window.dispatchEvent(new Event('scan-settings-changed'));
                 await fetchRegistries();
                 setUrl('');
                 setUsername('');
@@ -161,6 +163,7 @@ export default function Settings({ initialSection = null }) {
             const deleteUri = '/api/settings/registries/' + id;
             const response = await fetch(deleteUri, { method: 'DELETE' });
             if (response.ok) {
+                window.dispatchEvent(new Event('scan-settings-changed'));
                 fetchRegistries();
             }
         } catch (err) {
@@ -258,21 +261,16 @@ export default function Settings({ initialSection = null }) {
 
                         <section className="sheet" id="registry-form">
                             <div className="phead"><h2>{editingId ? 'Edit registry' : 'Add registry'}</h2></div>
-                            <form onSubmit={handleAddRegistry} className="flex flex-col gap-3 p-3.5">
+                            <form onSubmit={handleAddRegistry} className="settings-form flex flex-col gap-5 p-5">
                                 <label className="field">Registry URL
                                     <input type="text" required className="inp mono" placeholder="e.g. docker.io" value={url} onChange={(e) => setUrl(e.target.value)} />
                                 </label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-5">
                                     <label className="field">Username
                                         <input type="text" required className="inp" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
                                     </label>
                                     <label className="field">Password / token
-                                        <span className="flex">
-                                            <input type={showPassword ? "text" : "password"} required className="inp rounded-r-none" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-                                            <button type="button" className="btn h-[30px] rounded-l-none border-l-0" onClick={() => setShowPassword(!showPassword)}>
-                                                {showPassword ? "Hide" : "Show"}
-                                            </button>
-                                        </span>
+                                        <PasswordInput required className="inp" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
                                     </label>
                                 </div>
                                 {error && <div className="note note-crit">{error}</div>}
@@ -331,13 +329,13 @@ export default function Settings({ initialSection = null }) {
                         <p className="m-0 px-3.5 py-2.5 text-[12.5px]" style={{ color: 'var(--mute)', borderBottom: '1px solid var(--line-soft)' }}>
                             The token is used to clone private repositories.
                         </p>
-                        <form onSubmit={handleSaveGitConfig} className="flex flex-col gap-3 p-3.5">
-                            <div className="grid grid-cols-2 gap-3">
+                        <form onSubmit={handleSaveGitConfig} className="settings-form flex flex-col gap-5 p-5">
+                            <div className="grid grid-cols-2 gap-5">
                                 <label className="field">Git username
                                     <input type="text" required disabled={!isEditingGit} className="inp" placeholder="e.g. abhilash-armada-ai" value={gitUsername} onChange={(e) => setGitUsername(e.target.value)} />
                                 </label>
                                 <label className="field">Access token
-                                    <input type="password" required disabled={!isEditingGit} className="inp" placeholder="Access Token" value={gitToken} onChange={(e) => setGitToken(e.target.value)} />
+                                    <PasswordInput required disabled={!isEditingGit} className="inp" placeholder="Access Token" value={gitToken} onChange={(e) => setGitToken(e.target.value)} />
                                 </label>
                             </div>
                             <label className="field">Repository URLs <span className="hint">One per line. Lines starting with # are ignored.</span>

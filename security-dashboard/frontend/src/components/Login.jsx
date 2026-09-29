@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PasswordInput from './PasswordInput';
 
 const Login = ({ onLogin }) => {
     const [username, setUsername] = useState('');
@@ -53,7 +54,7 @@ const Login = ({ onLogin }) => {
                             <input type="text" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} className="inp h-9" placeholder="Enter your username" autoFocus />
                         </label>
                         <label className="field">Password
-                            <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="inp h-9" placeholder="Enter your password" />
+                            <PasswordInput autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="inp h-9" placeholder="Enter your password" />
                         </label>
                         {error && <div className="note note-crit" role="alert">{error}</div>}
                         <button type="submit" className="btn btn-primary h-[38px] text-[13.5px] font-semibold">Sign in</button>

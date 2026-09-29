@@ -25,6 +25,23 @@ function App() {
         return 'dashboard';
     });
     const [logs, setLogs] = useState([]);
+
+    // Sidebar width, dragged via the separator; remembered per browser.
+    const clampRail = (w) => Math.min(480, Math.max(200, w));
+    const [railW, setRailW] = useState(() => {
+        try { return clampRail(Number(localStorage.getItem('railWidth')) || 264); } catch { return 264; }
+    });
+    useEffect(() => { try { localStorage.setItem('railWidth', String(railW)); } catch { } }, [railW]);
+    const startRailDrag = (e) => {
+        e.preventDefault();
+        const x0 = e.clientX, w0 = railW;
+        const move = (ev) => setRailW(clampRail(w0 + ev.clientX - x0));
+        const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); document.body.style.cursor = ''; document.body.style.userSelect = ''; };
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+    };
     const [isScanning, setIsScanning] = useState(false);
     const [activeScanType, setActiveScanType] = useState(null);
     // Scan started from this browser; its live output is shown in Event logs
@@ -122,7 +139,7 @@ function App() {
         'kyverno': 'Policy Scan',
         'kube-bench': 'CIS Benchmarks',
         'trivy-cluster': 'Cluster Scan',
-        'all': 'All scans',
+        'all': 'Full scan',
     };
 
     // Safe ID generator that works in all contexts (http/https/older browsers)
@@ -332,7 +349,7 @@ function App() {
             </header>
 
             <div className="flex-1 flex min-h-0">
-                <aside className="rail w-[264px] shrink-0 flex flex-col pt-3 pb-3 overflow-y-auto relative z-30" aria-label="Primary">
+                <aside style={{ width: railW }} className="rail shrink-0 flex flex-col pt-3 pb-3 overflow-y-auto relative z-30" aria-label="Primary">
                     <nav>
                         {NAV.map(({ id, label, Icon, onClick, count, countRun }) => (
                             <React.Fragment key={id}>
@@ -346,7 +363,7 @@ function App() {
                                     <Icon className="w-4 h-4" strokeWidth={1.5} />
                                     {label}
                                     {count != null && (
-                                        <span className="num ml-auto text-[11px]" style={{ color: activeTab === id ? '#D6E1F0' : countRun ? 'var(--accent-text)' : 'var(--mute-2)' }}>{count}</span>
+                                        <span className="num ml-auto text-[12px]" style={{ color: activeTab === id ? '#D6E1F0' : countRun ? 'var(--accent-text)' : 'var(--mute-2)' }}>{count}</span>
                                     )}
                                     {id === 'policy' && (
                                         <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${count != null ? 'ml-1' : 'ml-auto'}`} strokeWidth={1.8}
@@ -392,6 +409,23 @@ function App() {
 
 
                 </aside>
+                <div
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Resize sidebar"
+                    aria-valuenow={railW}
+                    aria-valuemin={200}
+                    aria-valuemax={480}
+                    tabIndex={0}
+                    className="rail-resizer"
+                    onPointerDown={startRailDrag}
+                    onDoubleClick={() => setRailW(264)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'ArrowLeft') { e.preventDefault(); setRailW(w => clampRail(w - 16)); }
+                        if (e.key === 'ArrowRight') { e.preventDefault(); setRailW(w => clampRail(w + 16)); }
+                    }}
+                    title="Drag to resize · double-click to reset"
+                />
 
                 <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
                     {activeTab === 'dashboard' ? (

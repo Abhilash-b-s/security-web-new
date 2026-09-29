@@ -147,8 +147,14 @@ def _load_runs(since: datetime) -> list:
             if ts < since:
                 continue
             results = r.get("results") or []
+            scan_type = (r.get("request") or {}).get("scan_type", "unknown")
+            if scan_type == "all" and results:
+                # A full scan (e.g. the CronJob) counts as one run for each scanner it ran.
+                for x in results:
+                    runs.append({"ts": ts, "scan_type": x.get("scan_type", "unknown"), "failed": str(x.get("status")) != "completed"})
+                continue
             failed = any(str(x.get("status")) != "completed" for x in results) or not results
-            runs.append({"ts": ts, "scan_type": (r.get("request") or {}).get("scan_type", "unknown"), "failed": failed})
+            runs.append({"ts": ts, "scan_type": scan_type, "failed": failed})
         except Exception:
             continue
     return runs

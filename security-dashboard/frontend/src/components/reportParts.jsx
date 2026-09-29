@@ -10,13 +10,13 @@ export const Badge = ({ value }) => <span className={`badge ${BADGE[value] || 'b
 
 // Report types shown under "Scan reports" in the left panel.
 export const REPORT_TABS = [
-  { id: 'image', label: 'Images', key: 'trivyImage' },
-  { id: 'sbom', label: 'SBOM', key: 'trivySbom' },
-  { id: 'cluster', label: 'Cluster', key: 'cluster' },
-  { id: 'cis', label: 'CIS benchmark', key: 'kubebench' },
-  { id: 'kyverno', label: 'Policies', key: 'kyverno' },
-  { id: 'nmap', label: 'Network', key: 'nmap' },
-  { id: 'trivy-repo', label: 'Repositories', key: 'trivyRepo' },
+  { id: 'image', label: 'Image Vulnerability', key: 'trivyImage' },
+  { id: 'sbom', label: 'SBOM Reports', key: 'trivySbom' },
+  { id: 'kyverno', label: 'Policy Scan Report', key: 'kyverno' },
+  { id: 'nmap', label: 'Network Nmap Scan', key: 'nmap' },
+  { id: 'cis', label: 'CIS Benchmark', key: 'kubebench' },
+  { id: 'trivy-repo', label: 'Git Repository', key: 'trivyRepo' },
+  { id: 'cluster', label: 'Cluster Scan', key: 'cluster' },
 ];
 
 export const SEV_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];

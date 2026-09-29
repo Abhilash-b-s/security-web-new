@@ -164,29 +164,24 @@ async def get_dashboard_stats():
         if trivy_repo_dir.exists():
             json_files = sorted(trivy_repo_dir.glob("*.json"))
             if json_files:
-                with open(json_files[0], 'r') as f:
-                    json_data = json.load(f)
-                    results = json_data.get('Results', [])
-                    counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "UNKNOWN": 0}
-
-                    for result in results:
-                        # Handle Vulnerabilities
-                        vulns = result.get('Vulnerabilities', [])
-                        for vuln in vulns:
-                            severity = str(vuln.get('Severity', 'UNKNOWN')).upper()
+                # One report per repository: sum them all.
+                counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "UNKNOWN": 0}
+                for json_file in json_files:
+                    try:
+                        with open(json_file, 'r') as f:
+                            json_data = json.load(f)
+                    except Exception as e:
+                        print(f"Skipping unreadable repo report {json_file.name}: {e}")
+                        continue
+                    for result in json_data.get('Results') or []:
+                        for item in (result.get('Vulnerabilities') or []) + (result.get('Secrets') or []):
+                            severity = str(item.get('Severity', 'UNKNOWN')).upper()
                             if severity in counts:
                                 counts[severity] += 1
 
-                        # Handle Secrets
-                        secrets = result.get('Secrets', [])
-                        for secret in secrets:
-                            severity = str(secret.get('Severity', 'UNKNOWN')).upper()
-                            if severity in counts:
-                                counts[severity] += 1
-
-                    stats["trivyRepo"]["counts"] = counts
-                    stats["trivyRepo"]["total"] = sum(counts.values())
-                    stats["trivyRepo"]["available"] = True
+                stats["trivyRepo"]["counts"] = counts
+                stats["trivyRepo"]["total"] = sum(counts.values())
+                stats["trivyRepo"]["available"] = True
     except Exception as e:
         print(f"Error loading Trivy Repo data: {e}")
 

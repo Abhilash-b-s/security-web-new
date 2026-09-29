@@ -156,7 +156,6 @@ body {
   .phead .meta { font-size: 12px; color: var(--mute); }
   .count { font-family: 'Fira Code', ui-monospace, monospace; font-size: 11px; font-weight: 500; padding: 1px 6px; background: var(--count); color: #FFFFFF; border-radius: 2px; }
   .count.crit { background: #9B1C1C; }
-  .tool { font-family: 'Fira Code', ui-monospace, monospace; font-size: 10.5px; color: var(--mute); border: 1px solid var(--line-strong); padding: 0 4px; margin-left: 6px; font-weight: 400; }
 
   /* Tables */
   .ctable { border-collapse: collapse; width: 100%; }
@@ -184,6 +183,8 @@ body {
   .btn:disabled { opacity: .5; cursor: not-allowed; }
   .btn-primary { background: var(--accent); color: #FFFFFF; border-color: var(--accent-strong); }
   .btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .btn-accent { color: var(--accent-text); border-color: var(--accent-line); background: var(--accent-tint); font-weight: 600; }
+  .btn-accent:hover { background: var(--accent); color: #FFFFFF; border-color: var(--accent-strong); }
   .btn-quiet { background: transparent; border-color: transparent; color: var(--mute); }
   .btn-quiet:hover { background: var(--btn-press); color: var(--ink); border-color: transparent; }
   .lnk { font: inherit; font-size: 12px; color: var(--accent-text); background: none; border: 0; padding: 0; cursor: pointer; }
@@ -199,6 +200,11 @@ body {
   .inp:disabled { background: var(--panel-head); color: var(--mute); cursor: not-allowed; }
   textarea.inp { height: auto; padding: 8px 9px; line-height: 19px; }
   .inp.mono { font-family: 'Fira Code', ui-monospace, monospace; font-size: 12px; }
+  /* Settings forms: roomier fields */
+  .settings-form .field { gap: 7px; font-size: 13px; }
+  .settings-form .inp { height: 38px; padding: 0 12px; font-size: 14px; border-radius: 4px; }
+  .settings-form textarea.inp { height: auto; padding: 10px 12px; line-height: 21px; }
+  .settings-form .inp.mono { font-size: 13px; }
 
   /* Notes */
   .note { display: flex; gap: 8px; padding: 8px 10px; border: 1px solid; border-radius: 3px; font-size: 12px; line-height: 17px; }
@@ -210,7 +216,7 @@ body {
   /* Same font stack as the bridge-installer wizard sidebar (.wz-shell) */
   .rail { background: var(--side); border-right: 1px solid var(--line-panel); font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
   .rail > * { flex-shrink: 0; }
-  .navlink { display: flex; align-items: center; gap: 10px; width: calc(100% - 24px); margin: 0 12px 4px; padding: 7px 10px; font: inherit; font-size: 15px; color: var(--ink-2); background: var(--btn); border: 1px solid var(--btn-line); border-bottom-color: var(--btn-line-bottom); border-radius: 6px; text-align: left; cursor: pointer; }
+  .navlink { display: flex; align-items: center; gap: 10px; width: calc(100% - 24px); margin: 0 12px 4px; padding: 7px 10px; font: inherit; font-size: 16px; color: var(--ink-2); background: var(--btn); border: 1px solid var(--btn-line); border-bottom-color: var(--btn-line-bottom); border-radius: 6px; text-align: left; cursor: pointer; }
   .navlink svg { color: var(--mute-2); flex-shrink: 0; }
   .navlink:hover { background: var(--btn-hover); color: var(--ink); }
   .navlink:active { background: var(--btn-press); }
@@ -220,7 +226,7 @@ body {
   .subnav { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .22s ease, opacity .22s ease; opacity: 0; margin: 0 12px; }
   .subnav.open { grid-template-rows: 1fr; opacity: 1; margin-bottom: 6px; }
   .subnav-inner { overflow: hidden; min-height: 0; margin-left: 17px; padding-left: 8px; border-left: 1px solid var(--line-strong); }
-  .subnav-item { display: flex; align-items: center; gap: 8px; width: 100%; margin: 2px 0; padding: 5px 8px; font: inherit; font-size: 14.5px; text-align: left; color: var(--ink-2); background: transparent; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
+  .subnav-item { display: flex; align-items: center; gap: 8px; width: 100%; margin: 2px 0; padding: 5px 8px; font: inherit; font-size: 15.5px; text-align: left; color: var(--ink-2); background: transparent; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
   .subnav-item:hover { background: var(--btn-hover); border-color: var(--btn-line); color: var(--ink); }
   .subnav-item.on { background: var(--panel); border-color: var(--btn-line); color: var(--accent-text); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent-text); }
   .subnav-item .num { color: var(--mute-2); }
@@ -232,12 +238,12 @@ body {
   .navlink.expanded { background: var(--btn-hover); color: var(--ink); }
   @media (prefers-reduced-motion: reduce) { .subnav { transition: none; } }
   .side-h { display: flex; justify-content: space-between; align-items: baseline; margin: 0 16px; padding: 6px 0 5px; border-bottom: 1px solid var(--line-strong); }
-  .grp { margin: 10px 14px 4px; font-size: 10.5px; font-weight: 500; color: var(--faint); letter-spacing: .04em; }
+  .grp { margin: 10px 14px 4px; font-size: 11.5px; font-weight: 500; color: var(--faint); letter-spacing: .04em; }
   .scanrow { display: flex; align-items: center; gap: 9px; width: calc(100% - 24px); margin: 0 12px 4px; padding: 5px 6px 5px 10px; font: inherit; color: var(--ink-2); background: var(--btn); border: 1px solid var(--btn-line); border-bottom-color: var(--btn-line-bottom); border-radius: 6px; text-align: left; cursor: pointer; }
   .scanrow .sl { flex-grow: 1; min-width: 0; }
-  .scanrow .sn { display: block; font-size: 15px; line-height: 19px; }
-  .scanrow .st { display: block; font-family: 'Fira Code', ui-monospace, monospace; font-size: 10.5px; line-height: 14px; color: var(--mute-2); }
-  .scanrow .go { display: inline-flex; align-items: center; gap: 5px; height: 23px; padding: 0 8px; font-size: 12.5px; font-weight: 600; color: var(--accent-text); background: var(--panel); border: 1px solid var(--accent-line); border-radius: 4px; flex-shrink: 0; }
+  .scanrow .sn { display: block; font-size: 16px; line-height: 20px; }
+  .scanrow .st { display: block; font-family: 'Fira Code', ui-monospace, monospace; font-size: 11.5px; line-height: 15px; color: var(--mute-2); }
+  .scanrow .go { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 8px; font-size: 13.5px; font-weight: 600; color: var(--accent-text); background: var(--panel); border: 1px solid var(--accent-line); border-radius: 4px; flex-shrink: 0; }
   .scanrow .go.setup { color: var(--warn); border-color: var(--warn-line); background: var(--warn-tint); }
   .scanrow:hover { background: var(--btn-hover); }
   .scanrow:hover .go { background: var(--accent); color: #FFFFFF; border-color: var(--accent-strong); }
@@ -262,5 +268,16 @@ body {
 .dark .dark\:text-gray-300, .dark .dark\:text-slate-300 { color: var(--ink-2); }
 .dark .dark\:text-gray-400, .dark .dark\:text-slate-400 { color: var(--mute); }
 
-/* Dark theme: left panel text at full strength (tokens re-pointed inside the rail) */
-.dark .rail { --ink: #FFFFFF; --ink-2: #FFFFFF; --mute: #FFFFFF; --mute-2: #FFFFFF; --faint: #FFFFFF; color: #FFFFFF; }
+/* Drag handle between the sidebar and the page */
+.rail-resizer { width: 5px; margin-left: -3px; flex-shrink: 0; cursor: col-resize; position: relative; z-index: 31; background: transparent; transition: background .15s; }
+.rail-resizer:hover, .rail-resizer:focus-visible { background: var(--accent-text); outline: none; }
+
+/* Left panel is dark in both themes: the rail re-points its tokens to the dark palette (text at full strength) */
+.rail {
+  --side: #111214; --panel: #232529; --line-panel: #383A40; --line-strong: #4A4D53;
+  --ink: #FFFFFF; --ink-2: #FFFFFF; --mute: #FFFFFF; --mute-2: #FFFFFF; --faint: #FFFFFF;
+  --accent: #2F62A8; --accent-strong: #3D72BB; --accent-text: #7FA8E4; --accent-line: #3F5E8C;
+  --btn: #25272B; --btn-hover: #2D3035; --btn-press: #1C1E21; --btn-line: #393B41; --btn-line-bottom: #2E3035;
+  --warn: #E9C97C; --warn-tint: #382F1A; --warn-line: #5A4A23;
+  color: #FFFFFF; color-scheme: dark;
+}

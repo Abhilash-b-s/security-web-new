@@ -145,7 +145,7 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
                                         {new Date(r.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                     <span className="min-w-0">
-                                        <span className="block font-medium text-[13px] truncate">{r.scan_type}</span>
+                                        <span className="block font-medium text-[13px] truncate">{r.scan_type === 'all' ? 'Full scan' : r.scan_type}</span>
                                         <span className="block num text-[10.5px]" style={{ color: 'var(--faint)' }}>{r.scan_id.slice(0, 8)} · live</span>
                                     </span>
                                     <span className="badge badge-run flex items-center gap-1.5"><span className="w-1.5 h-1.5 animate-pulse" style={{ background: 'currentColor' }} />Running</span>
@@ -175,7 +175,7 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
                                         {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                     <span className="min-w-0">
-                                        <span className="block font-medium text-[13px] truncate">{report.scan_type || 'Unknown Scan'}</span>
+                                        <span className="block font-medium text-[13px] truncate">{report.scan_type === 'all' ? 'Full scan' : report.scan_type || 'Unknown Scan'}</span>
                                         <span className="block num text-[10.5px]" style={{ color: 'var(--faint)' }}>{report.id.slice(0, 8)}</span>
                                     </span>
                                     {statusBadge(report.status)}
@@ -203,7 +203,7 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
                     ) : selectedReport ? (
                         <>
                             <div className="phead flex-wrap py-1.5">
-                                <h2 className="capitalize">{selectedReport.request.scan_type}</h2>
+                                <h2 className="capitalize">{selectedReport.request.scan_type === 'all' ? 'Full scan' : selectedReport.request.scan_type}</h2>
                                 <span className="num text-[11px] px-1.5" style={{ border: '1px solid var(--line-strong)', color: 'var(--mute)' }}>{selectedReport.id.slice(0, 8)}</span>
                                 <span className="meta">Scanned {new Date(selectedReport.timestamp).toLocaleString()}</span>
                                 <div className="flex-1" />

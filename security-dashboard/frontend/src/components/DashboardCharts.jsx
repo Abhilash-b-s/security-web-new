@@ -11,10 +11,10 @@ const SEV = [
 ];
 
 const VULN_SOURCES = [
-    { key: 'trivyImage', name: 'Image vulnerabilities', tool: 'trivy' },
-    { key: 'trivySbom', name: 'SBOM inventory', tool: 'trivy' },
-    { key: 'cluster', name: 'Cluster risks', tool: 'trivy' },
-    { key: 'trivyRepo', name: 'Source code', tool: 'trivy' },
+    { key: 'trivyImage', name: 'Image vulnerabilities' },
+    { key: 'trivySbom', name: 'SBOM inventory' },
+    { key: 'cluster', name: 'Cluster risks' },
+    { key: 'trivyRepo', name: 'Source code' },
 ];
 
 function getScoreStyle(score) {
@@ -190,17 +190,17 @@ export default function DashboardCharts() {
 
     const compRows = [
         {
-            name: 'Policy compliance', tool: 'kyverno', available: d.kyverno.available, total: d.kyverno.total,
+            name: 'Policy compliance', available: d.kyverno.available, total: d.kyverno.total,
             pass: d.kyverno.counts.PASS || 0, warn: d.kyverno.counts.WARN || 0, fail: d.kyverno.counts.FAIL || 0,
             other: (d.kyverno.counts.ERROR || 0) + (d.kyverno.counts.SKIP || 0), otherLabel: 'error / skip',
         },
         {
-            name: 'CIS benchmark', tool: 'kube-bench', available: d.kubebench.available, total: d.kubebench.total,
+            name: 'CIS benchmark', available: d.kubebench.available, total: d.kubebench.total,
             pass: d.kubebench.counts.PASS || 0, warn: d.kubebench.counts.WARN || 0, fail: d.kubebench.counts.FAIL || 0,
             other: d.kubebench.counts.INFO || 0, otherLabel: 'info',
         },
         {
-            name: 'Network exposure', tool: 'nmap', available: d.nmap.available, total: d.nmap.total,
+            name: 'Network exposure', available: d.nmap.available, total: d.nmap.total,
             pass: d.nmap.total - d.nmap.servicesWithWeakCiphers, warn: null, fail: d.nmap.servicesWithWeakCiphers,
             other: null, unit: 'services scanned',
         },
@@ -279,7 +279,7 @@ export default function DashboardCharts() {
                         <tbody>
                             {vulnRows.map(r => (
                                 <tr key={r.key}>
-                                    <td className="whitespace-nowrap"><span className="font-medium">{r.name}</span><span className="tool">{r.tool}</span></td>
+                                    <td className="whitespace-nowrap"><span className="font-medium">{r.name}</span></td>
                                     {r.available ? (
                                         <>
                                             {SEV.map(s => <td key={s.key} className="r num" style={sevCell(r.c[s.key] || 0, s.key)}>{r.c[s.key] || 0}</td>)}
@@ -329,7 +329,7 @@ export default function DashboardCharts() {
                                     const rate = r.available ? pct(r.pass, r.total) : null;
                                     return (
                                         <tr key={r.name}>
-                                            <td className="whitespace-nowrap"><span className="font-medium">{r.name}</span><span className="tool">{r.tool}</span></td>
+                                            <td className="whitespace-nowrap"><span className="font-medium">{r.name}</span></td>
                                             {r.available ? (
                                                 <>
                                                     <td className="r num" style={{ color: 'var(--ok)' }}>{r.pass}</td>
@@ -376,7 +376,7 @@ export default function DashboardCharts() {
                                     <li key={r.id} className="grid grid-cols-[52px_12px_1fr_auto] items-center gap-2.5 py-[5px] text-[13px]" style={{ borderBottom: '1px dotted var(--line)' }}>
                                         <span className="num text-xs" style={{ color: 'var(--mute-2)' }}>{timeAgo(r.timestamp)}</span>
                                         <span className="w-[7px] h-[7px]" style={{ background: ok ? 'var(--ok)' : 'var(--crit)' }} />
-                                        <span className="truncate">{r.scan_type || 'Unknown scan'}</span>
+                                        <span className="truncate">{r.scan_type === 'all' ? 'Full scan' : r.scan_type || 'Unknown scan'}</span>
                                         <span className="text-xs font-medium" style={{ color: ok ? 'var(--ok)' : 'var(--crit)' }}>{r.status || '—'}</span>
                                     </li>
                                 );
