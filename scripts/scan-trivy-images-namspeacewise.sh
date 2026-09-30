@@ -94,6 +94,19 @@ sanitize() {
   echo "$1" | sed -e 's#/#_#g' -e 's#:#_#g' -e 's#@#_#g' -e 's#[^A-Za-z0-9._-]#_#g'
 }
 
+# containerd stores short refs fully qualified (python:3.11 -> docker.io/library/python:3.11);
+# Trivy's containerd export looks the name up verbatim, so normalize first.
+normalize_image() {
+  local img="$1" first="${1%%/*}"
+  if [[ "$img" != */* ]]; then
+    echo "docker.io/library/$img"
+  elif [[ "$first" != *.* && "$first" != *:* && "$first" != localhost ]]; then
+    echo "docker.io/$img"
+  else
+    echo "$img"
+  fi
+}
+
 # Scan all images in a single namespace and save reports to per-namespace folder
 scan_namespace() {
   local ns="$1"
@@ -124,7 +137,10 @@ scan_namespace() {
     
     # Capture stderr to a temp file to show on failure
     local err_log=$(mktemp)
-    trivy image $TRIVY_FLAGS -o "$out_file" "$image" >"$err_log" 2>&1 &
+    # If the node's containerd store is missing blobs (GC'd / partial multi-arch content),
+    # the local scan fails mid-analysis without falling back, so retry from the registry.
+    { trivy image $TRIVY_FLAGS -o "$out_file" "$(normalize_image "$image")" \
+        || trivy image $TRIVY_FLAGS --image-src remote -o "$out_file" "$(normalize_image "$image")"; } >"$err_log" 2>&1 &
     local pid=$!
     
     while kill -0 $pid 2>/dev/null; do
