@@ -15,28 +15,41 @@ export default function WebTerminal({ onClose }) {
     useEffect(() => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/api/terminal/ws`;
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
+        let retryTimer;
+        let wasOpen = false;
 
-        ws.onopen = () => {
-            setIsConnected(true);
-            setOutput(prev => prev + "--- Terminal Connected ---\n");
-        };
+        // Reconnect on drop: a redeploy (Recreate strategy) kills the socket while the page stays loaded.
+        const connect = () => {
+            const ws = new WebSocket(wsUrl);
+            wsRef.current = ws;
 
-        ws.onmessage = (event) => {
-            const message = event.data;
-            setOutput(prev => prev + message);
-        };
+            ws.onopen = () => {
+                wasOpen = true;
+                setIsConnected(true);
+                setOutput(prev => prev + "--- Terminal Connected ---\n");
+            };
 
-        ws.onclose = () => {
-            // Ignore a stale socket closing after its replacement opened (StrictMode double effect).
-            if (wsRef.current !== ws) return;
-            setIsConnected(false);
-            setOutput(prev => prev + "\n--- Terminal Disconnected ---\n");
+            ws.onmessage = (event) => {
+                const message = event.data;
+                setOutput(prev => prev + message);
+            };
+
+            ws.onclose = () => {
+                // Ignore a stale socket closing after its replacement opened (StrictMode double effect / unmount).
+                if (wsRef.current !== ws) return;
+                setIsConnected(false);
+                if (wasOpen) setOutput(prev => prev + "\n--- Terminal Disconnected, reconnecting... ---\n");
+                wasOpen = false;
+                retryTimer = setTimeout(connect, 3000);
+            };
         };
+        connect();
 
         return () => {
-            if (wsRef.current) wsRef.current.close();
+            clearTimeout(retryTimer);
+            const ws = wsRef.current;
+            wsRef.current = null;
+            if (ws) ws.close();
         };
     }, []);
 
@@ -46,7 +59,11 @@ export default function WebTerminal({ onClose }) {
 
     const handleSend = (e) => {
         e.preventDefault();
-        if (!command.trim() || !wsRef.current) return;
+        if (!command.trim()) return;
+        if (wsRef.current?.readyState !== WebSocket.OPEN) {
+            setError('Terminal is not connected yet, retrying...');
+            return;
+        }
 
         // Mirrors the server rule (services/terminal.py), which is the one that is enforced.
         if (!/^kubectl\s+get(\s|$)/.test(command.trim())) {
