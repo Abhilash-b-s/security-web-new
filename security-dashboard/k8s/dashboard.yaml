@@ -3,6 +3,21 @@ kind: Namespace
 metadata:
   name: security-ops
 ---
+# Auth credentials for the dashboard backend (SUPERUSER_PASSWORD, USER_PASSWORD, AUTH_SECRET).
+# IMPORTANT: replace every CHANGE_ME_* value below before deploying.
+# Generate AUTH_SECRET with:  openssl rand -hex 32
+# Changing AUTH_SECRET invalidates all existing login tokens (everyone must log in again).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: security-dashboard-auth
+  namespace: security-ops
+type: Opaque
+stringData:
+  SUPERUSER_PASSWORD: "superuser"
+  USER_PASSWORD: "user"
+  AUTH_SECRET: "long_random_string"
+---
 # Security Dashboard Service
 apiVersion: v1
 kind: Service
@@ -87,6 +102,9 @@ spec:
         - name: security-dashboard
           image: quay.io/abhilash_bs1/security-dashboard:latest
           imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: security-dashboard-auth
           env:
             - name: APP_HOME
               value: "/app"
@@ -186,12 +204,21 @@ spec:
             - name: trigger
               image: quay.io/abhilash_bs1/security-dashboard:latest
               imagePullPolicy: IfNotPresent
+              # SUPERUSER_PASSWORD comes from the auth Secret; the trigger logs in for a token.
+              envFrom:
+                - secretRef:
+                    name: security-dashboard-auth
               command:
                 - sh
                 - -c
                 - |
                   set -e
-                  API=http://security-dashboard.security-ops.svc:8000/api/scans
+                  API=http://security-dashboard.security-ops.svc:8000/api
+                  # Scans are superuser-gated now: authenticate, then call with a Bearer token.
+                  BODY=$(jq -nc --arg u superuser --arg p "$SUPERUSER_PASSWORD" '{username:$u,password:$p}')
+                  TOKEN=$(curl -sf -X POST "$API/login" -H 'Content-Type: application/json' -d "$BODY" | jq -r .token)
+                  if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "Login failed"; exit 1; fi
+                  AUTH="Authorization: Bearer $TOKEN"
                   # Skip if scans are already running: the same scan twice would overwrite its output files.
-                  if [ "$(curl -sf "$API/active" | tr -d ' ')" != "[]" ]; then echo "Scans already running, skipping"; exit 0; fi
-                  curl -sf -X POST "$API/start" -H 'Content-Type: application/json' -d '{"scan_type":"all"}'
+                  if [ "$(curl -sf -H "$AUTH" "$API/scans/active" | tr -d ' ')" != "[]" ]; then echo "Scans already running, skipping"; exit 0; fi
+                  curl -sf -X POST -H "$AUTH" "$API/scans/start" -H 'Content-Type: application/json' -d '{"scan_type":"all"}'

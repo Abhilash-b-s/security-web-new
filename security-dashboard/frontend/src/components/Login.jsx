@@ -6,15 +6,23 @@ const Login = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        if (username === 'user' && password === 'user') {
-            onLogin({ username: 'user', role: 'user' });
-        } else if (username === 'superuser' && password === 'superuser') {
-            onLogin({ username: 'superuser', role: 'superuser' });
-        } else {
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            if (!res.ok) {
+                setError('Invalid credentials');
+                return;
+            }
+            const data = await res.json();
+            onLogin({ username: data.username, role: data.role, token: data.token });
+        } catch {
             setError('Invalid credentials');
         }
     };

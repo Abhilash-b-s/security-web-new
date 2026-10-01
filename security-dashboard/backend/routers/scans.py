@@ -1,9 +1,15 @@
-from fastapi import APIRouter, WebSocket, BackgroundTasks
+from fastapi import APIRouter, WebSocket, BackgroundTasks, HTTPException
 from models import ScanRequest, ScanType, ScanStartResponse, ErrorResponse
 from services import scanner
+from auth import decode_token
+import re
 import uuid
 
 router = APIRouter()
+
+# scan_id is client-supplied and becomes the report filename reports/<scan_id>.json,
+# so restrict it to a safe charset to block path traversal (e.g. ../../app/script.sh).
+_SCAN_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 @router.post(
     "/start",
@@ -60,6 +66,8 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     after completion.
     """
     scan_id = request.scan_id or str(uuid.uuid4())
+    if not _SCAN_ID_RE.match(scan_id):
+        raise HTTPException(status_code=400, detail="Invalid scan_id")
     # Register the run now so it is listed as active before the background task starts.
     scanner.manager.start_run(scan_id, request.scan_type.value)
     background_tasks.add_task(scanner.run_scan_task, scan_id, request)
@@ -99,4 +107,8 @@ async def websocket_endpoint(websocket: WebSocket, scan_id: str):
     };
     ```
     """
+    claims = decode_token(websocket.query_params.get("token"))
+    if not claims or claims.get("role") != "superuser":
+        await websocket.close(code=1008)
+        return
     await scanner.handle_websocket(websocket, scan_id)

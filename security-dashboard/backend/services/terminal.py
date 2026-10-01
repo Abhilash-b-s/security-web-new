@@ -3,6 +3,8 @@ import logging
 from fastapi import WebSocket, APIRouter
 import shlex
 
+from auth import decode_token
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("terminal")
 
@@ -50,6 +52,10 @@ def parse_command(command_line: str):
 
 @router.websocket("/ws")
 async def terminal_websocket(websocket: WebSocket):
+    claims = decode_token(websocket.query_params.get("token"))
+    if not claims or claims.get("role") != "superuser":
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     logger.info("Terminal WS Connected")
 

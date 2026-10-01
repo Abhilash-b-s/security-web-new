@@ -14,7 +14,8 @@ export default function WebTerminal({ onClose }) {
 
     useEffect(() => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/api/terminal/ws`;
+        const token = JSON.parse(localStorage.getItem('user') || 'null')?.token;
+        const wsUrl = `${protocol}//${window.location.host}/api/terminal/ws?token=${encodeURIComponent(token)}`;
         let retryTimer;
         let wasOpen = false;
 

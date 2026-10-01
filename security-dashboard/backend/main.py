@@ -1,11 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from routers import scans, reports, files, settings, dashboard, suppressions
+from fastapi.responses import JSONResponse
+from routers import scans, reports, files, settings, dashboard, suppressions, auth as auth_router_mod
 from services import terminal
+import auth
+import ratelimit
 
 from fastapi.staticfiles import StaticFiles
 import os
+
+# Swagger/ReDoc/OpenAPI leak the full API surface to anonymous users; off by default,
+# enable in dev with ENABLE_DOCS=true.
+_docs_enabled = os.getenv("ENABLE_DOCS", "false").lower() in ("1", "true", "yes")
 
 app = FastAPI(
     title="Security Scanning Dashboard API",
@@ -34,7 +41,8 @@ app = FastAPI(
 
     ## Authentication
 
-    Currently the API does not require authentication. It is intended for internal use within a secured network.
+    All `/api/*` and `/new/*` routes require a Bearer JWT obtained from `POST /api/login`.
+    Scan, settings, and terminal routes additionally require the `superuser` role.
 
     ## WebSocket Endpoints
 
@@ -49,15 +57,20 @@ app = FastAPI(
         "name": "Apache 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
 )
 
+# The SPA is served same-origin (StaticFiles in prod, vite proxy in dev), so CORS is only
+# needed for direct cross-origin dev. Reflecting arbitrary origins with credentials was the
+# bug; the JWT rides the Authorization header (no cookies), so credentials are not needed.
+_allowed_origins = [o.strip() for o in os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:8000").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all for development
-    allow_credentials=True,
+    allow_origins=_allowed_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -65,6 +78,59 @@ app.add_middleware(
 # Add GZip compression middleware for faster asset delivery
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+# Paths requiring the superuser role; everything else under /api or /new needs any valid token.
+SUPERUSER_PREFIXES = ("/api/scans", "/api/settings", "/api/terminal")
+
+# Swagger UI / ReDoc need inline + CDN assets a strict CSP would block; gate these in prod instead.
+_CSP_SKIP = ("/docs", "/redoc", "/openapi.json")
+_CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws: wss:; "
+    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+)
+
+
+def _client_ip(request: Request) -> str:
+    xff = request.headers.get("x-forwarded-for", "")
+    return xff.split(",")[0].strip() if xff else (request.client.host if request.client else "?")
+
+
+# NOTE: auth_middleware is defined before security_headers so that security_headers is added
+# last and therefore wraps it (outermost) — headers land on every response, 401/403/429 included.
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    path = request.url.path
+    if request.method == "OPTIONS":  # CORS preflight
+        return await call_next(request)
+    if path == "/api/login" or path == "/health":
+        if path == "/api/login" and request.method == "POST" and ratelimit.limited(_client_ip(request)):
+            return JSONResponse(status_code=429, content={"detail": "Too many login attempts, slow down"})
+        return await call_next(request)
+    if not (path.startswith("/api/") or path.startswith("/new/")):
+        return await call_next(request)  # static UI
+    header = request.headers.get("authorization", "")
+    token = header[7:] if header.lower().startswith("bearer ") else None
+    claims = auth.decode_token(token)
+    if not claims:
+        return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
+    if path.startswith(SUPERUSER_PREFIXES) and claims.get("role") != "superuser":
+        return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    resp = await call_next(request)
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("Referrer-Policy", "no-referrer")
+    resp.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+    if not request.url.path.startswith(_CSP_SKIP):
+        resp.headers.setdefault("Content-Security-Policy", _CSP)
+    return resp
+
+
+app.include_router(auth_router_mod.router, prefix="/api", tags=["auth"])
 app.include_router(scans.router, prefix="/api/scans", tags=["scans"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(files.router, prefix="/api/files", tags=["files"])

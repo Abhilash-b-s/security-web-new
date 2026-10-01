@@ -113,7 +113,8 @@ export function RemoteLogViewer({ scanId, scanLabel, startedAt, onDone }) {
         setLogs([]);
         setRunning(true);
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}/api/scans/ws/${scanId}`);
+        const token = JSON.parse(localStorage.getItem('user') || 'null')?.token;
+        const ws = new WebSocket(`${protocol}//${window.location.host}/api/scans/ws/${scanId}?token=${encodeURIComponent(token)}`);
         ws.onmessage = (event) => {
             if (event.data === '__EOF__') {
                 setRunning(false);

@@ -103,12 +103,6 @@ function App() {
         localStorage.setItem('theme', theme);
     }, [theme]);
 
-    useEffect(() => {
-        if (user && user.role === 'user' && activeTab !== 'policy') {
-            setActiveTab('policy');
-        }
-    }, [user, activeTab]);
-
     const toggleTheme = () => {
         setTheme(prev => prev === 'dark' ? 'light' : 'dark');
     };
@@ -196,7 +190,8 @@ function App() {
             }
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/api/scans/ws/${scanId}`;
+            const token = JSON.parse(localStorage.getItem('user') || 'null')?.token;
+            const wsUrl = `${protocol}//${window.location.host}/api/scans/ws/${scanId}?token=${encodeURIComponent(token)}`;
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
@@ -275,7 +270,7 @@ function App() {
     const remoteRun = !isScanning && serverRuns[0];
 
     const NAV = [
-        { id: 'dashboard', label: 'Overview', Icon: LayoutGrid, superOnly: true, onClick: goOverview },
+        { id: 'dashboard', label: 'Overview', Icon: LayoutGrid, onClick: goOverview },
         { id: 'policy', label: 'Scan reports', Icon: FileCheck, onClick: () => { if (activeTab === 'policy') setReportsOpen(o => !o); else { setActiveTab('policy'); setReportsOpen(true); } }, },
         { id: 'reports', label: 'Event logs', Icon: FileText, superOnly: true, count: anyRunning ? `${runningCount} running` : navRuns || null, countRun: anyRunning },
         { id: 'terminal', label: 'Terminal', Icon: Terminal, superOnly: true },
