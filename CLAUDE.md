@@ -8,12 +8,11 @@ A DevSecOps security dashboard — a containerized full-stack web application fo
 
 ## Build & Run Commands
 
-### Local Development (all three services)
+### Local Development (backend + frontend)
 ```bash
 ./start-app.sh
 # Frontend: http://localhost:5173
 # Backend API + Swagger: http://localhost:8000/docs
-# Report server: http://localhost:8081
 ```
 
 ### Frontend only
@@ -35,7 +34,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ### Docker
 ```bash
 docker build -t security-dashboard:latest .
-docker run -d -p 8000:8000 -p 8081:8081 \
+docker run -d -p 8000:8000 \
   -v ~/.kube:/root/.kube:ro \
   -v /var/run/docker.sock:/var/run/docker.sock \
   security-dashboard:latest
@@ -45,7 +44,7 @@ docker run -d -p 8000:8000 -p 8081:8081 \
 ```bash
 ./build_and_deploy.sh          # Build, push, and deploy
 kubectl apply -f security-dashboard/k8s/dashboard.yaml
-# Access via NodePort 30095 (app) / 30096 (reports), namespace: security-ops
+# Access via NodePort 30095, namespace: security-ops
 ```
 
 No test suite exists. No linter is configured.
@@ -115,7 +114,7 @@ Auth is localStorage-based with two roles: `superuser` (all tabs) and `user` (re
 
 ### Kubernetes Deployment Notes
 
-- Namespace: `security-ops`; NodePort services on 30095 / 30096
+- Namespace: `security-ops`; NodePort service on 30095
 - Runs with `cluster-admin` `ClusterRole` and `hostPID: true`
 - Volume mounts: `/run/containerd/containerd.sock`, `/etc/kubernetes`, `/var/lib/kubelet`, `/etc/systemd`
 - Image: `quay.io/abhilash_bs1/security-dashboard:latest`

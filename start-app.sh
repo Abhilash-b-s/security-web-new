@@ -73,13 +73,6 @@ setup_backend
 echo "[Backend] Starting on port 8000..."
 "$BASE_DIR/security-dashboard/venv/bin/uvicorn" main:app --host 0.0.0.0 --port 8000 &
 
-# Start Report Server
-echo "[Report Server] Starting on port 8081..."
-# We use the system python3 because venv might not be active in this shell context, 
-# although we could use "$VENV_DIR/bin/python3". 
-# But standard library http.server is enough.
-python3 -m http.server 8081 --directory "$BASE_DIR/new" & # Assuming new is relative to BASE_DIR which is /app
-
 # Start Frontend
 echo "[Frontend] Starting on port 5173..."
 cd "$BASE_DIR/security-dashboard/frontend"
@@ -89,7 +82,6 @@ echo ""
 echo "--------------------------------------------------"
 echo "Services is Running!"
 echo "Backend API   : http://localhost:8000/docs"
-echo "Report Server : http://localhost:8081"
 echo "Frontend UI   : http://localhost:5173"
 echo "--------------------------------------------------"
 echo "Press Ctrl+C to stop all services."

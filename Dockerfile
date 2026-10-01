@@ -61,15 +61,12 @@ COPY security-dashboard/backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy static assets and scripts (changes less frequently)
-COPY logo-mobile.webp /app/
-COPY security-policy-report.html /app/
 COPY start-app.sh /app/
 COPY scripts/ /app/scripts/
 COPY *_run_*.sh /app/
-COPY new/ /app/new/
 
 # Make scripts executable
-RUN chmod +x /app/*_run_*.sh /app/scripts/*.sh /app/start-app.sh
+RUN chmod +x /app/*_run_*.sh /app/scripts/*.sh /app/start-app.sh && mkdir -p /app/new
 
 # Copy backend code (changes more frequently)
 COPY security-dashboard/backend/ /app/security-dashboard/backend/
@@ -82,7 +79,7 @@ ENV PYTHONPATH=/app/security-dashboard/backend
 ENV APP_HOME=/app
 
 # Expose Port
-EXPOSE 8000 8081
+EXPOSE 8000
 
 # Run Uvicorn from the correct location
-CMD ["/bin/sh", "-c", "python3 -m http.server 8081 --directory /app/new & uvicorn security-dashboard.backend.main:app --host 0.0.0.0 --port 8000"]
+CMD ["uvicorn", "security-dashboard.backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

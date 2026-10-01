@@ -13,11 +13,9 @@ registries.json
 git_config.json
 suppressions.json
 
-# Scan output (only the two committed assets under new/ are tracked)
+# Scan output
 security-dashboard/backend/reports/
 new/*
-!new/logo-mobile.webp
-!new/security-policy-report.html
 
 # Local logs and editor noise
 *.log

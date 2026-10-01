@@ -19,11 +19,6 @@ spec:
       port: 8000
       targetPort: 8000
       nodePort: 30095
-    - name: reports
-      protocol: TCP
-      port: 8081
-      targetPort: 8081
-      nodePort: 30096
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -80,12 +75,11 @@ spec:
       hostPID: true
       serviceAccountName: security-dashboard-sa
       initContainers:
-        # The image ships two static files in /app/new; copy them onto the volume
-        # without overwriting anything already there.
+        # Create the report, run-history and state directories on the volume.
         - name: seed-data
           image: quay.io/abhilash_bs1/security-dashboard:latest
           imagePullPolicy: Always
-          command: ["sh", "-c", "mkdir -p /data/new /data/reports /data/state && cp -rn /app/new/. /data/new/"]
+          command: ["mkdir", "-p", "/data/new", "/data/reports", "/data/state"]
           volumeMounts:
             - name: data
               mountPath: /data
@@ -104,7 +98,6 @@ spec:
               value: "k8s.io"
           ports:
             - containerPort: 8000
-            - containerPort: 8081
           # CRITICAL: Mount socket to allow scanning the node's images
           # AND host directories for kube-bench
           volumeMounts:
@@ -170,16 +163,6 @@ spec:
                 name: security-dashboard
                 port:
                   number: 8000
-    - host: security-reports.10.10.0.35.nip.io
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: security-dashboard
-                port:
-                  number: 8081
 ---
 # Runs every scan (scan_type "all", sequential) twice a day through the dashboard API.
 # The scans execute inside the dashboard pod; this job only triggers them.

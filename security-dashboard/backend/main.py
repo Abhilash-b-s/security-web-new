@@ -5,7 +5,6 @@ from routers import scans, reports, files, settings, dashboard, suppressions
 from services import terminal
 
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
 import os
 
 app = FastAPI(
@@ -77,8 +76,6 @@ app.include_router(suppressions.router, prefix="/api/suppressions", tags=["suppr
 # Mount static files (React build)
 # Check if static directory exists (it will in Docker, might not locally)
 STATIC_DIR = os.getenv("STATIC_DIR", "/app/static")
-if os.path.exists(STATIC_DIR):
-    app.mount("/assets", StaticFiles(directory=f"{STATIC_DIR}/assets"), name="assets")
 
 # Mount new reports directory
 NEW_DIR = os.getenv("NEW_DIR", "/app/new")
@@ -113,26 +110,6 @@ async def health_check():
         "version": "1.0.0"
     }
 
-@app.get("/")
-async def serve_index():
-    # Serve index.html for root
-    if os.path.exists(f"{STATIC_DIR}/index.html"):
-        return FileResponse(f"{STATIC_DIR}/index.html")
-    return {"message": "Security Dashboard API is running (Frontend not found)"}
-
-# Catch-all for SPA routing (excluding API)
-@app.get("/{full_path:path}")
-async def serve_spa(full_path: str):
-    # If path starts with api/, return 404 naturally
-    if full_path.startswith("api/"):
-        return JSONResponse(status_code=404, content={"error": "Not Found"})
-    
-    # Check if a static file exists at this path
-    static_file_path = os.path.join(STATIC_DIR, full_path)
-    if os.path.exists(static_file_path) and os.path.isfile(static_file_path):
-        return FileResponse(static_file_path)
-    
-    # Serve index.html for any other route (client-side routing)
-    if os.path.exists(f"{STATIC_DIR}/index.html"):
-        return FileResponse(f"{STATIC_DIR}/index.html")
-    return {"error": "Frontend not found"}
+# Built UI last, so API routes and /new match first. StaticFiles rejects paths outside STATIC_DIR.
+if os.path.exists(STATIC_DIR):
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="ui")

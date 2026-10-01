@@ -197,7 +197,6 @@ docker build -t security-dashboard:latest .
 docker run -d \
   --name security-dashboard \
   -p 8000:8000 \
-  -p 8081:8081 \
   -v ~/.kube:/root/.kube:ro \
   -v /var/run/docker.sock:/var/run/docker.sock \
   security-dashboard:latest
@@ -384,7 +383,6 @@ volumeMounts:
 | Port | Service | Description |
 |------|---------|-------------|
 | 8000 | Backend API | FastAPI + Frontend SPA |
-| 8081 | Report Server | Static file server for reports |
 | 5173 | Dev Frontend | Vite dev server (local only) |
 
 ## License

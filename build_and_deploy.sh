@@ -4,10 +4,13 @@ set -euo pipefail
 IMAGE="quay.io/abhilash_bs1/security-dashboard:latest"
 DEPLOYMENT="security-dashboard"
 NAMESPACE="security-ops"
+# Ingress hosts are <name>.<INGRESS_IP>.nip.io; change this for another cluster
+INGRESS_IP="10.10.0.35"
 
 echo "================================================="
 echo "Build, Push, and Redeploy"
 echo "Image: $IMAGE"
+echo "Ingress IP: $INGRESS_IP"
 echo "================================================="
 
 echo "[1/4] Building Docker Image..."
@@ -25,7 +28,7 @@ fi
 
 
 echo "[3/4] Applying manifests and restarting Deployment..."
-kubectl apply -f "$(dirname "$0")/security-dashboard/k8s/dashboard.yaml"
+sed "s/10\.10\.0\.35/${INGRESS_IP}/g" "$(dirname "$0")/security-dashboard/k8s/dashboard.yaml" | kubectl apply -f -
 kubectl rollout restart deployment/"$DEPLOYMENT" -n "$NAMESPACE"
 
 echo "[4/4] Waiting for Rollout..."
