@@ -171,7 +171,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: security-dashboard.10.10.0.35.nip.io
+    - host: security-dashboard.10.20.28.109.nip.io
       http:
         paths:
           - path: /

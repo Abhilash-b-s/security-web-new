@@ -16,7 +16,7 @@ const PlayIcon = () => (
     <svg width="8" height="8" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l6 4-6 4z" fill="currentColor" /></svg>
 );
 
-export default function ScanControl({ onStartScan, isScanning, runningTypes = new Set(), onNavigateToSettings }) {
+export default function ScanControl({ activeTab, onStartScan, isScanning, runningTypes = new Set(), onNavigateToSettings }) {
     const [showPanel, setShowPanel] = useState(false);
     const [selectedScan, setSelectedScan] = useState(null);
     const [gitConfigReady, setGitConfigReady] = useState(null); // null=loading, true/false
@@ -27,6 +27,14 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
 
     const [lastRuns, setLastRuns] = useState({}); // scan_type -> latest report
     const [fullScan, setFullScan] = useState(SCAN_TYPES.map(t => t.id)); // scans a full ("all") run includes; Settings → Full scan
+
+    // The sidebar stays mounted across tabs, so its transient scan UI (confirm panel,
+    // prereq warning) would otherwise linger when the user navigates away. Clear it on tab change.
+    useEffect(() => {
+        setShowPanel(false);
+        setSelectedScan(null);
+        setPrereqWarning(null);
+    }, [activeTab]);
 
     useEffect(() => {
         checkGitConfig();

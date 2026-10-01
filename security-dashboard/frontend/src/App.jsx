@@ -7,7 +7,25 @@ import PolicyReports from './components/PolicyReports';
 import Settings from './components/Settings';
 import DashboardCharts from './components/DashboardCharts';
 import { REPORT_TABS } from './components/reportParts';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutGrid, FileText, Terminal, FileCheck, SlidersHorizontal, Sun, Moon, LogOut, ChevronDown } from 'lucide-react';
+
+// Path-based routing (react-router): each tab is a real URL, so refresh, back/forward and
+// bookmarks work. The Scan reports tab also carries its view (/policy/image); Event logs is /events.
+const TAB_PATHS = { dashboard: '/dashboard', policy: '/policy', reports: '/events', terminal: '/terminal', settings: '/settings' };
+const TAB_IDS = Object.keys(TAB_PATHS);
+const USER_TABS = ['dashboard', 'policy']; // what a non-superuser may open
+const REPORT_VIEWS = REPORT_TABS.map(t => t.id);
+const DEFAULT_VIEW = 'kyverno';
+const tabAllowed = (id, role) => (role === 'superuser' ? TAB_IDS : USER_TABS).includes(id);
+const defaultTab = (role) => (role === 'user' ? 'policy' : 'dashboard');
+const pathForTab = (tab, view) => (tab === 'policy' ? `/policy/${view || DEFAULT_VIEW}` : TAB_PATHS[tab]);
+const parsePath = (pathname) => {
+    const seg = pathname.replace(/^\/+/, '').split('/');
+    const tab = TAB_IDS.find(k => TAB_PATHS[k] === '/' + (seg[0] || '')) || null;
+    const view = (tab === 'policy' && REPORT_VIEWS.includes(seg[1])) ? seg[1] : null;
+    return { tab, view };
+};
 
 function App() {
     const [user, setUser] = useState(() => {
@@ -18,12 +36,11 @@ function App() {
         return null;
     });
 
-    const [activeTab, setActiveTab] = useState(() => {
-        if (user && user.role === 'user') {
-            return 'policy';
-        }
-        return 'dashboard';
-    });
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { tab: parsedTab, view: parsedView } = parsePath(location.pathname);
+    const activeTab = (parsedTab && user && tabAllowed(parsedTab, user.role)) ? parsedTab : defaultTab(user?.role);
+    const reportView = parsedView || DEFAULT_VIEW;
     const [logs, setLogs] = useState([]);
 
     // Sidebar width, dragged via the separator; remembered per browser.
@@ -60,7 +77,6 @@ function App() {
 
     // Nav counts and API status; refreshed on login and whenever a scan finishes.
     const [navRuns, setNavRuns] = useState(null);
-    const [reportView, setReportView] = useState('kyverno'); // which Scan reports page is open
     const [reportsOpen, setReportsOpen] = useState(true); // Scan reports sub-menu slid out
     const [apiUp, setApiUp] = useState(null);
     useEffect(() => {
@@ -103,6 +119,14 @@ function App() {
         localStorage.setItem('theme', theme);
     }, [theme]);
 
+    // Canonicalize the URL: a logged-in user on an unknown/disallowed path, bare "/", or
+    // "/policy" without a view is redirected to the valid path (which also puts the view in the URL).
+    useEffect(() => {
+        if (!user) return;
+        const want = pathForTab(activeTab, reportView);
+        if (location.pathname !== want) navigate(want, { replace: true });
+    }, [user, location.pathname, activeTab, reportView]);
+
     const toggleTheme = () => {
         setTheme(prev => prev === 'dark' ? 'light' : 'dark');
     };
@@ -110,17 +134,13 @@ function App() {
     const handleLogin = (userData) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
-        if (userData.role === 'user') {
-            setActiveTab('policy');
-        } else {
-            setActiveTab('dashboard');
-        }
+        navigate(pathForTab(defaultTab(userData.role)), { replace: true });
     };
 
     const handleLogout = () => {
         setUser(null);
         localStorage.removeItem('user');
-        setActiveTab('dashboard'); // Reset tab for next login
+        navigate('/', { replace: true });
     };
 
 
@@ -264,14 +284,14 @@ function App() {
         return <Login onLogin={handleLogin} />;
     }
 
-    const goOverview = () => setActiveTab('dashboard');
+    const goOverview = () => navigate('/dashboard');
     const runningCount = Math.max(serverRuns.length, isScanning ? 1 : 0);
     const anyRunning = runningCount > 0;
     const remoteRun = !isScanning && serverRuns[0];
 
     const NAV = [
         { id: 'dashboard', label: 'Overview', Icon: LayoutGrid, onClick: goOverview },
-        { id: 'policy', label: 'Scan reports', Icon: FileCheck, onClick: () => { if (activeTab === 'policy') setReportsOpen(o => !o); else { setActiveTab('policy'); setReportsOpen(true); } }, },
+        { id: 'policy', label: 'Scan reports', Icon: FileCheck, onClick: () => { if (activeTab === 'policy') setReportsOpen(o => !o); else { navigate(pathForTab('policy', reportView)); setReportsOpen(true); } }, },
         { id: 'reports', label: 'Event logs', Icon: FileText, superOnly: true, count: anyRunning ? `${runningCount} running` : navRuns || null, countRun: anyRunning },
         { id: 'terminal', label: 'Terminal', Icon: Terminal, superOnly: true },
         { id: 'settings', label: 'Settings', Icon: SlidersHorizontal, superOnly: true },
@@ -299,7 +319,7 @@ function App() {
                 {remoteRun && (
                     <>
                         <div className="w-px h-[18px]" style={{ background: 'var(--header-line)' }} />
-                        <button type="button" onClick={() => setActiveTab('reports')} title="Show progress in Event logs"
+                        <button type="button" onClick={() => navigate('/events')} title="Show progress in Event logs"
                             className="flex items-center gap-2 text-xs bg-transparent border-0 p-0 cursor-pointer underline-offset-2 hover:underline" style={{ color: 'var(--header-ink)' }}>
                             <span className="w-1.5 h-1.5 animate-pulse" style={{ background: '#7FA3D6' }} />
                             {SCAN_LABELS[remoteRun.scan_type] ?? remoteRun.scan_type} running{serverRuns.length > 1 ? ` (+${serverRuns.length - 1})` : ''}… <span style={{ color: 'var(--header-mute)' }}>View progress</span>
@@ -310,7 +330,7 @@ function App() {
                 {isScanning && activeScanType && (
                     <>
                         <div className="w-px h-[18px]" style={{ background: 'var(--header-line)' }} />
-                        <button type="button" onClick={() => setActiveTab('reports')} title="Show progress in Event logs"
+                        <button type="button" onClick={() => navigate('/events')} title="Show progress in Event logs"
                             className="flex items-center gap-2 text-xs bg-transparent border-0 p-0 cursor-pointer underline-offset-2 hover:underline" style={{ color: 'var(--header-ink)' }}>
                             <span className="w-1.5 h-1.5 animate-pulse" style={{ background: '#7FA3D6' }} />
                             {SCAN_LABELS[activeScanType] ?? activeScanType} running… <span style={{ color: 'var(--header-mute)' }}>View progress</span>
@@ -350,7 +370,7 @@ function App() {
                             <React.Fragment key={id}>
                                 <button
                                     type="button"
-                                    onClick={onClick || (() => setActiveTab(id))}
+                                    onClick={onClick || (() => navigate(TAB_PATHS[id]))}
                                     className={`navlink ${activeTab === id ? 'on' : ''}`}
                                     aria-current={activeTab === id ? 'page' : undefined}
                                     aria-expanded={id === 'policy' ? activeTab === 'policy' && reportsOpen : undefined}
@@ -377,7 +397,7 @@ function App() {
                                                         tabIndex={activeTab === 'policy' && reportsOpen ? 0 : -1}
                                                         className={`subnav-item ${on ? 'on' : ''}`}
                                                         aria-current={on ? 'page' : undefined}
-                                                        onClick={() => { setReportView(t.id); setActiveTab('policy'); }}
+                                                        onClick={() => navigate(`/policy/${t.id}`)}
                                                     >
                                                         <span className="truncate">{t.label}</span>
                                                     </button>
@@ -392,12 +412,13 @@ function App() {
 
                     {user.role === 'superuser' && (
                         <ScanControl
+                            activeTab={activeTab}
                             onStartScan={startScan}
                             isScanning={anyRunning}
                             runningTypes={new Set([...serverRuns.map(r => r.scan_type), isScanning && activeScanType])}
                             onNavigateToSettings={(section) => {
                                 setSettingsSection(section);
-                                setActiveTab('settings');
+                                navigate('/settings');
                             }}
                         />
                     )}

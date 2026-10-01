@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from pathlib import Path
 from routers import scans, reports, files, settings, dashboard, suppressions, auth as auth_router_mod
 from services import terminal
 import auth
@@ -176,6 +177,19 @@ async def health_check():
         "version": "1.0.0"
     }
 
-# Built UI last, so API routes and /new match first. StaticFiles rejects paths outside STATIC_DIR.
+# Serve the built SPA (registered last, so /api/* and /new/* match first).
+# A real asset file is returned directly (path-traversal guarded via the parents check);
+# any other non-API path returns index.html so client-side routes like /policy/image and
+# /events resolve on refresh or direct load. Never opens a user-controlled path outside STATIC_DIR.
 if os.path.exists(STATIC_DIR):
-    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="ui")
+    _STATIC_ROOT = Path(STATIC_DIR).resolve()
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        if full_path.startswith(("api/", "new/")):
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+        if full_path:
+            target = (_STATIC_ROOT / full_path).resolve()
+            if _STATIC_ROOT in target.parents and target.is_file():
+                return FileResponse(target)
+        return FileResponse(_STATIC_ROOT / "index.html")
