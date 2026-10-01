@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from models import (RegistryCredential, GitConfig, RegistryDeleteResponse, ErrorResponse,
-                     RegistryCredentialResponse, GitConfigResponse)
+                     RegistryCredentialResponse, GitConfigResponse, FullScanConfig, ScanType)
 from typing import List
 import json
 import os
@@ -284,3 +284,43 @@ async def update_git_config(config: GitConfig):
     save_git_config(config)
     # Return without token
     return {"username": config.username, "repos": config.repos}
+
+# Run order for a full scan; source code goes last because it is the slowest.
+FULL_SCAN_ORDER = [ScanType.TRIVY_SBOM, ScanType.KYVERNO, ScanType.KUBE_BENCH, ScanType.TRIVY_IMAGE,
+                   ScanType.NMAP, ScanType.TRIVY_CLUSTER, ScanType.TRIVY_REPO]
+FULL_SCAN_FILE = os.path.join(STATE_DIR, "full_scan.json")
+
+def load_full_scan() -> List[ScanType]:
+    """Scans a full scan runs, in run order. Defaults to every scan when nothing is saved."""
+    try:
+        with open(FULL_SCAN_FILE) as f:
+            picked = set(FullScanConfig(**json.load(f)).scans)
+    except Exception:
+        return list(FULL_SCAN_ORDER)
+    return [s for s in FULL_SCAN_ORDER if s in picked]
+
+@router.get(
+    "/full-scan",
+    response_model=FullScanConfig,
+    summary="Get Full Scan Selection",
+    description="Scan types included when a scan is started with `scan_type: all` (Run all scans and the scheduled CronJob).",
+    tags=["settings"]
+)
+async def get_full_scan():
+    return {"scans": load_full_scan()}
+
+@router.post(
+    "/full-scan",
+    response_model=FullScanConfig,
+    summary="Update Full Scan Selection",
+    description="Choose which scan types a full scan runs. Order is fixed by the server. "
+                "The source code scan still runs only when Git repositories are configured.",
+    tags=["settings"]
+)
+async def update_full_scan(config: FullScanConfig):
+    scans = [s for s in FULL_SCAN_ORDER if s in set(config.scans)]
+    if not scans:
+        raise HTTPException(status_code=422, detail="Select at least one scan")
+    with open(FULL_SCAN_FILE, "w") as f:
+        json.dump({"scans": [s.value for s in scans]}, f, indent=2)
+    return {"scans": scans}

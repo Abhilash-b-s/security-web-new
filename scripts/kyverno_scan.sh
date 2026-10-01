@@ -35,11 +35,8 @@ for f in files:
 echo "Analyzing cluster resources against security policies..."
 # Run kyverno apply
 # Note: We capture stdout to the file, but let stderr go to console for progress/warnings
-kyverno apply "$KYVERNO_POLICY_DIR" --resource ./all-resources.yaml --policy-report > policy-report.yaml 2>&1 || true
-
-# Legacy workaround removed: Kyverno 1.16+ outputs clean YAML, no need to strip headers.
-# tail -n +6 policy-report.yaml > policy-report.clean.yaml
-# mv policy-report.clean.yaml policy-report.yaml
+# Kyverno 1.19+ prints "Warning: ... ClusterPolicy is deprecated" lines on stdout ahead of the report; drop them.
+kyverno apply "$KYVERNO_POLICY_DIR" --resource ./all-resources.yaml --policy-report 2>&1 | grep -v '^Warning:' > policy-report.yaml || true
 
 echo "Verifying policy compliance report..."
 python3 -c "import yaml; yaml.safe_load(open('policy-report.yaml'))" && echo "Policy report validated successfully"

@@ -26,6 +26,7 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
     const [open, setOpen] = useState(true); // scan list slides out from the Start scanning button
 
     const [lastRuns, setLastRuns] = useState({}); // scan_type -> latest report
+    const [fullScan, setFullScan] = useState(SCAN_TYPES.map(t => t.id)); // scans a full ("all") run includes; Settings → Full scan
 
     useEffect(() => {
         checkGitConfig();
@@ -44,7 +45,8 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
 
     // Settings fires this after a git/registry save so "Set up" clears without a reload.
     useEffect(() => {
-        const recheck = () => { checkGitConfig(); checkRegistryConfig(); };
+        const recheck = () => { checkGitConfig(); checkRegistryConfig(); checkFullScan(); };
+        checkFullScan();
         window.addEventListener('scan-settings-changed', recheck);
         return () => window.removeEventListener('scan-settings-changed', recheck);
     }, []);
@@ -63,6 +65,10 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
         }
     };
 
+    const checkFullScan = () => {
+        fetch('/api/settings/full-scan').then(r => (r.ok ? r.json() : null)).then(d => d && setFullScan(d.scans)).catch(() => { });
+    };
+
     const checkRegistryConfig = async () => {
         try {
             const response = await fetch('/api/settings/registries');
@@ -77,6 +83,16 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
     };
 
     const handleStartScan = (scanType) => {
+        if (scanType.id === 'all') {
+            setSelectedScan({
+                id: 'all',
+                label: 'Full scan',
+                about: 'Runs the selected scans one after another.',
+                includes: SCAN_TYPES.filter(t => fullScan.includes(t.id)),
+            });
+            setShowPanel(true);
+            return;
+        }
         if (scanType.id === 'trivy-repo' && !gitConfigReady) {
             setPrereqWarning('git');
             return;
@@ -102,6 +118,7 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
         setSelectedScan(null);
     };
 
+    const anyRunning = [...runningTypes].some(Boolean); // App adds `false` when no local scan is active
     const goSettings = (section) => { setPrereqWarning(null); onNavigateToSettings?.(section); };
 
     return (
@@ -145,8 +162,9 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
                     || (type.id === 'trivy-image' && registryConfigReady === false);
                 const picked = showPanel && selectedScan?.id === type.id;
                 // Different scans can run in parallel; the same scan can't (its script writes to a fixed output path).
-                // An "all" run (e.g. the scheduled CronJob) runs every scan; source code only when Git settings are complete.
-                const running = runningTypes.has(type.id) || (runningTypes.has('all') && (type.id !== 'trivy-repo' || gitConfigReady));
+                // An "all" run (Run all scans or the scheduled CronJob) runs the scans picked in Settings → Full scan;
+                // source code only when Git settings are complete.
+                const running = runningTypes.has(type.id) || (runningTypes.has('all') && fullScan.includes(type.id) && (type.id !== 'trivy-repo' || gitConfigReady));
                 // Trivy scans share one cache/DB and block each other, so only one runs at a time.
                 const trivyBusy = !running && type.id.startsWith('trivy-') && [...runningTypes].some(t => t === 'all' || (typeof t === 'string' && t.startsWith('trivy-')));
                 return (
@@ -172,8 +190,11 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
             })}
 
             <div className="mx-3 mt-4">
-                <button type="button" className="btn w-full" disabled title="Run All Scans (Disabled)">
-                    <PlayIcon /> Run all scans
+                {/* Blocked while anything runs: a full scan reuses every scan's fixed output path and the shared Trivy cache. */}
+                <button type="button" className="btn w-full" onClick={() => handleStartScan({ id: 'all' })} tabIndex={open ? 0 : -1}
+                    disabled={anyRunning || !fullScan.length}
+                    title={anyRunning ? 'Wait for running scans to finish' : `Runs ${fullScan.length} of ${SCAN_TYPES.length} scans`}>
+                    {runningTypes.has('all') ? 'Full scan running…' : <><PlayIcon /> Run all scans <span className="num text-[11px]" style={{ color: 'var(--mute-2)' }}>{fullScan.length}/{SCAN_TYPES.length}</span></>}
                 </button>
             </div>
 
@@ -188,6 +209,7 @@ export default function ScanControl({ onStartScan, isScanning, runningTypes = ne
                 scan={selectedScan}
                 lastRun={selectedScan ? lastRuns[selectedScan.id] : null}
                 registryCount={registryCount}
+                onEditIncludes={() => { cancelScan(); goSettings('fullscan'); }}
             />
         </>
     );

@@ -121,7 +121,7 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
                                     {new Date(live.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                                 <span className="min-w-0">
-                                    <span className="block font-medium text-[13px] truncate">{live.type}</span>
+                                    <span className="block font-medium text-[13px] truncate">{live.type === 'all' ? 'Full scan' : live.type}</span>
                                     <span className="block num text-[10.5px]" style={{ color: 'var(--faint)' }}>{live.scanId.slice(0, 8)} · live</span>
                                 </span>
                                 {live.isScanning

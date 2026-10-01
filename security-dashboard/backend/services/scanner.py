@@ -267,13 +267,14 @@ async def run_scan_task(scan_id: str, request: ScanRequest):
     try:
         if request.scan_type == ScanType.ALL:
 
-            scans_to_run = [ScanType.TRIVY_SBOM, ScanType.KYVERNO, ScanType.KUBE_BENCH, ScanType.TRIVY_IMAGE, ScanType.NMAP, ScanType.TRIVY_CLUSTER]
-            # Source code runs last (slowest), and only once Git settings are complete in Settings.
-            from routers.settings import load_git_config
+            # Scans picked in Settings → Full scan (every scan by default).
+            from routers.settings import load_git_config, load_full_scan
+            scans_to_run = load_full_scan()
+            await manager.broadcast(f"Full scan includes: {', '.join(s.value for s in scans_to_run)}\n", scan_id)
+            # Source code runs only once Git settings are complete in Settings.
             git = load_git_config()
-            if git.username and git.token and any(r.strip() and not r.strip().startswith('#') for r in (git.repos or '').split('\n')):
-                scans_to_run.append(ScanType.TRIVY_REPO)
-            else:
+            if ScanType.TRIVY_REPO in scans_to_run and not (git.username and git.token and any(r.strip() and not r.strip().startswith('#') for r in (git.repos or '').split('\n'))):
+                scans_to_run.remove(ScanType.TRIVY_REPO)
                 await manager.broadcast("Skipping source code scan: Git repositories are not configured in Settings.\n", scan_id)
             for s_type in scans_to_run:
                 res = await run_single_scan(s_type, scan_id, request)

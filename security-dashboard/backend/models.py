@@ -151,6 +151,10 @@ class GitConfigResponse(BaseModel):
             }
         }
 
+class FullScanConfig(BaseModel):
+    """Scans included when scan_type is "all" (Run all scans and the scheduled CronJob)."""
+    scans: List[ScanType] = Field(..., description="Scan types to run; order is fixed by the server and 'all' is ignored")
+
 class RegistryDeleteResponse(BaseModel):
     """Response when a registry is deleted."""
     status: str = Field(..., description="Operation status")

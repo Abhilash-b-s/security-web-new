@@ -58,9 +58,9 @@ The dashboard integrates the following security tools:
 - **Architecture**: RESTful API with real-time WebSocket endpoints
 
 ### Security Tools (Integrated)
-- **Trivy** v0.68.2 - Vulnerability scanner for containers, code, and IaC
-- **Kube-Bench** v0.14.0 - CIS Kubernetes Benchmark checker
-- **Kyverno CLI** v1.16.1 - Kubernetes policy validation
+- **Trivy** v0.74.0 - Vulnerability scanner for containers, code, and IaC
+- **Kube-Bench** v0.16.0 - CIS Kubernetes Benchmark checker
+- **Kyverno CLI** v1.19.1 - Kubernetes policy validation
 - **Nmap** - Network scanning and security auditing
 - **Kubectl** - Kubernetes command-line tool (latest stable)
 
@@ -349,9 +349,9 @@ APP_HOME=/app                   # Application home directory
 PYTHONPATH=/app/security-dashboard/backend
 
 # Scan Tool Versions (Build-time)
-TRIVY_VERSION=0.68.2
-KUBE_BENCH_VERSION=0.14.0
-KYVERNO_VERSION=1.16.1
+TRIVY_VERSION=0.74.0
+KUBE_BENCH_VERSION=0.16.0
+KYVERNO_VERSION=1.19.1
 ```
 
 ### Volume Mounts

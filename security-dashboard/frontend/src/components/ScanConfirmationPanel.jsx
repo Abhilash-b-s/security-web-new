@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
 // Side sheet that opens from the edge of the left rail (264px wide, below the 64px header).
-export default function ScanConfirmationPanel({ isOpen, onClose, onConfirm, scanLabel, scan, lastRun, registryCount }) {
+export default function ScanConfirmationPanel({ isOpen, onClose, onConfirm, scanLabel, scan, lastRun, registryCount, onEditIncludes }) {
     useEffect(() => {
         if (!isOpen) return;
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -36,7 +36,12 @@ export default function ScanConfirmationPanel({ isOpen, onClose, onConfirm, scan
                 <div className="flex-1 overflow-y-auto px-[22px] pt-1.5 pb-4">
                     <dl className="grid grid-cols-[120px_1fr] text-[13px] m-0">
                         {[
-                            ['Scanner', <span className="num text-xs">{scan?.tool}</span>],
+                            scan?.includes
+                                ? ['Includes', <span>
+                                    {scan.includes.map(t => <span key={t.id} className="block">{t.label} <span className="num text-[11px]" style={{ color: 'var(--mute-2)' }}>{t.tool}</span></span>)}
+                                    <button type="button" className="lnk mt-1" onClick={onEditIncludes}>Change in Settings</button>
+                                  </span>]
+                                : ['Scanner', <span className="num text-xs">{scan?.tool}</span>],
                             ['Target', 'Kubernetes cluster from the mounted kubeconfig'],
                             ...(scan?.id === 'trivy-image' ? [['Registries', `${registryCount} configured`]] : []),
                             ['Last run', lastRun

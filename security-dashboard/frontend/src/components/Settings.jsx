@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit } from 'lucide-react';
 import PageHead from './PageHead';
 import PasswordInput from './PasswordInput';
+import { SCAN_TYPES } from './ScanControl';
 
 export default function Settings({ initialSection = null }) {
     const [registries, setRegistries] = useState([]);
@@ -44,6 +45,25 @@ export default function Settings({ initialSection = null }) {
         }
     };
     useEffect(() => { fetchSuppressions(); }, []);
+
+    // Full scan: which scans "Run all scans" and the scheduled CronJob include
+    const [fullScan, setFullScan] = useState([]);
+    const [fullScanMsg, setFullScanMsg] = useState(null); // { ok, text }
+    useEffect(() => {
+        fetch('/api/settings/full-scan').then(r => (r.ok ? r.json() : null)).then(d => d && setFullScan(d.scans)).catch(() => { });
+    }, []);
+    const toggleFullScan = (id) => { setFullScanMsg(null); setFullScan(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])); };
+    const saveFullScan = async () => {
+        try {
+            const res = await fetch('/api/settings/full-scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scans: fullScan }) });
+            if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+            setFullScan((await res.json()).scans);
+            setFullScanMsg({ ok: true, text: 'Full scan selection saved.' });
+            window.dispatchEvent(new Event('scan-settings-changed'));
+        } catch (err) {
+            setFullScanMsg({ ok: false, text: `Failed to save: ${err.message}` });
+        }
+    };
 
     useEffect(() => {
         if (initialSection) {
@@ -191,6 +211,7 @@ export default function Settings({ initialSection = null }) {
     const navItems = [
         { id: 'registry', label: 'Container registries', count: registries.length || null },
         { id: 'git', label: 'Git repositories' },
+        { id: 'fullscan', label: 'Full scan', count: fullScan.length ? `${fullScan.length}/${SCAN_TYPES.length}` : null },
         { id: 'suppressions', label: 'Suppressions', count: suppressions.length || null },
     ];
 
@@ -315,6 +336,32 @@ export default function Settings({ initialSection = null }) {
                                 </table>
                             </div>
                         )}
+                    </section>
+                )}
+
+                {activeSection === 'fullscan' && (
+                    <section className="sheet max-w-3xl">
+                        <div className="phead">
+                            <h2>Full scan</h2>
+                            <span className="meta">Scans run by Run all scans and the scheduled CronJob, one after another</span>
+                        </div>
+                        <div className="flex flex-col p-2">
+                            {SCAN_TYPES.map(t => (
+                                <label key={t.id} className="flex items-start gap-3 px-3 py-2.5 rounded-md cursor-pointer" style={{ borderBottom: '1px solid var(--line-soft)' }}>
+                                    <input type="checkbox" className="mt-1" checked={fullScan.includes(t.id)} onChange={() => toggleFullScan(t.id)} />
+                                    <span className="flex-1 min-w-0">
+                                        <span className="block text-[13px] font-medium" style={{ color: 'var(--ink)' }}>{t.label} <span className="num text-[11px] font-normal" style={{ color: 'var(--mute-2)' }}>{t.tool}</span></span>
+                                        <span className="block text-[12px]" style={{ color: 'var(--mute)' }}>{t.about}{t.id === 'trivy-repo' && ' Skipped when Git repositories are not configured.'}</span>
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                        {fullScanMsg && <div className={`note ${fullScanMsg.ok ? 'note-ok' : 'note-crit'} mx-5`}>{fullScanMsg.text}</div>}
+                        <div className="flex items-center gap-2.5 px-5 py-3" style={{ borderTop: '1px solid var(--line-soft)' }}>
+                            <span className="num text-[11.5px]" style={{ color: 'var(--mute-2)' }}>{fullScan.length} of {SCAN_TYPES.length} selected</span>
+                            <div className="flex-1" />
+                            <button type="button" className="btn btn-primary" disabled={!fullScan.length} onClick={saveFullScan}>Save selection</button>
+                        </div>
                     </section>
                 )}
 

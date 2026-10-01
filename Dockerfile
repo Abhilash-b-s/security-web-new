@@ -16,9 +16,9 @@ RUN npm run build
 FROM python:3.12-slim
 
 # Build arguments for version management
-ARG TRIVY_VERSION=0.69.3
-ARG KUBE_BENCH_VERSION=0.14.0
-ARG KYVERNO_VERSION=1.16.1
+ARG TRIVY_VERSION=0.74.0
+ARG KUBE_BENCH_VERSION=0.16.0
+ARG KYVERNO_VERSION=1.19.1
 
 # Install system dependencies and security tools in a single layer
 # - nmap: Network scanning
