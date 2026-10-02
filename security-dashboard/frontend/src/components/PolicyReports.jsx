@@ -971,7 +971,7 @@ export default function PolicyReports({ activeView }) {
           <table className="ctable">
             <thead><tr>
               <SortTh label="Namespace" k="namespace" sort={nSort} onSort={onNSort} />
-              <SortTh label="Host" k="fqdn" sort={nSort} onSort={onNSort} />
+              <SortTh label="Host" k="fqdn" sort={nSort} onSort={onNSort} className="w-[240px]" />
               <SortTh label="Port" k="port" sort={nSort} onSort={onNSort} className="w-[80px]" />
               <th>Accepted ciphers</th>
               <SortTh label="Weak ciphers" k="weakCount" sort={nSort} onSort={onNSort} />
@@ -980,10 +980,10 @@ export default function PolicyReports({ activeView }) {
               {nPaging.slice.map((r, i) => (
                 <tr key={i}>
                   <td className="num text-xs">{r.namespace}</td>
-                  <td style={{ color: 'var(--accent-text)' }}>{r.fqdn}</td>
+                  <td className="w-[240px] max-w-[240px] break-all" style={{ color: 'var(--accent-text)' }}>{r.fqdn}</td>
                   <td className="num text-xs">{r.port}</td>
-                  <td className="max-w-[420px]"><div className="flex flex-wrap gap-1">{r.accepted.map(c => <span key={c} className="badge badge-ok num !font-normal !whitespace-normal break-all">{c}</span>)}</div></td>
-                  <td className="max-w-[320px]">{r.weak.length ? <div className="flex flex-wrap gap-1">{r.weak.map(c => <span key={c} className="badge badge-crit num !font-normal !whitespace-normal break-all">{c}</span>)}</div> : <span style={{ color: 'var(--faint)' }}>None</span>}</td>
+                  <td><div className="flex flex-wrap gap-1">{r.accepted.map(c => <span key={c} className="badge badge-ok num !font-normal !whitespace-normal break-all">{c}</span>)}</div></td>
+                  <td>{r.weak.length ? <div className="flex flex-wrap gap-1">{r.weak.map(c => <span key={c} className="badge badge-crit num !font-normal !whitespace-normal break-all">{c}</span>)}</div> : <span style={{ color: 'var(--faint)' }}>None</span>}</td>
                 </tr>
               ))}
               {nmapRows.length === 0 && <EmptyRow cols={5}>{nmapAll.length ? 'No services match these filters.' : 'No network scan data yet. Run the Network exposure scan.'}</EmptyRow>}

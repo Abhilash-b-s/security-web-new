@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PageHead from './PageHead';
 import HistoryCharts, { computeSecurityScore } from './HistoryCharts';
 
@@ -11,10 +12,10 @@ const SEV = [
 ];
 
 const VULN_SOURCES = [
-    { key: 'trivyImage', name: 'Image vulnerabilities' },
-    { key: 'trivySbom', name: 'SBOM inventory' },
-    { key: 'cluster', name: 'Cluster risks' },
-    { key: 'trivyRepo', name: 'Source code' },
+    { key: 'trivyImage', name: 'Image vulnerabilities', view: 'image' },
+    { key: 'trivySbom', name: 'SBOM inventory', view: 'sbom' },
+    { key: 'trivyRepo', name: 'Source code', view: 'trivy-repo' },
+    { key: 'cluster', name: 'Cluster risks', view: 'cluster' },
 ];
 
 function getScoreStyle(score) {
@@ -190,17 +191,17 @@ export default function DashboardCharts() {
 
     const compRows = [
         {
-            name: 'Policy compliance', available: d.kyverno.available, total: d.kyverno.total,
+            name: 'Policy compliance', view: 'kyverno', available: d.kyverno.available, total: d.kyverno.total,
             pass: d.kyverno.counts.PASS || 0, warn: d.kyverno.counts.WARN || 0, fail: d.kyverno.counts.FAIL || 0,
             other: (d.kyverno.counts.ERROR || 0) + (d.kyverno.counts.SKIP || 0), otherLabel: 'error / skip',
         },
         {
-            name: 'CIS benchmark', available: d.kubebench.available, total: d.kubebench.total,
+            name: 'CIS benchmark', view: 'cis', available: d.kubebench.available, total: d.kubebench.total,
             pass: d.kubebench.counts.PASS || 0, warn: d.kubebench.counts.WARN || 0, fail: d.kubebench.counts.FAIL || 0,
             other: d.kubebench.counts.INFO || 0, otherLabel: 'info',
         },
         {
-            name: 'Network exposure', available: d.nmap.available, total: d.nmap.total,
+            name: 'Network exposure', view: 'nmap', available: d.nmap.available, total: d.nmap.total,
             pass: d.nmap.total - d.nmap.servicesWithWeakCiphers, warn: null, fail: d.nmap.servicesWithWeakCiphers,
             other: null, unit: 'services scanned',
         },
@@ -279,7 +280,7 @@ export default function DashboardCharts() {
                         <tbody>
                             {vulnRows.map(r => (
                                 <tr key={r.key}>
-                                    <td className="whitespace-nowrap"><span className="font-medium">{r.name}</span></td>
+                                    <td className="whitespace-nowrap"><Link to={`/policy/${r.view}`} className="font-medium hover:underline" style={{ color: 'inherit' }} title={`Open the ${r.name} report`}>{r.name}</Link></td>
                                     {r.available ? (
                                         <>
                                             {SEV.map(s => <td key={s.key} className="r num" style={sevCell(r.c[s.key] || 0, s.key)}>{r.c[s.key] || 0}</td>)}
@@ -329,7 +330,7 @@ export default function DashboardCharts() {
                                     const rate = r.available ? pct(r.pass, r.total) : null;
                                     return (
                                         <tr key={r.name}>
-                                            <td className="whitespace-nowrap"><span className="font-medium">{r.name}</span></td>
+                                            <td className="whitespace-nowrap"><Link to={`/policy/${r.view}`} className="font-medium hover:underline" style={{ color: 'inherit' }} title={`Open the ${r.name} report`}>{r.name}</Link></td>
                                             {r.available ? (
                                                 <>
                                                     <td className="r num" style={{ color: 'var(--ok)' }}>{r.pass}</td>

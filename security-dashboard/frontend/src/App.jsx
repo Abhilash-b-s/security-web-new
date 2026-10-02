@@ -18,7 +18,7 @@ const USER_TABS = ['dashboard', 'policy']; // what a non-superuser may open
 const REPORT_VIEWS = REPORT_TABS.map(t => t.id);
 const DEFAULT_VIEW = 'kyverno';
 const tabAllowed = (id, role) => (role === 'superuser' ? TAB_IDS : USER_TABS).includes(id);
-const defaultTab = (role) => (role === 'user' ? 'policy' : 'dashboard');
+const defaultTab = () => 'dashboard'; // every role lands on Overview
 const pathForTab = (tab, view) => (tab === 'policy' ? `/policy/${view || DEFAULT_VIEW}` : TAB_PATHS[tab]);
 const parsePath = (pathname) => {
     const seg = pathname.replace(/^\/+/, '').split('/');

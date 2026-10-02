@@ -5,11 +5,11 @@ import ScanConfirmationPanel from './ScanConfirmationPanel';
 export const SCAN_TYPES = [
     { id: 'trivy-image', label: 'Image vulnerabilities', tool: 'trivy image', group: 'Workloads', script: '2_run_trivy_image.sh', about: 'Scans the container images running in the cluster for known CVEs.' },
     { id: 'trivy-sbom', label: 'SBOM inventory', tool: 'trivy sbom', group: 'Workloads', script: '1_run_trivy_sbom.sh', about: 'Builds a software bill of materials for each image and checks it for vulnerabilities.' },
-    { id: 'trivy-cluster', label: 'Cluster risks', tool: 'trivy k8s', group: 'Cluster', script: '5_run_trivy_cluster.sh', about: 'Checks Kubernetes resources for misconfigurations, secrets and vulnerable workloads.' },
-    { id: 'kube-bench', label: 'CIS benchmark', tool: 'kube-bench', group: 'Cluster', script: '4_run_kube_bench.sh', about: 'Runs the CIS Kubernetes Benchmark checks against the cluster nodes.' },
     { id: 'kyverno', label: 'Policy compliance', tool: 'kyverno', group: 'Cluster', script: '6_run_kyverno.sh', about: 'Collects Kyverno policy reports for every namespace.' },
     { id: 'nmap', label: 'Network exposure', tool: 'nmap', group: 'Network', script: '3_run_nmap.sh', about: 'Probes cluster services for open ports and weak TLS ciphers.' },
     { id: 'trivy-repo', label: 'Source code', tool: 'trivy repo', group: 'Source', script: '7_run_trivy_repo.sh', about: 'Clones the configured Git repositories and scans them for vulnerabilities and secrets.' },
+    { id: 'kube-bench', label: 'CIS benchmark', tool: 'kube-bench', group: 'Cluster', script: '4_run_kube_bench.sh', about: 'Runs the CIS Kubernetes Benchmark checks against the cluster nodes.' },
+    { id: 'trivy-cluster', label: 'Cluster risks', tool: 'trivy k8s', group: 'Cluster', script: '5_run_trivy_cluster.sh', about: 'Checks Kubernetes resources for misconfigurations, secrets and vulnerable workloads.' },
 ];
 
 const PlayIcon = () => (
