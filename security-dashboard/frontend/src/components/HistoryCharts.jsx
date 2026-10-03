@@ -82,7 +82,7 @@ function linePath(values, x, y) {
 function Tooltip({ x, y, children }) {
     return (
         <div className="absolute z-10 pointer-events-none rounded px-2.5 py-2 text-[11.5px] leading-[17px] whitespace-nowrap shadow-lg"
-            style={{ left: x, top: y, background: '#1B1D1F', color: '#F6F7F9' }} role="status">
+            style={{ left: x, top: y, background: '#1B1D1F', color: '#FFFFFF' }} role="status">
             {children}
         </div>
     );
@@ -91,7 +91,7 @@ const TipRow = ({ color, value, label }) => (
     <div className="flex items-center gap-1.5">
         {color && <span className="inline-block w-2.5 h-0.5" style={{ background: color }} />}
         <b className="num font-medium" style={{ color: '#FFFFFF' }}>{value}</b>
-        <span style={{ color: '#C5CBD3' }}>{label}</span>
+        <span style={{ color: '#FFFFFF' }}>{label}</span>
     </div>
 );
 const Key = ({ color, label, line }) => (
@@ -238,7 +238,7 @@ function NewResolved({ days }) {
             </svg>
             {hover != null && (
                 <Tooltip x={Math.min(w - 150, padL + hover * band + band + 6)} y={16}>
-                    <div style={{ color: '#C5CBD3' }}>{dayLabel(days[hover].date)}</div>
+                    <div style={{ color: '#FFFFFF' }}>{dayLabel(days[hover].date)}</div>
                     <TipRow color="var(--viz-new)" value={fmt(days[hover].new)} label="new" />
                     <TipRow color="var(--viz-resolved)" value={fmt(days[hover].resolved)} label="resolved" />
                 </Tooltip>
@@ -300,7 +300,7 @@ function LineChart({ series, dates, yMax, unit = '', target }) {
             </svg>
             {hover != null && (
                 <Tooltip x={Math.min(w - 170, x(hover) + 12)} y={20}>
-                    <div style={{ color: '#C5CBD3' }}>{dayLabel(dates[hover])}</div>
+                    <div style={{ color: '#FFFFFF' }}>{dayLabel(dates[hover])}</div>
                     {series.map(s => <TipRow key={s.name} color={s.color} value={s.values[hover] == null ? '—' : `${fmt(s.values[hover])}${unit}`} label={s.name} />)}
                 </Tooltip>
             )}
@@ -349,7 +349,7 @@ function Heatmap({ days }) {
             </svg>
             {hover && (
                 <Tooltip x={Math.min(iw - 190, hover.x + cellW + 20)} y={hover.y + 34}>
-                    <div style={{ color: '#C5CBD3' }}>{hover.name} · {dayLabel(hover.date)}</div>
+                    <div style={{ color: '#FFFFFF' }}>{hover.name} · {dayLabel(hover.date)}</div>
                     <TipRow value={hover.runs} label="runs" />
                     <TipRow value={hover.failed} label="failed" />
                 </Tooltip>

@@ -15,10 +15,10 @@
   --line-panel: #DDE1E6;
   --line-strong: #C5CBD3;
   --ink: #000000;
-  --ink-2: #0A0A0A;
-  --mute: #33363A;
-  --mute-2: #45494D;
-  --faint: #8A8D90;
+  --ink-2: #000000;
+  --mute: #000000;
+  --mute-2: #000000;
+  --faint: #000000;
   --accent: #1F4E8C;
   --accent-strong: #163A69;
   --accent-text: #1F4E8C;
@@ -30,8 +30,8 @@
   --btn-line: #D5DAE0;
   --btn-line-bottom: #BCC3CC;
   --header: #1B1D1F;
-  --header-ink: #E9E7E1;
-  --header-mute: #A3A6A9;
+  --header-ink: #FFFFFF;
+  --header-mute: #FFFFFF;
   --header-line: #45494D;
   --header-field: #2A2D30;
   --crit: #9B1C1C;
@@ -74,11 +74,11 @@
   --line-soft: #313338;
   --line-panel: #383A40;
   --line-strong: #4A4D53;
-  --ink: #F7F6F2;
-  --ink-2: #ECEAE5;
-  --mute: #F0EEE9;
-  --mute-2: #E6E4DF;
-  --faint: #D2D0CB;
+  --ink: #FFFFFF;
+  --ink-2: #FFFFFF;
+  --mute: #FFFFFF;
+  --mute-2: #FFFFFF;
+  --faint: #FFFFFF;
   --accent: #2F62A8;
   --accent-strong: #3D72BB;
   --accent-text: #7FA8E4;
@@ -90,8 +90,8 @@
   --btn-line: #393B41;
   --btn-line-bottom: #2E3035;
   --header: #050506;
-  --header-ink: #F7F6F2;
-  --header-mute: #E6E4DF;
+  --header-ink: #FFFFFF;
+  --header-mute: #FFFFFF;
   --header-line: #2E3035;
   --header-field: #232529;
   --crit: #F2A7A7;
@@ -195,7 +195,7 @@ body {
   .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
   .field .hint { font-weight: 400; color: var(--mute-2); font-size: 11.5px; }
   .inp { height: 30px; box-sizing: border-box; padding: 0 9px; font: inherit; font-size: 13px; font-weight: 400; color: var(--ink); background: var(--panel); border: 1px solid var(--line-strong); border-radius: 3px; width: 100%; }
-  .inp::placeholder { color: var(--faint); }
+  .inp::placeholder { color: var(--faint); opacity: .5; }
   .inp:focus { outline: 2px solid var(--accent-text); outline-offset: -1px; border-color: var(--accent-text); }
   .inp:disabled { background: var(--panel-head); color: var(--mute); cursor: not-allowed; }
   textarea.inp { height: auto; padding: 8px 9px; line-height: 19px; }
