@@ -30,8 +30,14 @@ const parsePath = (pathname) => {
 function App() {
     const [user, setUser] = useState(() => {
         if (typeof window !== 'undefined' && window.localStorage) {
-            const saved = localStorage.getItem('user');
-            return saved ? JSON.parse(saved) : null;
+            // Drop an expired/unparseable session up front so we render Login directly
+            // instead of flashing the dashboard until its first API call 401s.
+            try {
+                const saved = JSON.parse(localStorage.getItem('user') || 'null');
+                const exp = JSON.parse(atob(saved.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp;
+                if (exp * 1000 > Date.now()) return saved;
+            } catch { }
+            localStorage.removeItem('user');
         }
         return null;
     });

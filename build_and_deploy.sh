@@ -5,7 +5,7 @@ IMAGE="quay.io/abhilash_bs1/security-dashboard:latest"
 DEPLOYMENT="security-dashboard"
 NAMESPACE="security-ops"
 # Ingress host is <name>.<INGRESS_IP>.nip.io where INGRESS_IP is the ingress LB IP (not the node IP). Override per cluster.
-INGRESS_IP="10.20.28.137"
+INGRESS_IP="10.10.0.35"
 
 echo "================================================="
 echo "Build, Push, and Redeploy"
@@ -28,7 +28,7 @@ fi
 
 
 echo "[3/4] Applying manifests and restarting Deployment..."
-sed "s/10\.20\.28\.137/${INGRESS_IP}/g" "$(dirname "$0")/security-dashboard/k8s/dashboard.yaml" | kubectl apply -f -
+sed "s/10\.10\.0\.35/${INGRESS_IP}/g" "$(dirname "$0")/security-dashboard/k8s/dashboard.yaml" | kubectl apply -f -
 kubectl rollout restart deployment/"$DEPLOYMENT" -n "$NAMESPACE"
 
 echo "[4/4] Waiting for Rollout..."

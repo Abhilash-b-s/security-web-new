@@ -169,9 +169,9 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec:
-  ingressClassName: nginx-oob
+  ingressClassName: nginx
   rules:
-    - host: security-dashboard.10.20.28.137.nip.io
+    - host: security-dashboard.10.10.0.35.nip.io
       http:
         paths:
           - path: /
