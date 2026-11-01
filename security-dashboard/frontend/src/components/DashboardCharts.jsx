@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageHead from './PageHead';
-import HistoryCharts, { computeSecurityScore } from './HistoryCharts';
+import FindingsAge from './FindingsAge';
+import { useCluster, apiUrl } from '../cluster';
+import HistoryCharts from './HistoryCharts';
 
 const SEV = [
     { key: 'CRITICAL', label: 'Critical', color: 'var(--crit)' },
@@ -18,13 +20,6 @@ const VULN_SOURCES = [
     { key: 'cluster', name: 'Cluster risks', view: 'cluster' },
 ];
 
-function getScoreStyle(score) {
-    if (score >= 80) return { color: 'var(--ok)', label: 'Good' };
-    if (score >= 60) return { color: 'var(--warn)', label: 'Fair' };
-    if (score >= 40) return { color: 'var(--high-text)', label: 'Poor' };
-    return { color: 'var(--crit)', label: 'Critical' };
-}
-
 function rateColor(rate) {
     if (rate === null) return 'var(--faint)';
     if (rate >= 80) return 'var(--ok)';
@@ -33,19 +28,6 @@ function rateColor(rate) {
 }
 
 const pct = (n, d) => (d > 0 ? Math.round((n / d) * 100) : null);
-
-function Figure({ label, value, unit, color, note }) {
-    return (
-        <div className="px-4 py-3" style={{ borderLeft: '1px solid var(--line-soft)' }}>
-            <div className="text-[11px] font-medium" style={{ color: 'var(--mute)' }}>{label}</div>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="num text-[22px] leading-[34px] font-medium" style={{ color: color || 'var(--ink)' }}>{value}</span>
-                {unit && <span className="text-xs" style={{ color: 'var(--mute)' }}>{unit}</span>}
-            </div>
-            {note && <div className="text-[11px] mt-0.5" style={{ color: 'var(--mute-2)' }}>{note}</div>}
-        </div>
-    );
-}
 
 function StackBar({ parts, width = 180 }) {
     const total = parts.reduce((a, p) => a + p.value, 0);
@@ -78,6 +60,7 @@ function timeAgo(ts) {
 }
 
 export default function DashboardCharts() {
+    const { cluster } = useCluster(); // App remounts this page when the cluster changes
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [recent, setRecent] = useState([]);
@@ -96,7 +79,7 @@ export default function DashboardCharts() {
     const loadAllData = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/dashboard/stats');
+            const res = await fetch(apiUrl(cluster, '/api/dashboard/stats'));
             if (!res.ok) throw new Error('Failed to load dashboard data');
             setDashboardData(await res.json());
         } catch (err) {
@@ -108,7 +91,7 @@ export default function DashboardCharts() {
 
     const loadRecent = async () => {
         try {
-            const res = await fetch('/api/reports/');
+            const res = await fetch(apiUrl(cluster, '/api/reports/'));
             if (!res.ok) return;
             const data = await res.json();
             data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -118,7 +101,7 @@ export default function DashboardCharts() {
         }
     };
 
-    const head = <PageHead eyebrow="Security posture" title="Overview" sub="Latest report of each scanner" />;
+    const head = <PageHead title="Overview" sub="Latest report of each scanner" />;
 
     if (loading) {
         return (
@@ -150,6 +133,7 @@ export default function DashboardCharts() {
             <div className="flex flex-col gap-3.5">
                 {head}
                 <HistoryCharts />
+                <FindingsAge />
                 <section className="sheet">
                     <div className="phead"><h2>No scan data yet</h2></div>
                     <p className="px-3.5 py-3 m-0 text-[13px] max-w-xl" style={{ color: 'var(--mute)' }}>
@@ -171,16 +155,11 @@ export default function DashboardCharts() {
 
     // ── Derived values ───────────────────────────────────────────────────────
     const d = dashboardData;
-    const securityScore = computeSecurityScore(d);
-    const scoreStyle = securityScore !== null ? getScoreStyle(securityScore) : null;
 
     const vulnKeys = ['trivyImage', 'trivySbom', 'trivyRepo', 'cluster'];
     const sumSev = (sev) => vulnKeys.reduce((a, k) => a + (d[k].counts[sev] || 0), 0);
     const totalCritical = sumSev('CRITICAL');
     const totalHigh = sumSev('HIGH');
-
-    const policyPassRate = d.kyverno.available ? pct(d.kyverno.counts.PASS || 0, d.kyverno.total) : null;
-    const cisPassRate = d.kubebench.available ? pct(d.kubebench.counts.PASS || 0, d.kubebench.total) : null;
 
     const vulnRows = VULN_SOURCES.map(s => {
         const src = d[s.key];
@@ -217,49 +196,16 @@ export default function DashboardCharts() {
 
     return (
         <div className="flex flex-col gap-[18px]">
-            <PageHead eyebrow="Security posture" title="Overview" sub="Trends from daily scan history, then the latest report of each scanner">
+            <PageHead title="Overview" sub="Trends from daily scan history, then the latest report of each scanner">
                 <button type="button" className="btn" onClick={exportSummary}><Download className="w-3 h-3" /> Export summary</button>
             </PageHead>
 
             <HistoryCharts />
+            <FindingsAge />
 
             <div className="flex items-baseline gap-3 mt-2 pt-4" style={{ borderTop: '1px solid var(--line)' }}>
                 <h2 className="m-0 text-[15px] font-semibold">Latest reports</h2>
                 <span className="page-sub">Current numbers from the most recent report of each scanner</span>
-            </div>
-
-            {/* Headline figures */}
-            <div className="sheet grid grid-cols-2 md:grid-cols-3 xl:grid-cols-[1.35fr_repeat(5,minmax(0,1fr))]">
-                <div className="px-[18px] py-3 col-span-2 md:col-span-1">
-                    <div className="text-[11px] font-medium" style={{ color: 'var(--mute)' }}>Security score</div>
-                    {securityScore !== null ? (
-                        <>
-                            <div className="flex items-baseline gap-2 mt-0.5">
-                                <span className="num text-[30px] leading-[34px] font-medium">{securityScore}</span>
-                                <span className="text-xs" style={{ color: 'var(--mute)' }}>/ 100</span>
-                                <span className="text-xs font-medium" style={{ color: scoreStyle.color }}>{scoreStyle.label}</span>
-                            </div>
-                            <div className="relative mt-2 h-1.5 flex">
-                                <div className="w-[40%]" style={{ background: 'var(--crit-line)' }} />
-                                <div className="w-[20%]" style={{ background: 'var(--high-tint)' }} />
-                                <div className="w-[20%]" style={{ background: 'var(--warn-line)' }} />
-                                <div className="w-[20%]" style={{ background: 'var(--ok-line)' }} />
-                                <div className="absolute -top-[3px] w-0.5 h-3" style={{ left: `${securityScore}%`, background: 'var(--ink)' }} />
-                            </div>
-                            <div className="num flex justify-between mt-[3px] text-[10px]" style={{ color: 'var(--faint)' }}><span>0</span><span>40</span><span>60</span><span>80</span><span>100</span></div>
-                        </>
-                    ) : (
-                        <div className="num text-[30px] leading-[34px]" style={{ color: 'var(--faint)' }}>N/A</div>
-                    )}
-                </div>
-                <Figure label="Critical findings" value={totalCritical} unit="open" color={totalCritical > 0 ? 'var(--crit)' : undefined} note="Image, SBOM, repo and cluster" />
-                <Figure label="High findings" value={totalHigh} unit="open" note="Same sources" />
-                <Figure label="Policy pass rate" value={policyPassRate !== null ? policyPassRate : '—'} unit={policyPassRate !== null ? '%' : ''} color={rateColor(policyPassRate)}
-                    note={d.kyverno.available ? `${d.kyverno.counts.PASS || 0} of ${d.kyverno.total} checks` : 'No data'} />
-                <Figure label="CIS pass rate" value={cisPassRate !== null ? cisPassRate : '—'} unit={cisPassRate !== null ? '%' : ''} color={rateColor(cisPassRate)}
-                    note={d.kubebench.available ? `${d.kubebench.counts.PASS || 0} of ${d.kubebench.total} checks` : 'No data'} />
-                <Figure label="Weak-cipher services" value={d.nmap.available ? d.nmap.servicesWithWeakCiphers : '—'} unit={d.nmap.available ? `of ${d.nmap.total}` : ''}
-                    color={d.nmap.available && d.nmap.servicesWithWeakCiphers > 0 ? 'var(--warn)' : undefined} note={d.nmap.available ? 'From the last network scan' : 'No data'} />
             </div>
 
             {/* Vulnerabilities by scanner */}

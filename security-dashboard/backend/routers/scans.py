@@ -1,6 +1,6 @@
-from fastapi import APIRouter, WebSocket, BackgroundTasks, HTTPException
+from fastapi import APIRouter, WebSocket, BackgroundTasks, HTTPException, Request
 from models import ScanRequest, ScanType, ScanStartResponse, ErrorResponse
-from services import scanner
+from services import scanner, audit_hook, clusters
 from auth import decode_token
 import re
 import uuid
@@ -57,7 +57,7 @@ _SCAN_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
     },
     tags=["scans"]
 )
-async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
+async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks, http_request: Request):
     """
     Initiate a security scan and return a scan ID for tracking.
 
@@ -68,8 +68,10 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     scan_id = request.scan_id or str(uuid.uuid4())
     if not _SCAN_ID_RE.match(scan_id):
         raise HTTPException(status_code=400, detail="Invalid scan_id")
+    clusters.check_scan_target(request.cluster, request.scan_type.value)
     # Register the run now so it is listed as active before the background task starts.
     scanner.manager.start_run(scan_id, request.scan_type.value)
+    audit_hook.record(http_request, "scan.start", request.scan_type.value, f"scan_id={scan_id} cluster={getattr(request, 'cluster', 'local')}")
     background_tasks.add_task(scanner.run_scan_task, scan_id, request)
     return {"scan_id": scan_id, "status": "initiated"}
 

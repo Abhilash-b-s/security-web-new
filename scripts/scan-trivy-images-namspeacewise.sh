@@ -94,8 +94,7 @@ sanitize() {
   echo "$1" | sed -e 's#/#_#g' -e 's#:#_#g' -e 's#@#_#g' -e 's#[^A-Za-z0-9._-]#_#g'
 }
 
-# containerd stores short refs fully qualified (python:3.11 -> docker.io/library/python:3.11);
-# Trivy's containerd export looks the name up verbatim, so normalize first.
+# Pods may use short refs (python:3.11); qualify them the way containerd/registries do.
 normalize_image() {
   local img="$1" first="${1%%/*}"
   if [[ "$img" != */* ]]; then
@@ -137,10 +136,9 @@ scan_namespace() {
     
     # Capture stderr to a temp file to show on failure
     local err_log=$(mktemp)
-    # If the node's containerd store is missing blobs (GC'd / partial multi-arch content),
-    # the local scan fails mid-analysis without falling back, so retry from the registry.
-    { trivy image $TRIVY_FLAGS -o "$out_file" "$(normalize_image "$image")" \
-        || trivy image $TRIVY_FLAGS --image-src remote -o "$out_file" "$(normalize_image "$image")"; } >"$err_log" 2>&1 &
+    # Images are pulled from their registry (no access to the node's containerd store);
+    # credentials come from the docker config written by the Settings registry logins.
+    trivy image $TRIVY_FLAGS --image-src remote -o "$out_file" "$(normalize_image "$image")" >"$err_log" 2>&1 &
     local pid=$!
     
     while kill -0 $pid 2>/dev/null; do
@@ -153,14 +151,21 @@ scan_namespace() {
     # echo "" removed to preventing blank line in UI
     if [ $ret -eq 0 ]; then
       echo -e "     ${GREEN}✔${RESET} scanning completed"
+      SCANNED=$((SCANNED + 1))
     else
       echo -e "     ${BOLD}✘${RESET} scanning failed"
+      echo "SKIPPED (could not pull or scan): $image"
+      SKIPPED=$((SKIPPED + 1))
+      rm -f "$out_file"
       echo -e "${DIM}Error details:${RESET}"
       cat "$err_log"
     fi
     rm -f "$err_log"
   done
 }
+
+SCANNED=0
+SKIPPED=0
 
 # Entry
 if [[ "${NAMESPACE^^}" == "ALL" ]]; then
@@ -182,3 +187,7 @@ else
   scan_namespace "$NAMESPACE"
   echo "Done. Reports saved in '$OUTPUT_DIR/$NAMESPACE/'"
 fi
+
+# Coverage line so a drop in scanned images is visible, not silent
+echo
+echo "Image scan summary: scanned=$SCANNED skipped=$SKIPPED"

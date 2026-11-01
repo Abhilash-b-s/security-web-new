@@ -1,4 +1,5 @@
 import PageHead from './PageHead';
+import { useCluster, newUrl, apiUrl } from '../cluster';
 import React, { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import { Download } from 'lucide-react';
@@ -7,6 +8,7 @@ import { REPORT_TABS, Badge, SEV_ORDER, SEV_COLOR, countBy, FigureStrip, ToggleG
 
 // activeView is owned by App so the left panel's report sub-items and this page stay in sync.
 export default function PolicyReports({ activeView }) {
+  const { cluster } = useCluster(); // App remounts this page when the cluster changes
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -76,7 +78,7 @@ export default function PolicyReports({ activeView }) {
   // Latest dashboard stats: tab counts and aggregate totals when no report file is selected
   const [stats, setStats] = useState(null);
   useEffect(() => {
-    fetch('/api/dashboard/stats')
+    fetch(apiUrl(cluster, '/api/dashboard/stats'))
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setStats(data); })
       .catch(() => { });
@@ -98,7 +100,7 @@ export default function PolicyReports({ activeView }) {
     if (kyvernoData.rows.length > 0) return;
     setLoading(true);
     try {
-      const res = await fetch('/new/kyverno-report/kyverno.zip');
+      const res = await fetch(newUrl(cluster, 'kyverno-report/kyverno.zip'));
       if (res.status === 404) {
         // Graceful handling for missing report
         setKyvernoData({ rows: [], counts: {} });
@@ -134,7 +136,7 @@ export default function PolicyReports({ activeView }) {
     if (sbomData.list.length > 0) return;
     setLoading(true);
     try {
-      const res = await fetch('/new/trivy-sbom/sbom.json');
+      const res = await fetch(newUrl(cluster, 'trivy-sbom/sbom.json'));
       if (res.status === 404) {
         setSbomData({ list: [], counts: {} });
         return;
@@ -155,7 +157,7 @@ export default function PolicyReports({ activeView }) {
     if (nmapData.length > 0) return;
     setLoading(true);
     try {
-      const res = await fetch('/new/nmap/nmap.json');
+      const res = await fetch(newUrl(cluster, 'nmap/nmap.json'));
       if (res.status === 404) {
         setNmapData([]);
         return;
@@ -176,7 +178,7 @@ export default function PolicyReports({ activeView }) {
     if (cisData.list.length > 0) return;
     setLoading(true);
     try {
-      const res = await fetch('/new/kube-bench/kubebench.txt');
+      const res = await fetch(newUrl(cluster, 'kube-bench/kubebench.txt'));
       if (res.status === 404) {
         setCisData({ list: [], counts: {} });
         return;
@@ -197,7 +199,7 @@ export default function PolicyReports({ activeView }) {
     if (clusterData.list.length > 0) return;
     setLoading(true);
     try {
-      const res = await fetch('/new/trivy-cluster-report/cluster.zip');
+      const res = await fetch(newUrl(cluster, 'trivy-cluster-report/cluster.zip'));
       if (res.status === 404) {
         setClusterData({ list: [], counts: {} });
         return;
@@ -228,7 +230,7 @@ export default function PolicyReports({ activeView }) {
     setLoading(true);
     try {
       // New backend endpoint to list files in trivy-reports
-      const res = await fetch('/api/files/list?subpath=trivy-reports');
+      const res = await fetch(apiUrl(cluster, '/api/files/list?subpath=trivy-reports'));
       if (!res.ok) throw new Error(`Failed to list image reports: ${res.status}`);
       const files = await res.json();
       setImageFiles(files);
@@ -245,7 +247,7 @@ export default function PolicyReports({ activeView }) {
   const loadImageReport = async (filename) => {
     setLoading(true);
     try {
-      const res = await fetch(`/new/trivy-reports/${filename}`);
+      const res = await fetch(newUrl(cluster, `trivy-reports/${filename}`));
       if (!res.ok) throw new Error(`Failed to load report ${filename}: ${res.status}`);
       const json = await res.json();
       const parsed = parseImage(json);
@@ -279,7 +281,7 @@ export default function PolicyReports({ activeView }) {
     setLoading(true);
     try {
       const fetchOne = async (f) => {
-        const res = await fetch(`/new/trivy_repo_scan/${f}`);
+        const res = await fetch(newUrl('local', `trivy_repo_scan/${f}`));
         if (!res.ok) throw new Error(`Failed to load report ${f}: ${res.status}`);
         return parseTrivyRepo(await res.json());
       };
@@ -1069,15 +1071,15 @@ export default function PolicyReports({ activeView }) {
 
   // Report file offered in the page header, same place on every report screen.
   const EXPORTS = {
-    kyverno: () => ({ href: '/new/kyverno-report/Policy_report.xlsx', file: 'Policy_report.xlsx', label: 'Export .xlsx' }),
-    image: () => ({ href: '/new/trivy-reports/consolidated-report_images.xlsx', file: 'consolidated-report_images.xlsx', label: 'Export .xlsx' }),
-    sbom: () => ({ href: '/new/trivy-sbom/sbom.json', file: 'sbom.json', label: 'Download .json' }),
-    cluster: () => ({ href: '/new/trivy-cluster-report/cluster.zip', file: 'cluster.zip', label: 'Download .zip' }),
-    cis: () => ({ href: '/new/kube-bench/kubebench.txt', file: 'kubebench.txt', label: 'Download .txt' }),
-    nmap: () => ({ href: '/new/nmap/nmap.json', file: 'nmap.json', label: 'Download .json' }),
+    kyverno: () => ({ href: newUrl(cluster, 'kyverno-report/Policy_report.xlsx'), file: 'Policy_report.xlsx', label: 'Export .xlsx' }),
+    image: () => ({ href: newUrl(cluster, 'trivy-reports/consolidated-report_images.xlsx'), file: 'consolidated-report_images.xlsx', label: 'Export .xlsx' }),
+    sbom: () => ({ href: newUrl(cluster, 'trivy-sbom/sbom.json'), file: 'sbom.json', label: 'Download .json' }),
+    cluster: () => ({ href: newUrl(cluster, 'trivy-cluster-report/cluster.zip'), file: 'cluster.zip', label: 'Download .zip' }),
+    cis: () => ({ href: newUrl(cluster, 'kube-bench/kubebench.txt'), file: 'kubebench.txt', label: 'Download .txt' }),
+    nmap: () => ({ href: newUrl(cluster, 'nmap/nmap.json'), file: 'nmap.json', label: 'Download .json' }),
     'trivy-repo': () => [
       { href: '/api/files/trivy-repo.xlsx', file: 'git-repository-findings.xlsx', label: 'Export .xlsx' },
-      ...(selectedTrivyRepoFile && selectedTrivyRepoFile !== 'ALL' ? [{ href: `/new/trivy_repo_scan/${selectedTrivyRepoFile}`, file: selectedTrivyRepoFile.split('/').pop(), label: 'Download .json' }] : []),
+      ...(selectedTrivyRepoFile && selectedTrivyRepoFile !== 'ALL' ? [{ href: newUrl('local', `trivy_repo_scan/${selectedTrivyRepoFile}`), file: selectedTrivyRepoFile.split('/').pop(), label: 'Download .json' }] : []),
     ],
   };
 

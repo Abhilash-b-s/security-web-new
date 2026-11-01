@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Download, Search } from 'lucide-react';
 import PageHead from './PageHead';
+import { useCluster, apiUrl } from '../cluster';
 import LogViewer, { RemoteLogViewer, lineStyle } from './LogViewer';
 
 const statusBadge = (status) => (
@@ -12,6 +13,7 @@ const statusBadge = (status) => (
 // live: the scan started from this browser, if any: { scanId, type, label, logs, isScanning, startedAt, endedAt }
 // active: scans running on the server (any browser), from /api/scans/active; labelFor maps scan_type to a label
 export default function ReportViewer({ live, active = [], labelFor = (t) => t }) {
+    const { cluster } = useCluster(); // App remounts this page when the cluster changes
     const [reports, setReports] = useState([]);
     const [selectedReport, setSelectedReport] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ export default function ReportViewer({ live, active = [], labelFor = (t) => t })
 
     const fetchReports = async () => {
         try {
-            const res = await fetch('/api/reports/');
+            const res = await fetch(apiUrl(cluster, '/api/reports/'));
             const data = await res.json();
             // Sort by timestamp desc
             data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));

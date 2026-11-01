@@ -4,6 +4,8 @@ from fastapi import WebSocket, APIRouter
 import shlex
 
 from auth import decode_token
+from routers.features import terminal_enabled
+from services import audit
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("terminal")
@@ -52,10 +54,16 @@ def parse_command(command_line: str):
 
 @router.websocket("/ws")
 async def terminal_websocket(websocket: WebSocket):
+    if not terminal_enabled():
+        await websocket.close(code=1008, reason="Terminal is disabled (set ENABLE_TERMINAL=true to enable)")
+        return
     claims = decode_token(websocket.query_params.get("token"))
     if not claims or claims.get("role") != "superuser":
         await websocket.close(code=1008)
         return
+    actor = claims.get("sub", "-")
+    xff = websocket.headers.get("x-forwarded-for", "")
+    ip = xff.split(",")[0].strip() if xff else (websocket.client.host if websocket.client else "")
     await websocket.accept()
     logger.info("Terminal WS Connected")
 
@@ -70,9 +78,11 @@ async def terminal_websocket(websocket: WebSocket):
             argv, reason = parse_command(command_line.strip())
             if argv is None:
                 logger.info(f"Rejected: {command_line}")
+                audit.log_event(actor, "terminal.blocked", detail=command_line.strip(), ip=ip)
                 await websocket.send_text(f"Error: {reason}\n")
                 continue
             logger.info(f"Executing: {shlex.join(argv)}")
+            audit.log_event(actor, "terminal.command", detail=command_line.strip(), ip=ip)
 
             try:
                 process = await asyncio.create_subprocess_exec(

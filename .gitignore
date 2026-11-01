@@ -12,9 +12,17 @@ venv/
 registries.json
 git_config.json
 suppressions.json
+full_scan.json
+
+# Secrets (AUTH_SECRET, SUPERUSER_PASSWORD, USER_PASSWORD)
+.env
+.env.*
+
+# Personal Claude Code settings
+.claude/settings.local.json
 
 # Scan output
-security-dashboard/backend/reports/
+**/reports/
 new/*
 
 # Local logs and editor noise

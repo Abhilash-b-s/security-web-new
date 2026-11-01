@@ -4,22 +4,26 @@ import ScanControl from './components/ScanControl';
 import ReportViewer from './components/ReportViewer';
 import WebTerminal from './components/WebTerminal';
 import PolicyReports from './components/PolicyReports';
+import ComplianceReport from './components/ComplianceReport';
+import SelectReport from './components/SelectReport';
 import Settings from './components/Settings';
+import AuditLog from './components/AuditLog';
 import DashboardCharts from './components/DashboardCharts';
+import useFeatures from './useFeatures';
 import { REPORT_TABS } from './components/reportParts';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutGrid, FileText, Terminal, FileCheck, SlidersHorizontal, Sun, Moon, LogOut, ChevronDown } from 'lucide-react';
+import { useCluster, apiUrl } from './cluster';
+import { LayoutGrid, FileText, Terminal, FileCheck, SlidersHorizontal, ScrollText, Sun, Moon, LogOut, ChevronDown } from 'lucide-react';
 
 // Path-based routing (react-router): each tab is a real URL, so refresh, back/forward and
 // bookmarks work. The Scan reports tab also carries its view (/policy/image); Event logs is /events.
-const TAB_PATHS = { dashboard: '/dashboard', policy: '/policy', reports: '/events', terminal: '/terminal', settings: '/settings' };
+const TAB_PATHS = { dashboard: '/dashboard', policy: '/policy', reports: '/events', terminal: '/terminal', settings: '/settings', audit: '/audit' };
 const TAB_IDS = Object.keys(TAB_PATHS);
 const USER_TABS = ['dashboard', 'policy']; // what a non-superuser may open
 const REPORT_VIEWS = REPORT_TABS.map(t => t.id);
-const DEFAULT_VIEW = 'kyverno';
-const tabAllowed = (id, role) => (role === 'superuser' ? TAB_IDS : USER_TABS).includes(id);
+const tabAllowed = (id, role, features = {}) => (role === 'superuser' ? TAB_IDS : USER_TABS).includes(id) && (id !== 'terminal' || !!features.terminal);
 const defaultTab = () => 'dashboard'; // every role lands on Overview
-const pathForTab = (tab, view) => (tab === 'policy' ? `/policy/${view || DEFAULT_VIEW}` : TAB_PATHS[tab]);
+const pathForTab = (tab, view) => (tab === 'policy' ? (view ? `/policy/${view}` : '/policy') : TAB_PATHS[tab]);
 const parsePath = (pathname) => {
     const seg = pathname.replace(/^\/+/, '').split('/');
     const tab = TAB_IDS.find(k => TAB_PATHS[k] === '/' + (seg[0] || '')) || null;
@@ -28,6 +32,7 @@ const parsePath = (pathname) => {
 };
 
 function App() {
+    const { cluster, setCluster, clusters, refresh: refreshClusters } = useCluster();
     const [user, setUser] = useState(() => {
         if (typeof window !== 'undefined' && window.localStorage) {
             // Drop an expired/unparseable session up front so we render Login directly
@@ -42,11 +47,12 @@ function App() {
         return null;
     });
 
+    const features = useFeatures(user);
     const navigate = useNavigate();
     const location = useLocation();
     const { tab: parsedTab, view: parsedView } = parsePath(location.pathname);
-    const activeTab = (parsedTab && user && tabAllowed(parsedTab, user.role)) ? parsedTab : defaultTab(user?.role);
-    const reportView = parsedView || DEFAULT_VIEW;
+    const activeTab = (parsedTab && user && tabAllowed(parsedTab, user.role, features)) ? parsedTab : defaultTab(user?.role);
+    const reportView = parsedView; // null on /policy: no report type is preselected
     const [logs, setLogs] = useState([]);
 
     // Sidebar width, dragged via the separator; remembered per browser.
@@ -87,9 +93,10 @@ function App() {
     const [apiUp, setApiUp] = useState(null);
     useEffect(() => {
         if (!user || isScanning) return;
-        fetch('/api/reports/').then(r => (r.ok ? r.json() : null)).catch(() => null)
+        fetch(apiUrl(cluster, '/api/reports/')).then(r => (r.ok ? r.json() : null)).catch(() => null)
             .then(reps => setNavRuns(Array.isArray(reps) ? reps.length : null));
-    }, [user, isScanning]);
+    }, [user, isScanning, cluster]);
+    useEffect(() => { if (user) refreshClusters(); }, [user]);
     useEffect(() => {
         if (!user) return;
         const ping = () => fetch('/api/suppressions/', { cache: 'no-store' }).then(r => setApiUp(r.ok)).catch(() => setApiUp(false));
@@ -159,6 +166,7 @@ function App() {
         'kyverno': 'Policy Scan',
         'kube-bench': 'CIS Benchmarks',
         'trivy-cluster': 'Cluster Scan',
+        'trivy-compliance': 'Compliance Scan',
         'all': 'Full scan',
     };
 
@@ -191,6 +199,7 @@ function App() {
                 },
                 body: JSON.stringify({
                     scan_type: type,
+                    cluster,
                     scan_id: scanId
                 }),
             });
@@ -301,7 +310,8 @@ function App() {
         { id: 'reports', label: 'Event logs', Icon: FileText, superOnly: true, count: anyRunning ? `${runningCount} running` : navRuns || null, countRun: anyRunning },
         { id: 'terminal', label: 'Terminal', Icon: Terminal, superOnly: true },
         { id: 'settings', label: 'Settings', Icon: SlidersHorizontal, superOnly: true },
-    ].filter(n => user.role === 'superuser' || !n.superOnly);
+        { id: 'audit', label: 'Audit log', Icon: ScrollText, superOnly: true },
+    ].filter(n => (user.role === 'superuser' || !n.superOnly) && (n.id !== 'terminal' || features.terminal));
 
     return (
         <div className="h-screen overflow-hidden flex flex-col" style={{ background: 'var(--page)', color: 'var(--ink)' }}>
@@ -345,6 +355,21 @@ function App() {
                 )}
 
                 <div className="flex-1" />
+
+                {clusters.length > 1 && (
+                    <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--header-mute)' }}>
+                        Cluster
+                        <select
+                            className="h-[26px] px-1.5 text-xs"
+                            style={{ background: 'transparent', color: 'var(--header-ink)', border: '1px solid var(--header-line)' }}
+                            value={cluster}
+                            onChange={(e) => setCluster(e.target.value)}
+                            aria-label="Cluster"
+                        >
+                            {clusters.map(c => <option key={c.name} value={c.name} style={{ color: '#000' }}>{c.name}</option>)}
+                        </select>
+                    </label>
+                )}
 
                 <button
                     type="button"
@@ -452,18 +477,21 @@ function App() {
                 <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
                     {activeTab === 'dashboard' ? (
                         <div className="flex-1 min-h-0 overflow-auto px-7 pt-[18px] pb-6">
-                            <DashboardCharts key={statsVersion} />
+                            <DashboardCharts key={`${statsVersion}-${cluster}`} />
                         </div>
                     ) : activeTab === 'reports' ? (
                         <ReportViewer
+                            key={cluster}
                             live={liveScan && { ...liveScan, label: SCAN_LABELS[liveScan.type] ?? liveScan.type, logs, isScanning }}
                             active={serverRuns}
                             labelFor={(t) => SCAN_LABELS[t] ?? t}
                         />
                     ) : activeTab === 'policy' ? (
-                        <PolicyReports activeView={reportView} />
+                        !reportView ? <SelectReport /> : reportView === 'compliance' ? <ComplianceReport key={cluster} /> : <PolicyReports key={cluster} activeView={reportView} />
                     ) : activeTab === 'settings' ? (
                         <Settings initialSection={settingsSection} />
+                    ) : activeTab === 'audit' ? (
+                        <AuditLog />
                     ) : activeTab === 'terminal' ? (
                         <WebTerminal />
                     ) : null}

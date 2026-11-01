@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
-from routers import scans, reports, files, settings, dashboard, suppressions, auth as auth_router_mod
+from routers import clusters, scans, reports, files, settings, dashboard, suppressions, features, compliance, auth as auth_router_mod
+from routers import audit as audit_router, findings as findings_router
+from services import migrate
 from services import terminal
 import auth
 import ratelimit
@@ -34,6 +36,7 @@ app = FastAPI(
     * `trivy-image`: Container image vulnerability scanning
     * `trivy-sbom`: Generate Software Bill of Materials
     * `trivy-cluster`: Kubernetes cluster-wide security scanning
+    * `trivy-compliance`: Trivy NSA / Pod Security compliance specs
     * `trivy-repo`: Git repository vulnerability scanning
     * `kube-bench`: CIS Kubernetes Benchmark checks
     * `kyverno`: Kubernetes policy validation
@@ -80,7 +83,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Paths requiring the superuser role; everything else under /api or /new needs any valid token.
-SUPERUSER_PREFIXES = ("/api/scans", "/api/settings", "/api/terminal")
+SUPERUSER_PREFIXES = ("/api/scans", "/api/settings", "/api/terminal", "/api/audit")
 
 # Swagger UI / ReDoc need inline + CDN assets a strict CSP would block; gate these in prod instead.
 _CSP_SKIP = ("/docs", "/redoc", "/openapi.json")
@@ -137,8 +140,15 @@ app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(files.router, prefix="/api/files", tags=["files"])
 app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
 app.include_router(terminal.router, prefix="/api/terminal", tags=["terminal"])
+app.include_router(features.router, prefix="/api/features", tags=["features"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(clusters.router, prefix="/api/clusters", tags=["clusters"])
 app.include_router(suppressions.router, prefix="/api/suppressions", tags=["suppressions"])
+app.include_router(findings_router.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(audit_router.router, prefix="/api/audit", tags=["audit"])
+app.include_router(compliance.router, prefix="/api/compliance", tags=["compliance"])
+
+migrate.run()  # one-time import of the old JSON state files into the database
 
 # Mount static files (React build)
 # Check if static directory exists (it will in Docker, might not locally)

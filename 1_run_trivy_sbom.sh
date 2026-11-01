@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-OUTPUT_DIR="$(pwd)/${OUTPUT_DIR:-new}"
+OUTPUT_DIR="$(realpath -m "${OUTPUT_DIR:-new}")"  # relative to cwd, or absolute (per-cluster dirs)
 
 mkdir -p "$OUTPUT_DIR"
 

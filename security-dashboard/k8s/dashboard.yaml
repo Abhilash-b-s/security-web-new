@@ -3,21 +3,9 @@ kind: Namespace
 metadata:
   name: security-ops
 ---
-# Auth credentials for the dashboard backend (SUPERUSER_PASSWORD, USER_PASSWORD, AUTH_SECRET).
-# IMPORTANT: replace every CHANGE_ME_* value below before deploying.
-# Generate AUTH_SECRET with:  openssl rand -hex 32
-# Changing AUTH_SECRET invalidates all existing login tokens (everyone must log in again).
-apiVersion: v1
-kind: Secret
-metadata:
-  name: security-dashboard-auth
-  namespace: security-ops
-type: Opaque
-stringData:
-  SUPERUSER_PASSWORD: "superuser"
-  USER_PASSWORD: "user"
-  AUTH_SECRET: "long_random_string"
----
+# The auth Secret (security-dashboard-auth) is NOT part of this file so a re-apply can never reset
+# the credentials. See dashboard-secret.example.yaml; build_and_deploy.sh creates it if missing.
+# RBAC lives in dashboard-rbac.yaml, the kube-bench admission policy in dashboard-admission-policy.yaml.
 # Security Dashboard Service
 apiVersion: v1
 kind: Service
@@ -40,19 +28,6 @@ kind: ServiceAccount
 metadata:
   name: security-dashboard-sa
   namespace: security-ops
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: security-dashboard-admin-binding
-subjects:
-- kind: ServiceAccount
-  name: security-dashboard-sa
-  namespace: security-ops
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin
-  apiGroup: rbac.authorization.k8s.io
 ---
 # Persistent storage for scan output, run reports and settings, so a redeploy keeps them.
 # No storageClassName: uses the cluster default (local-path on the lab cluster).
@@ -87,14 +62,30 @@ spec:
       labels:
         app: security-dashboard
     spec:
-      hostPID: true
       serviceAccountName: security-dashboard-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        # fsGroup is a no-op for hostPath-backed PVs such as local-path; the seed-data init
+        # container below chowns the volume, which covers that case.
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
         # Create the report, run-history and state directories on the volume.
         - name: seed-data
           image: quay.io/abhilash_bs1/security-dashboard:latest
           imagePullPolicy: Always
-          command: ["mkdir", "-p", "/data/new", "/data/reports", "/data/state"]
+          command: ["sh", "-c", "mkdir -p /data/new /data/reports /data/state && chown -R 10001:10001 /data"]
+          # Root only for this one-shot, with just the capabilities chown needs.
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "FOWNER", "DAC_OVERRIDE"]
           volumeMounts:
             - name: data
               mountPath: /data
@@ -110,27 +101,24 @@ spec:
               value: "/app"
             - name: STATE_DIR
               value: "/app/state"
-            # Trivy reads images from the node's containerd store; Kubernetes keeps them in the
-            # "k8s.io" namespace (Trivy's default is "default"). Lets it scan images it cannot pull.
-            - name: CONTAINERD_NAMESPACE
-              value: "k8s.io"
+            # Image used for the short-lived kube-bench Job (must match the admission policy's image prefix).
+            - name: DASHBOARD_IMAGE
+              value: "quay.io/abhilash_bs1/security-dashboard:latest"
+            # The web terminal (an interactive kubectl shell) is off. Set to "true" and re-apply to
+            # enable it; superuser only, every command is written to the audit log.
+            - name: ENABLE_TERMINAL
+              value: "false"
           ports:
             - containerPort: 8000
-          # CRITICAL: Mount socket to allow scanning the node's images
-          # AND host directories for kube-bench
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            # The image only writes to /app/new, /app/state, the reports dir (PVC) and /tmp (emptyDir).
+            readOnlyRootFilesystem: true
           volumeMounts:
-            - name: containerd-socket
-              mountPath: /run/containerd/containerd.sock 
-              readOnly: true
-            - name: etc-kubernetes
-              mountPath: /etc/kubernetes
-              readOnly: true
-            - name: var-lib-kubelet
-              mountPath: /var/lib/kubelet
-              readOnly: true
-            - name: etc-systemd
-              mountPath: /etc/systemd
-              readOnly: true
+            - name: tmp
+              mountPath: /tmp
             # Persistent data (see PersistentVolumeClaim above)
             - name: data
               mountPath: /app/new
@@ -145,19 +133,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: security-dashboard-data
-        - name: containerd-socket
-          hostPath:
-            path: /run/containerd/containerd.sock
-            type: Socket
-        - name: etc-kubernetes
-          hostPath:
-            path: /etc/kubernetes
-        - name: var-lib-kubelet
-          hostPath:
-            path: /var/lib/kubelet
-        - name: etc-systemd
-          hostPath:
-            path: /etc/systemd
+        - name: tmp
+          emptyDir:
+            sizeLimit: 4Gi
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

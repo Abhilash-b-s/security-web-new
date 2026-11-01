@@ -8,6 +8,8 @@ import uuid
 from fastapi import WebSocket
 from models import ScanRequest, ScanType, ScanStatus, ScanResult
 from services.history import record_snapshot
+from services import runs_store, clusters
+from services.cluster_context import LOCAL, REMOTE_SCANS, scan_env
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -51,7 +53,7 @@ class ConnectionManager:
             if run:
                 for line in list(run["lines"]):
                     await websocket.send_text(line)
-            elif os.path.exists(os.path.join(REPORTS_DIR, f"{scan_id}.json")):
+            elif runs_store.has_run(scan_id):
                 # Scan already finished: tell the client straight away instead of leaving it waiting.
                 await websocket.send_text("__EOF__")
             self.active_connections.setdefault(scan_id, []).append(websocket)
@@ -149,7 +151,7 @@ async def run_single_scan(scan_type: ScanType, scan_id: str, request: ScanReques
     cwd = os.getenv("APP_HOME", "/app") 
     
     # Prepare environment
-    env = os.environ.copy()
+    env = scan_env(os.environ.copy(), request.cluster)
     
     if scan_type == ScanType.KUBE_BENCH:
         command = ["bash", f"{cwd}/4_run_kube_bench.sh"]
@@ -165,6 +167,9 @@ async def run_single_scan(scan_type: ScanType, scan_id: str, request: ScanReques
     
     elif scan_type == ScanType.TRIVY_CLUSTER:
         command = ["bash", f"{cwd}/5_run_trivy_cluster.sh"]
+
+    elif scan_type == ScanType.TRIVY_COMPLIANCE:
+        command = ["bash", f"{cwd}/8_run_trivy_compliance.sh"]
 
     elif scan_type == ScanType.NMAP:
         command = ["bash", f"{cwd}/3_run_nmap.sh"]
@@ -270,6 +275,11 @@ async def run_scan_task(scan_id: str, request: ScanRequest):
             # Scans picked in Settings → Full scan (every scan by default).
             from routers.settings import load_git_config, load_full_scan
             scans_to_run = load_full_scan()
+            if request.cluster != LOCAL:
+                skipped = [s for s in scans_to_run if s.value not in REMOTE_SCANS]
+                scans_to_run = [s for s in scans_to_run if s.value in REMOTE_SCANS]
+                if skipped:
+                    await manager.broadcast(f"Skipping {', '.join(s.value for s in skipped)}: local cluster only, not run against '{request.cluster}'.\n", scan_id)
             await manager.broadcast(f"Full scan includes: {', '.join(s.value for s in scans_to_run)}\n", scan_id)
             # Source code runs only once Git settings are complete in Settings.
             git = load_git_config()
@@ -284,7 +294,6 @@ async def run_scan_task(scan_id: str, request: ScanRequest):
             results.append(res)
 
         # Save Report
-        report_file = os.path.join(REPORTS_DIR, f"{scan_id}.json")
         final_report = {
             "id": scan_id,
             "request": request.dict(),
@@ -292,12 +301,13 @@ async def run_scan_task(scan_id: str, request: ScanRequest):
             "results": results
         }
     
-        with open(report_file, "w") as f:
-            json.dump(final_report, f, indent=2)
+        cluster = getattr(request, "cluster", "local")
+        runs_store.save_run(final_report, cluster)
 
         # Record a history snapshot for the Overview charts before telling clients the scan is done.
         overall = "completed" if results and all(str(getattr(r["status"], "value", r["status"])) == "completed" for r in results) else "failed"
-        await record_snapshot(scan_id, request.scan_type.value, overall)
+        clusters.touch(request.cluster, overall)
+        await record_snapshot(scan_id, request.scan_type.value, overall, cluster)
 
         await manager.broadcast("__EOF__", scan_id)
     finally:

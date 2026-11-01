@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, X, ChevronDown, Radar } from 'lucide-react';
 import ScanConfirmationPanel from './ScanConfirmationPanel';
+import { useCluster, apiUrl } from '../cluster';
 
 export const SCAN_TYPES = [
     { id: 'trivy-image', label: 'Image vulnerabilities', tool: 'trivy image', group: 'Workloads', script: '2_run_trivy_image.sh', about: 'Scans the container images running in the cluster for known CVEs.' },
@@ -10,13 +11,19 @@ export const SCAN_TYPES = [
     { id: 'trivy-repo', label: 'Source code', tool: 'trivy repo', group: 'Source', script: '7_run_trivy_repo.sh', about: 'Clones the configured Git repositories and scans them for vulnerabilities and secrets.' },
     { id: 'kube-bench', label: 'CIS benchmark', tool: 'kube-bench', group: 'Cluster', script: '4_run_kube_bench.sh', about: 'Runs the CIS Kubernetes Benchmark checks against the cluster nodes.' },
     { id: 'trivy-cluster', label: 'Cluster risks', tool: 'trivy k8s', group: 'Cluster', script: '5_run_trivy_cluster.sh', about: 'Checks Kubernetes resources for misconfigurations, secrets and vulnerable workloads.' },
+    { id: 'trivy-compliance', label: 'Compliance', tool: 'trivy k8s', group: 'Cluster', script: '8_run_trivy_compliance.sh', about: 'Checks workloads against the NSA hardening guidance and the Pod Security Standards.' },
 ];
+
+// Scans that can run against a registered (non-local) cluster; the rest inspect the dashboard's own host/network or are cluster independent.
+const REMOTE_SCANS = ['trivy-image', 'trivy-sbom', 'kyverno', 'trivy-cluster'];
 
 const PlayIcon = () => (
     <svg width="8" height="8" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l6 4-6 4z" fill="currentColor" /></svg>
 );
 
 export default function ScanControl({ activeTab, onStartScan, isScanning, runningTypes = new Set(), onNavigateToSettings }) {
+    const { cluster } = useCluster();
+    const remote = cluster !== 'local';
     const [showPanel, setShowPanel] = useState(false);
     const [selectedScan, setSelectedScan] = useState(null);
     const [gitConfigReady, setGitConfigReady] = useState(null); // null=loading, true/false
@@ -39,7 +46,7 @@ export default function ScanControl({ activeTab, onStartScan, isScanning, runnin
     useEffect(() => {
         checkGitConfig();
         checkRegistryConfig();
-        fetch('/api/reports/')
+        fetch(apiUrl(cluster, '/api/reports/'))
             .then(r => (r.ok ? r.json() : []))
             .then(list => {
                 const latest = {};
@@ -49,7 +56,7 @@ export default function ScanControl({ activeTab, onStartScan, isScanning, runnin
                 setLastRuns(latest);
             })
             .catch(() => { });
-    }, [isScanning]);
+    }, [isScanning, cluster]);
 
     // Settings fires this after a git/registry save so "Set up" clears without a reload.
     useEffect(() => {
@@ -96,7 +103,7 @@ export default function ScanControl({ activeTab, onStartScan, isScanning, runnin
                 id: 'all',
                 label: 'Full scan',
                 about: 'Runs the selected scans one after another.',
-                includes: SCAN_TYPES.filter(t => fullScan.includes(t.id)),
+                includes: SCAN_TYPES.filter(t => fullScan.includes(t.id) && (!remote || REMOTE_SCANS.includes(t.id))),
             });
             setShowPanel(true);
             return;
@@ -166,6 +173,7 @@ export default function ScanControl({ activeTab, onStartScan, isScanning, runnin
             )}
 
             {SCAN_TYPES.map(type => {
+                const localOnly = remote && !REMOTE_SCANS.includes(type.id);
                 const isMissingConfig = (type.id === 'trivy-repo' && gitConfigReady === false)
                     || (type.id === 'trivy-image' && registryConfigReady === false);
                 const picked = showPanel && selectedScan?.id === type.id;
@@ -180,13 +188,15 @@ export default function ScanControl({ activeTab, onStartScan, isScanning, runnin
                         key={type.id}
                         type="button"
                         onClick={() => handleStartScan(type)}
-                        disabled={running || trivyBusy}
+                        disabled={running || trivyBusy || localOnly}
                         tabIndex={open ? 0 : -1}
                         className={`scanrow ${isMissingConfig ? 'unset' : ''} ${picked ? 'picked' : ''}`}
                         aria-expanded={picked}
                     >
                         <span className="sl"><span className="sn">{type.label}</span></span>
-                        {running
+                        {localOnly
+                            ? <span className="go" title="This scan only runs against the local cluster">Local only</span>
+                            : running
                             ? <span className="go">Running…</span>
                             : trivyBusy
                             ? <span className="go" title="Another Trivy scan is running">Trivy busy</span>
@@ -201,7 +211,7 @@ export default function ScanControl({ activeTab, onStartScan, isScanning, runnin
                 {/* Blocked while anything runs: a full scan reuses every scan's fixed output path and the shared Trivy cache. */}
                 <button type="button" className="btn w-full" onClick={() => handleStartScan({ id: 'all' })} tabIndex={open ? 0 : -1}
                     disabled={anyRunning || !fullScan.length}
-                    title={anyRunning ? 'Wait for running scans to finish' : `Runs ${fullScan.length} of ${SCAN_TYPES.length} scans`}>
+                    title={anyRunning ? 'Wait for running scans to finish' : remote ? `Runs the scans supported on ${cluster}` : `Runs ${fullScan.length} of ${SCAN_TYPES.length} scans`}>
                     {runningTypes.has('all') ? 'Full scan running…' : <><PlayIcon /> Run all scans <span className="num text-[11px]" style={{ color: 'var(--mute-2)' }}>{fullScan.length}/{SCAN_TYPES.length}</span></>}
                 </button>
             </div>
@@ -215,6 +225,7 @@ export default function ScanControl({ activeTab, onStartScan, isScanning, runnin
                 onConfirm={confirmScan}
                 scanLabel={selectedScan?.label}
                 scan={selectedScan}
+                cluster={cluster}
                 lastRun={selectedScan ? lastRuns[selectedScan.id] : null}
                 registryCount={registryCount}
                 onEditIncludes={() => { cancelScan(); goSettings('fullscan'); }}

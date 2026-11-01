@@ -16,7 +16,7 @@ set -euo pipefail
 #   TRIVY_EXTRA_ARGS   Extra args passed to `trivy image` (e.g., "--severity HIGH,CRITICAL").
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPORTS_DIR="${SCRIPT_DIR}/trivy-reports"
+REPORTS_DIR="${OUTPUT_DIR:-${SCRIPT_DIR}/trivy-reports}"
 OUT_FILE="${REPORTS_DIR}/consolidated-images.json"
 
 # Ensure output directory exists
@@ -60,6 +60,7 @@ tmp_file="$(mktemp)"
 trap 'rm -f "$tmp_file"' EXIT
 
 total_reports=0
+skipped=0
 
 for ns in "${filtered_namespaces[@]}"; do
   echo "[INFO] Gathering images in namespace: $ns"
@@ -77,11 +78,12 @@ for ns in "${filtered_namespaces[@]}"; do
     echo "[INFO] Scanning image: $img (namespace: $ns)"
     # Run trivy image scan in JSON format
     # --ignore-unfixed reduces noise; adjust via TRIVY_EXTRA_ARGS if desired
-    if ! trivy image --format json --quiet --ignore-unfixed ${TRIVY_EXTRA_ARGS:-} "$img" \
+    if ! trivy image --image-src remote --format json --quiet --ignore-unfixed ${TRIVY_EXTRA_ARGS:-} "$img" \
          | jq --arg ns "$ns" --arg image "$img" \
               '. as $r | {namespace: $ns, image: $image, report: $r}' \
          >> "$tmp_file"; then
-      echo "[WARN] Trivy scan failed for image '$img' in namespace '$ns'"
+      echo "[WARN] SKIPPED (could not pull or scan) image '$img' in namespace '$ns'"
+      skipped=$((skipped + 1))
       continue
     fi
     echo >> "$tmp_file" # newline separator for jq -s
@@ -98,3 +100,4 @@ else
 fi
 
 echo "[INFO] Consolidated $total_reports image scan report(s) into: $OUT_FILE"
+echo "Image scan summary: scanned=$total_reports skipped=$skipped"

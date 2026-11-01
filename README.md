@@ -150,7 +150,10 @@ The project provides an automated script to build, push, and deploy to Kubernete
    This script will:
    - Build the Docker image using multi-stage build
    - Push to your configured container registry
-   - Prompt for confirmation
+   - Push an extra immutable `:<git-short-sha>` tag
+   - Prompt for confirmation (skip with `-y` or `YES=1`)
+   - Apply the manifests, RBAC and kube-bench admission policy
+   - Create the `security-dashboard-auth` Secret with random credentials only if it does not exist (passwords printed once, never overwritten)
    - Restart the Kubernetes deployment
    - Wait for rollout completion
 
@@ -169,8 +172,14 @@ The project provides an automated script to build, push, and deploy to Kubernete
 3. **Create Kubernetes resources**:
    ```bash
    kubectl create namespace security-ops
-   kubectl apply -f k8s/dashboard.yaml
+   kubectl apply -f security-dashboard/k8s/dashboard.yaml
+   # Create the auth Secret first if missing (see k8s/dashboard-secret.example.yaml)
+   kubectl apply -f security-dashboard/k8s/dashboard-rbac.yaml
+   kubectl apply -f security-dashboard/k8s/dashboard-admission-policy.yaml
    ```
+
+   The pod runs non-root with a read-only cluster role (no Secrets access), no hostPID and no hostPath mounts.
+   kube-bench runs as a short-lived Job (the admission policy only lets the dashboard create that fixed Job).
 
 4. **Access the dashboard**:
    ```bash
@@ -318,6 +327,8 @@ Monitor real-time feedback from the scanning engine:
 - **Performance Metrics**: Scan duration and resource usage
 
 ### 6. 💻 Terminal
+**Off by default.** Set `ENABLE_TERMINAL=true` on the Deployment to enable it (superuser only; every command is audit-logged).
+
 Direct shell access to the security container:
 - **Kubectl Integration**: Run kubectl commands directly
 - **Cluster Inspection**: View pods, deployments, services

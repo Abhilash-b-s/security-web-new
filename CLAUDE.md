@@ -43,7 +43,8 @@ docker run -d -p 8000:8000 \
 ### Kubernetes
 ```bash
 ./build_and_deploy.sh          # Build, push, and deploy
-kubectl apply -f security-dashboard/k8s/dashboard.yaml
+kubectl apply -f security-dashboard/k8s/dashboard.yaml   # then dashboard-rbac.yaml, dashboard-admission-policy.yaml
+# Auth Secret is NOT in dashboard.yaml (see dashboard-secret.example.yaml); build_and_deploy.sh [-y] creates it only if missing
 # Access via NodePort 30095, namespace: security-ops
 ```
 
@@ -115,6 +116,9 @@ Auth is localStorage-based with two roles: `superuser` (all tabs) and `user` (re
 ### Kubernetes Deployment Notes
 
 - Namespace: `security-ops`; NodePort service on 30095
-- Runs with `cluster-admin` `ClusterRole` and `hostPID: true`
-- Volume mounts: `/run/containerd/containerd.sock`, `/etc/kubernetes`, `/var/lib/kubelet`, `/etc/systemd`
+- RBAC (`dashboard-rbac.yaml`): read-only ClusterRole, no Secrets; namespaced Role for Jobs/pods/pods-log in `security-ops` only
+- Pod runs non-root (uid 10001), caps dropped, seccomp RuntimeDefault, read-only root fs; no `hostPID`, no hostPath mounts, no containerd socket
+- kube-bench runs as a short-lived Job (`services/kubebench_job.py`, hostPID + read-only host paths); `dashboard-admission-policy.yaml` restricts the dashboard SA to creating only that fixed Job
+- Trivy image scans pull from registries (`--image-src remote`); the scan log ends with `scanned=N skipped=M`
+- Web terminal is off unless `ENABLE_TERMINAL=true`; `GET /api/features` tells the UI; commands are audit-logged
 - Image: `quay.io/abhilash_bs1/security-dashboard:latest`

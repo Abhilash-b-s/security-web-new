@@ -74,6 +74,18 @@ COPY security-dashboard/backend/ /app/security-dashboard/backend/
 # Copy built frontend from Stage 1 (for serving)
 COPY --from=frontend-build /app/frontend/dist /app/static
 
+# Run as a non-root user. Writable paths: /app/new, /app/state and the reports dir (a PVC in k8s,
+# owned here for plain docker run), plus /tmp (HOME, trivy cache, kubectl cache).
+# repos.txt is written by the source-code scan; a symlink into /tmp keeps /app itself read-only.
+RUN useradd --uid 10001 --user-group --no-create-home --shell /usr/sbin/nologin dashboard \
+    && mkdir -p /app/state /app/security-dashboard/backend/reports \
+    && ln -s /tmp/repos.txt /app/repos.txt \
+    && chown -R dashboard:dashboard /app/new /app/state /app/security-dashboard/backend/reports
+ENV HOME=/tmp \
+    TRIVY_CACHE_DIR=/tmp/trivy-cache \
+    PYTHONDONTWRITEBYTECODE=1
+USER 10001:10001
+
 # Set Environment Variables
 ENV PYTHONPATH=/app/security-dashboard/backend
 ENV APP_HOME=/app

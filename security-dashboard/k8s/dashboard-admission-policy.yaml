@@ -1,0 +1,74 @@
+# Limits what the dashboard ServiceAccount may create through its Job permission (dashboard-rbac.yaml).
+# Without this, a stolen SA token could create a Job that mounts the host filesystem. With it, the SA can
+# only create the one fixed kube-bench Job that services/kubebench_job.py builds. Keep both in sync.
+#
+# Only requests from that ServiceAccount are evaluated (matchConditions); other users are unaffected.
+# Requires Kubernetes 1.30+ (ValidatingAdmissionPolicy GA in admissionregistration.k8s.io/v1).
+#
+# RESIDUAL RISK, not eliminated: the SA can still create that fixed Job, which runs as root with
+# hostPID and read-only mounts of /etc/kubernetes, /var/lib/kubelet and /etc/systemd. The command is
+# pinned to kube-bench with fixed args, so an attacker cannot read arbitrary files through it, but the
+# kube-bench log output can contain host configuration details, and a Job can be created repeatedly.
+# The policy also trusts the image tag prefix: whoever can push that repository's tags controls what runs.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: dashboard-kubebench-job-only
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs"]
+  matchConditions:
+    - name: from-dashboard-sa
+      expression: "request.userInfo.username == 'system:serviceaccount:security-ops:security-dashboard-sa'"
+  variables:
+    - name: pod
+      expression: "object.spec.template.spec"
+    - name: c
+      expression: "variables.pod.containers[0]"
+  validations:
+    - expression: "object.metadata.namespace == 'security-ops'"
+      message: "dashboard may only create Jobs in security-ops"
+    - expression: "has(object.metadata.name) && object.metadata.name.startsWith('kube-bench-')"
+      message: "Job name must start with kube-bench-"
+    - expression: >-
+        variables.pod.containers.size() == 1 && !has(variables.pod.initContainers) &&
+        variables.c.image.startsWith('quay.io/abhilash_bs1/security-dashboard:')
+      message: "exactly one container, from the dashboard image, and no init containers"
+    - expression: >-
+        variables.c.command == ['/opt/kube-bench/kube-bench'] &&
+        has(variables.c.args) && variables.c.args.size() >= 4 &&
+        variables.c.args[0] == '--config-dir' && variables.c.args[1] == '/opt/kube-bench/cfg' && variables.c.args[2] == '--config' && variables.c.args[3] == '/opt/kube-bench/cfg/config.yaml' &&
+        (variables.c.args.size() == 4 ||
+         (variables.c.args.size() == 6 && variables.c.args[4] == '--version' && variables.c.args[5].matches('^[0-9]+[.][0-9]+$')))
+      message: "container command and args must be the fixed kube-bench invocation"
+    - expression: >-
+        !has(variables.c.env) && !has(variables.c.envFrom) &&
+        (!has(variables.c.securityContext) || !has(variables.c.securityContext.privileged) || variables.c.securityContext.privileged == false) &&
+        (!has(variables.c.securityContext) || !has(variables.c.securityContext.capabilities) || !has(variables.c.securityContext.capabilities.add))
+      message: "no env/envFrom, not privileged, no added capabilities"
+    - expression: >-
+        (!has(variables.pod.hostNetwork) || !variables.pod.hostNetwork) &&
+        (!has(variables.pod.hostIPC) || !variables.pod.hostIPC) &&
+        (!has(variables.pod.serviceAccountName) || variables.pod.serviceAccountName == 'default') &&
+        has(variables.pod.automountServiceAccountToken) && variables.pod.automountServiceAccountToken == false
+      message: "no hostNetwork/hostIPC, default ServiceAccount, no API token mounted"
+    - expression: >-
+        has(variables.pod.volumes) && variables.pod.volumes.all(v, has(v.hostPath) &&
+        v.hostPath.path in ['/etc/kubernetes', '/var/lib/kubelet', '/etc/systemd'])
+      message: "only hostPath volumes for /etc/kubernetes, /var/lib/kubelet, /etc/systemd"
+    - expression: >-
+        has(variables.c.volumeMounts) && variables.c.volumeMounts.all(m, has(m.readOnly) && m.readOnly == true)
+      message: "all volume mounts must be read-only"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: dashboard-kubebench-job-only
+spec:
+  policyName: dashboard-kubebench-job-only
+  validationActions: ["Deny"]

@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-OUTPUT_DIR="$(pwd)/${OUTPUT_DIR:-new}"
+OUTPUT_DIR="${OUTPUT_DIR:-new}"
+[[ "$OUTPUT_DIR" = /* ]] || OUTPUT_DIR="$(pwd)/$OUTPUT_DIR"
 
 PPWD=$(pwd)
 mkdir -p "$OUTPUT_DIR"

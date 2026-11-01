@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
+import { ClusterProvider } from './cluster'
 import './fonts.css'
 import './index.css'
 
@@ -33,7 +34,9 @@ window.fetch = async (input, init = {}) => {
 ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
         <BrowserRouter>
-            <App />
+            <ClusterProvider>
+                <App />
+            </ClusterProvider>
         </BrowserRouter>
     </React.StrictMode>,
 )

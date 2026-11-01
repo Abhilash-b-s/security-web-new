@@ -3,6 +3,7 @@ import { Edit } from 'lucide-react';
 import PageHead from './PageHead';
 import PasswordInput from './PasswordInput';
 import { SCAN_TYPES } from './ScanControl';
+import ClustersSettings from './ClustersSettings';
 
 export default function Settings({ initialSection = null }) {
     const [registries, setRegistries] = useState([]);
@@ -210,6 +211,7 @@ export default function Settings({ initialSection = null }) {
     // Navigation Items
     const navItems = [
         { id: 'registry', label: 'Container registries', count: registries.length || null },
+        { id: 'clusters', label: 'Clusters' },
         { id: 'git', label: 'Git repositories' },
         { id: 'fullscan', label: 'Full scan', count: fullScan.length ? `${fullScan.length}/${SCAN_TYPES.length}` : null },
         { id: 'suppressions', label: 'Suppressions', count: suppressions.length || null },
@@ -338,6 +340,8 @@ export default function Settings({ initialSection = null }) {
                         )}
                     </section>
                 )}
+
+                {activeSection === 'clusters' && <ClustersSettings />}
 
                 {activeSection === 'fullscan' && (
                     <section className="sheet max-w-3xl">

@@ -1,0 +1,82 @@
+# RBAC for the dashboard ServiceAccount (security-ops/security-dashboard-sa). Apply after dashboard.yaml.
+#
+# Read-only cluster view for the scans (trivy k8s / SBOM, kubectl get pods -A, nmap service discovery,
+# kyverno inputs, the read-only terminal). It replaces the former cluster-admin binding.
+#
+# SECRETS ARE DELIBERATELY NOT LISTED. No scan needs Secret contents, and a stolen dashboard token
+# must not be able to read credentials, TLS keys or other ServiceAccount tokens. Do not add "secrets"
+# here (or a "*" wildcard) to make a scan work: fix the scan instead.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security-dashboard-readonly
+rules:
+  # core: workloads + config + identity + storage objects trivy k8s and kyverno inspect
+  - apiGroups: [""]
+    resources: [pods, services, configmaps, namespaces, nodes, serviceaccounts,
+                persistentvolumes, persistentvolumeclaims, replicationcontrollers, resourcequotas, limitranges]
+    verbs: [get, list, watch]
+  - apiGroups: [apps]
+    resources: [deployments, daemonsets, statefulsets, replicasets]
+    verbs: [get, list, watch]
+  - apiGroups: [batch]
+    resources: [jobs, cronjobs]
+    verbs: [get, list, watch]
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses, networkpolicies, ingressclasses]
+    verbs: [get, list, watch]
+  - apiGroups: [policy]
+    resources: [poddisruptionbudgets]
+    verbs: [get, list, watch]
+  - apiGroups: [rbac.authorization.k8s.io]
+    resources: [roles, rolebindings, clusterroles, clusterrolebindings]
+    verbs: [get, list, watch]
+  - apiGroups: [apiextensions.k8s.io]
+    resources: [customresourcedefinitions]
+    verbs: [get, list, watch]
+  - apiGroups: [storage.k8s.io]
+    resources: [storageclasses]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: security-dashboard-readonly-binding
+subjects:
+  - kind: ServiceAccount
+    name: security-dashboard-sa
+    namespace: security-ops
+roleRef:
+  kind: ClusterRole
+  name: security-dashboard-readonly
+  apiGroup: rbac.authorization.k8s.io
+---
+# Namespaced: only what the kube-bench Job flow needs, only in security-ops.
+# pods/log is namespaced on purpose: the ClusterRole above cannot read logs cluster-wide.
+# The ValidatingAdmissionPolicy (dashboard-admission-policy.yaml) restricts WHAT Job may be created.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: security-dashboard-kubebench
+  namespace: security-ops
+rules:
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [create, get, list, delete]
+  - apiGroups: [""]
+    resources: [pods, pods/log]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: security-dashboard-kubebench
+  namespace: security-ops
+subjects:
+  - kind: ServiceAccount
+    name: security-dashboard-sa
+    namespace: security-ops
+roleRef:
+  kind: Role
+  name: security-dashboard-kubebench
+  apiGroup: rbac.authorization.k8s.io

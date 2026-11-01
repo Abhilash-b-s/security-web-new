@@ -1,23 +1,44 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useCluster, apiUrl } from '../cluster';
 
 // ── Shared helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Parts of the security score, each 0–100 (higher is better), as shares of what was scanned so the
+ * score does not bottom out on large clusters. A half-weight item counts as half a bad one.
+ * Snapshots from before the image/pod breakdown existed have no score.
+ */
+export function securityScoreParts(data) {
+    if (!data || (data.trivyImage?.images == null && data.kyverno?.pods == null)) return [];
+    const share = (bad, total) => Math.max(0, 100 - (bad / total) * 100);
+    const parts = [];
+    const img = data.trivyImage;
+    if (img?.images > 0) parts.push({
+        key: 'images', label: 'Images', weight: 40, score: share(img.imagesFixableCritical + img.imagesFixableHigh / 2, img.images),
+        note: `${img.imagesFixableCritical} of ${img.images} with a fixable critical CVE, ${img.imagesFixableHigh} more with a fixable high`,
+    });
+    const k = data.kyverno;
+    if (k?.pods > 0) parts.push({
+        key: 'workloads', label: 'Workloads', weight: 30, score: share(k.podsBaselineFail + k.podsRestrictedFail / 2, k.pods),
+        note: `${k.podsBaselineFail} of ${k.pods} pods fail Baseline pod security, ${k.podsRestrictedFail} more only Restricted · ${k.privileged} privileged, ${k.notNonRoot} not declared non-root`,
+    });
+    const kb = data.kubebench;
+    if (kb?.available && kb.total > 0) parts.push({
+        key: 'cis', label: 'CIS benchmark', weight: 20, score: ((kb.counts.PASS || 0) / kb.total) * 100,
+        note: `${kb.counts.PASS || 0} of ${kb.total} checks pass`,
+    });
+    const n = data.nmap;
+    if (n?.available && n.total > 0) parts.push({
+        key: 'network', label: 'Network', weight: 10, score: share(n.servicesWithWeakCiphers, n.total),
+        note: `${n.servicesWithWeakCiphers} of ${n.total} services offer weak ciphers`,
+    });
+    return parts;
+}
+
 export function computeSecurityScore(data) {
-    if (!data) return null;
-    const scores = [];
-    if (data.kyverno?.available && data.kyverno.total > 0) scores.push(((data.kyverno.counts.PASS || 0) / data.kyverno.total) * 100);
-    if (data.kubebench?.available && data.kubebench.total > 0) scores.push(((data.kubebench.counts.PASS || 0) / data.kubebench.total) * 100);
-    if (data.trivyImage?.available && data.trivyImage.total > 0) {
-        const c = data.trivyImage.counts;
-        scores.push(Math.max(0, 100 - Math.min(100, (c.CRITICAL || 0) * 5 + (c.HIGH || 0))));
-    }
-    if (data.cluster?.available && data.cluster.total > 0) {
-        const c = data.cluster.counts;
-        scores.push(Math.max(0, 100 - Math.min(100, (c.CRITICAL || 0) * 5 + (c.HIGH || 0))));
-    }
-    if (data.nmap?.available && data.nmap.total > 0) scores.push(Math.max(0, 100 - (data.nmap.servicesWithWeakCiphers / data.nmap.total) * 100));
-    if (scores.length === 0) return null;
-    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const parts = securityScoreParts(data);
+    const weight = parts.reduce((a, p) => a + p.weight, 0);
+    return weight ? Math.round(parts.reduce((a, p) => a + p.score * p.weight, 0) / weight) : null;
 }
 
 const VULN_SOURCES = [
@@ -33,7 +54,7 @@ const SEVERITIES = [
     { key: 'LOW', label: 'Low', color: 'var(--viz-low)' },
 ];
 const HEAT_ROWS = [
-    ['trivy-image', 'Image vulnerabilities'], ['trivy-sbom', 'SBOM inventory'], ['trivy-cluster', 'Cluster risks'],
+    ['trivy-image', 'Image vulnerabilities'], ['trivy-sbom', 'SBOM inventory'], ['trivy-cluster', 'Cluster risks'], ['trivy-compliance', 'Compliance'],
     ['kube-bench', 'CIS benchmark'], ['kyverno', 'Policy compliance'], ['nmap', 'Network exposure'], ['trivy-repo', 'Source code'],
 ];
 const HEAT_FILL = ['var(--viz-h0)', 'var(--viz-h1)', 'var(--viz-h2)', 'var(--viz-h3)', 'var(--viz-h4)'];
@@ -361,6 +382,7 @@ function Heatmap({ days }) {
 // ── Section ────────────────────────────────────────────────────────────────
 
 export default function HistoryCharts() {
+    const { cluster } = useCluster();
     const [range, setRange] = useState(7);
     const [compare, setCompare] = useState(true);
     const [data, setData] = useState(null);
@@ -368,12 +390,12 @@ export default function HistoryCharts() {
 
     useEffect(() => {
         let alive = true;
-        fetch(`/api/dashboard/history?days=${range}`)
+        fetch(apiUrl(cluster, `/api/dashboard/history?days=${range}`))
             .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
             .then(d => { if (alive) { setData(d); setError(null); } })
             .catch(e => { if (alive) setError(e.message); });
         return () => { alive = false; };
-    }, [range]);
+    }, [range, cluster]);
 
     const view = useMemo(() => {
         if (!data || data.days !== range) return null;

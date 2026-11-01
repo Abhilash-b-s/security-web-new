@@ -8,6 +8,7 @@ from fastapi.responses import Response
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from models import ErrorResponse
+from services.cluster_context import cluster_dir
 
 router = APIRouter()
 
@@ -62,16 +63,17 @@ NEW_DIR = os.getenv("NEW_DIR", "/app/new")
     },
     tags=["files"]
 )
-async def list_files(subpath: str = Query(..., description="Subdirectory to list (e.g., 'trivy-reports', 'kube-bench')", examples=["trivy-reports"])):
+async def list_files(subpath: str = Query(..., description="Subdirectory to list (e.g., 'trivy-reports', 'kube-bench')", examples=["trivy-reports"]), cluster: str = Query("local", description="Cluster whose reports to list")):
     """
     List all JSON files in a specific subdirectory.
 
     Useful for browsing scan outputs organized by scan type.
     """
-    target_dir = os.path.join(NEW_DIR, subpath)
+    base = str(cluster_dir(cluster))
+    target_dir = os.path.join(base, subpath)
 
-    # Security check: Ensure we don't traverse out of NEW_DIR
-    if not os.path.abspath(target_dir).startswith(os.path.abspath(NEW_DIR)):
+    # Security check: Ensure we don't traverse out of the cluster's directory
+    if not os.path.abspath(target_dir).startswith(os.path.abspath(base)):
          raise HTTPException(status_code=403, detail="Access denied")
 
     if not os.path.exists(target_dir):

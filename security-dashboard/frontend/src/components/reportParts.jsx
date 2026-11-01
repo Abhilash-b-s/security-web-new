@@ -17,6 +17,7 @@ export const REPORT_TABS = [
   { id: 'cis', label: 'CIS Benchmark', key: 'kubebench' },
   { id: 'trivy-repo', label: 'Git Repository', key: 'trivyRepo' },
   { id: 'cluster', label: 'Cluster Scan', key: 'cluster' },
+  { id: 'compliance', label: 'Compliance', key: 'compliance' },
 ];
 
 export const SEV_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN'];

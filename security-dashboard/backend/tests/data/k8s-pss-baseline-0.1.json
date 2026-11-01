@@ -1,0 +1,1500 @@
+{
+ "ID": "k8s-pss-baseline-0.1",
+ "Title": "Kubernetes Pod Security Standards - Baseline",
+ "Description": "Kubernetes Pod Security Standards - Baseline",
+ "Version": "0.1",
+ "RelatedResources": [
+  "https://kubernetes.io/docs/concepts/security/pod-security-standards/#baseline"
+ ],
+ "Results": [
+  {
+   "ID": "1",
+   "Name": "HostProcess",
+   "Description": "Windows pods offer the ability to run HostProcess containers which enables privileged access to the Windows node. Privileged access to the host is disallowed in the baseline policy",
+   "Severity": "HIGH",
+   "Results": null
+  },
+  {
+   "ID": "2",
+   "Name": "Host Namespaces",
+   "Description": "Sharing the host namespaces must be disallowed.",
+   "Severity": "HIGH",
+   "Results": null
+  },
+  {
+   "ID": "3",
+   "Name": "Privileged Containers",
+   "Description": "Privileged Pods disable most security mechanisms and must be disallowed.",
+   "Severity": "HIGH",
+   "Results": [
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0017",
+       "Title": "Privileged",
+       "Message": "Container 'mount-bpf-fs' of DaemonSet 'cilium' should set 'securityContext.privileged' to false",
+       "Resolution": "Change 'containers[].securityContext.privileged' to 'false'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0017",
+       "Title": "Privileged",
+       "Message": "Container 'kube-proxy' of DaemonSet 'kube-proxy' should set 'securityContext.privileged' to false",
+       "Resolution": "Change 'containers[].securityContext.privileged' to 'false'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0017",
+       "Title": "Privileged",
+       "Message": "Container 'neuvector-enforcer-pod' of DaemonSet 'neuvector-enforcer-pod' should set 'securityContext.privileged' to false",
+       "Resolution": "Change 'containers[].securityContext.privileged' to 'false'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "4",
+   "Name": "Capabilities",
+   "Description": "Adding additional capabilities beyond those listed below must be disallowed.",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "Deployment/ingress-nginx-controller",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'controller' of Deployment 'ingress-nginx-controller' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'apply-sysctl-overwrites' of DaemonSet 'cilium' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'clean-cilium-state' of DaemonSet 'cilium' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'config' of DaemonSet 'cilium' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'mount-cgroup' of DaemonSet 'cilium' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'cilium-envoy' of DaemonSet 'cilium-envoy' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/coredns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'coredns' of Deployment 'coredns' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/kps-grafana",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0022",
+       "Title": "Specific capabilities added",
+       "Message": "Container 'init-chown-data' of Deployment 'kps-grafana' should not set 'securityContext.capabilities.add'",
+       "Resolution": "Do not set spec.containers[*].securityContext.capabilities.add and spec.initContainers[*].securityContext.capabilities.add.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "5",
+   "Name": "HostPath Volumes",
+   "Description": "HostPath volumes must be forbidden.",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "DaemonSet 'cilium' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "DaemonSet 'cilium-envoy' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "DaemonSet 'kube-proxy' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/etcd-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "Pod 'etcd-lab-obs-01' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "Pod 'kube-apiserver-lab-obs-01' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-controller-manager-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "Pod 'kube-controller-manager-lab-obs-01' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-scheduler-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "Pod 'kube-scheduler-lab-obs-01' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kps-prometheus-node-exporter",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "DaemonSet 'kps-prometheus-node-exporter' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "DaemonSet 'neuvector-enforcer-pod' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0023",
+       "Title": "hostPath volumes mounted",
+       "Message": "Deployment 'security-dashboard' should not set 'spec.template.volumes.hostPath'",
+       "Resolution": "Do not set 'spec.volumes[*].hostPath'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "6",
+   "Name": "host ports",
+   "Description": "hostports should be disallowed, or at minimum restricted to a known list.",
+   "Severity": "HIGH",
+   "Results": [
+    {
+     "Target": "Deployment/ingress-nginx-controller",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'controller' of Deployment 'ingress-nginx-controller' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-envoy' of DaemonSet 'cilium-envoy' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cilium-operator",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0024",
+       "Title": "Access to host ports",
+       "Message": "Container 'cilium-operator' of Deployment 'cilium-operator' should not set host ports, 'ports[*].hostPort'",
+       "Resolution": "Do not set spec.containers[*].ports[*].hostPort and spec.initContainers[*].ports[*].hostPort.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "7",
+   "Name": "AppArmor",
+   "Description": "On supported hosts, the runtime/default AppArmor profile is applied by default. The baseline policy should prevent overriding or disabling the default AppArmor profile, or restrict overrides to an allowed set of profiles.",
+   "Severity": "HIGH",
+   "Results": null
+  },
+  {
+   "ID": "8",
+   "Name": "SELinux",
+   "Description": "Setting the SELinux type is restricted, and setting a custom SELinux user or role option is forbidden.",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0025",
+       "Title": "SELinux custom options set",
+       "Message": "DaemonSet 'cilium' uses invalid seLinux type 'spc_t'",
+       "Resolution": "Do not set 'spec.securityContext.seLinuxOptions', spec.containers[*].securityContext.seLinuxOptions and spec.initContainers[*].securityContext.seLinuxOptions.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0025",
+       "Title": "SELinux custom options set",
+       "Message": "DaemonSet 'cilium-envoy' uses invalid seLinux type 'spc_t'",
+       "Resolution": "Do not set 'spec.securityContext.seLinuxOptions', spec.containers[*].securityContext.seLinuxOptions and spec.initContainers[*].securityContext.seLinuxOptions.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "9",
+   "Name": "/proc Mount Type",
+   "Description": "The default /proc masks are set up to reduce attack surface, and should be required.",
+   "Severity": "MEDIUM",
+   "Results": null
+  },
+  {
+   "ID": "10",
+   "Name": "Seccomp",
+   "Description": "Seccomp profile must not be explicitly set to Unconfined.",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "Deployment/registry",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"registry\" of deployment \"registry\" in \"harbor-poc\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"apply-sysctl-overwrites\" of daemonset \"cilium\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"cilium-agent\" of daemonset \"cilium\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"clean-cilium-state\" of daemonset \"cilium\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"config\" of daemonset \"cilium\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"install-cni-binaries\" of daemonset \"cilium\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"mount-bpf-fs\" of daemonset \"cilium\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"mount-cgroup\" of daemonset \"cilium\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"cilium-envoy\" of daemonset \"cilium-envoy\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"kube-proxy\" of daemonset \"kube-proxy\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/coredns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"coredns\" of deployment \"coredns\" in \"kube-system\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/local-path-provisioner",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"local-path-provisioner\" of deployment \"local-path-provisioner\" in \"local-path-storage\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/minio",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"minio\" of deployment \"minio\" in \"minio\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kps-prometheus-node-exporter",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"node-exporter\" of daemonset \"kps-prometheus-node-exporter\" in \"monitoring\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-cert-upgrader-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"neuvector-cert-upgrader-pod\" of cronjob \"neuvector-cert-upgrader-pod\" in \"neuvector\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-updater-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"neuvector-updater-pod\" of cronjob \"neuvector-updater-pod\" in \"neuvector\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"neuvector-enforcer-pod\" of daemonset \"neuvector-enforcer-pod\" in \"neuvector\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"init\" of deployment \"neuvector-controller-pod\" in \"neuvector\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"neuvector-controller-pod\" of deployment \"neuvector-controller-pod\" in \"neuvector\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-manager-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"neuvector-manager-pod\" of deployment \"neuvector-manager-pod\" in \"neuvector\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-scanner-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"neuvector-scanner-pod\" of deployment \"neuvector-scanner-pod\" in \"neuvector\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"alloy\" of daemonset \"alloy\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"config-reloader\" of daemonset \"alloy\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cortex-tenant",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"cortex-tenant\" of deployment \"cortex-tenant\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-loki",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"proxy\" of deployment \"grafana-tenant-proxy-loki\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-mimir",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"proxy\" of deployment \"grafana-tenant-proxy-mimir\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/loki-read",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"loki\" of deployment \"loki-read\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-backend",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"loki\" of statefulset \"loki-backend\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-backend",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"loki-sc-rules\" of statefulset \"loki-backend\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-chunks-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"exporter\" of statefulset \"loki-chunks-cache\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-chunks-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"memcached\" of statefulset \"loki-chunks-cache\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-results-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"exporter\" of statefulset \"loki-results-cache\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-results-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"memcached\" of statefulset \"loki-results-cache\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-write",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"loki\" of statefulset \"loki-write\" in \"observability\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-filer",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"seaweedfs\" of statefulset \"seaweedfs-filer\" in \"seaweedfs\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-master",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"seaweedfs\" of statefulset \"seaweedfs-master\" in \"seaweedfs\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-volume",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"seaweedfs\" of statefulset \"seaweedfs-volume\" in \"seaweedfs\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/security-dashboard-scheduled-scans",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"trigger\" of cronjob \"security-dashboard-scheduled-scans\" in \"security-ops\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"security-dashboard\" of deployment \"security-dashboard\" in \"security-ops\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0104",
+       "Title": "Seccomp policies disabled",
+       "Message": "container \"seed-data\" of deployment \"security-dashboard\" in \"security-ops\" namespace should specify a seccomp profile",
+       "Resolution": "Specify seccomp either by annotation or by seccomp profile type having allowed values as per pod security standards",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "11",
+   "Name": "Sysctls",
+   "Description": "Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed \"safe\" subset. A sysctl is considered safe if it is namespaced in the container or the Pod, and it is isolated from other Pods or processes on the same Node.",
+   "Severity": "MEDIUM",
+   "Results": null
+  }
+ ]
+}

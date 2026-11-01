@@ -10,6 +10,7 @@ class ScanType(str, Enum):
     TRIVY_IMAGE = "trivy-image"
     TRIVY_SBOM = "trivy-sbom"
     TRIVY_CLUSTER = "trivy-cluster"
+    TRIVY_COMPLIANCE = "trivy-compliance"
     TRIVY_REPO = "trivy-repo"
     NMAP = "nmap"
     ALL = "all"
@@ -27,6 +28,7 @@ class ScanRequest(BaseModel):
         ...,
         description="Type of security scan to perform"
     )
+    cluster: str = Field("local", description="Registered cluster to scan; 'local' is the cluster the dashboard runs in")
     scan_id: Optional[str] = Field(
         None,
         description="Optional custom scan ID. If not provided, a UUID will be generated."

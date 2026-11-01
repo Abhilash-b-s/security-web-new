@@ -4,6 +4,7 @@ import os
 import json
 import pandas as pd
 from pathlib import Path
+from services.cluster_context import cluster_dir
 
 router = APIRouter()
 
@@ -11,10 +12,10 @@ router = APIRouter()
 NEW_DIR = Path(os.getenv("NEW_DIR", "/app/new"))
 
 
-def load_cluster_report():
+def load_cluster_report(cluster: str = "local"):
     """The Trivy cluster report: cluster.json if present, otherwise the cluster.zip the scan script leaves."""
     import zipfile
-    base = NEW_DIR / "trivy-cluster-report"
+    base = cluster_dir(cluster) / "trivy-cluster-report"
     if (base / "cluster.json").exists():
         return json.loads((base / "cluster.json").read_text())
     if (base / "cluster.zip").exists():
@@ -40,10 +41,11 @@ def load_cluster_report():
     """,
     tags=["dashboard"]
 )
-async def get_dashboard_stats():
+async def get_dashboard_stats(cluster: str = "local"):
     """
     Extract and aggregate statistics from all available security scan reports.
     """
+    NEW_DIR = cluster_dir(cluster)
     stats = {
         "kyverno": {"counts": {}, "total": 0, "available": False},
         "trivyImage": {"counts": {}, "total": 0, "available": False},
@@ -68,6 +70,19 @@ async def get_dashboard_stats():
                 }
                 stats["kyverno"]["total"] = int(df.shape[0])
                 stats["kyverno"]["available"] = True
+                # Pods failing Pod Security Standards, for the workload part of the security score
+                if {'policy', 'category', 'resource_name'} <= set(df.columns):
+                    pod = df['resource_namespace'].astype(str) + '/' + df['resource_name'].astype(str)
+                    fail = df[status_col].astype(str).str.lower() == 'fail'
+                    failing = lambda mask: set(pod[fail & mask])
+                    baseline = failing(df['category'].astype(str).str.contains('Baseline'))
+                    stats["kyverno"].update({
+                        "pods": int(pod.nunique()),
+                        "podsBaselineFail": len(baseline),
+                        "podsRestrictedFail": len(failing(df['category'].astype(str).str.contains('Restricted')) - baseline),
+                        "privileged": len(failing(df['policy'] == 'disallow-privileged-containers')),
+                        "notNonRoot": len(failing(df['policy'] == 'require-run-as-nonroot')),
+                    })
     except Exception as e:
         print(f"Error loading Kyverno data: {e}")
 
@@ -108,6 +123,16 @@ async def get_dashboard_stats():
                 }
                 stats["trivyImage"]["total"] = int(df.shape[0])
                 stats["trivyImage"]["available"] = True
+                # Images with a fixable critical/high CVE, for the image part of the security score
+                if {'Artifact', 'Fixed Version'} <= set(df.columns):
+                    fixable = df[df['Fixed Version'].fillna('').astype(str).str.strip() != '']
+                    crit = set(fixable[fixable[sev_col] == 'CRITICAL']['Artifact'])
+                    high = set(fixable[fixable[sev_col] == 'HIGH']['Artifact']) - crit
+                    stats["trivyImage"].update({
+                        "images": int(df['Artifact'].nunique()),
+                        "imagesFixableCritical": len(crit),
+                        "imagesFixableHigh": len(high),
+                    })
     except Exception as e:
         print(f"Error loading Trivy Image data: {e}")
 
@@ -229,7 +254,7 @@ async def get_dashboard_stats():
 
     # Load Cluster scan data (the scan script leaves cluster.zip; cluster.json is read if present)
     try:
-        json_data = load_cluster_report()
+        json_data = load_cluster_report(cluster)
         if json_data is not None:
             counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "UNKNOWN": 0}
 
@@ -275,6 +300,6 @@ async def get_dashboard_stats():
     """,
     tags=["dashboard"]
 )
-async def get_dashboard_history(days: int = Query(30, ge=1, le=180)):
+async def get_dashboard_history(days: int = Query(30, ge=1, le=180), cluster: str = "local"):
     from services.history import build_history
-    return build_history(days)
+    return build_history(days, cluster)

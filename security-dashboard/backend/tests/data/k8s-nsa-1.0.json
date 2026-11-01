@@ -1,0 +1,4477 @@
+{
+ "ID": "k8s-nsa-1.0",
+ "Title": "National Security Agency - Kubernetes Hardening Guidance v1.0",
+ "Description": "National Security Agency - Kubernetes Hardening Guidance",
+ "Version": "1.0",
+ "RelatedResources": [
+  "https://www.nsa.gov/Press-Room/News-Highlights/Article/Article/2716980/nsa-cisa-release-kubernetes-hardening-guidance/"
+ ],
+ "Results": [
+  {
+   "ID": "1.0",
+   "Name": "Non-root containers",
+   "Description": "Check that container is not running as root",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "Deployment/registry",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'registry' of Deployment 'registry' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'apply-sysctl-overwrites' of DaemonSet 'cilium' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'clean-cilium-state' of DaemonSet 'cilium' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'config' of DaemonSet 'cilium' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'install-cni-binaries' of DaemonSet 'cilium' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'mount-bpf-fs' of DaemonSet 'cilium' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'mount-cgroup' of DaemonSet 'cilium' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'cilium-envoy' of DaemonSet 'cilium-envoy' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'kube-proxy' of DaemonSet 'kube-proxy' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cilium-operator",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'cilium-operator' of Deployment 'cilium-operator' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/coredns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'coredns' of Deployment 'coredns' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/etcd-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'etcd' of Pod 'etcd-lab-obs-01' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'kube-apiserver' of Pod 'kube-apiserver-lab-obs-01' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-controller-manager-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'kube-controller-manager' of Pod 'kube-controller-manager-lab-obs-01' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-scheduler-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'kube-scheduler' of Pod 'kube-scheduler-lab-obs-01' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/local-path-provisioner",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'local-path-provisioner' of Deployment 'local-path-provisioner' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/minio",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'minio' of Deployment 'minio' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-cert-upgrader-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'neuvector-cert-upgrader-pod' of CronJob 'neuvector-cert-upgrader-pod' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-updater-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'neuvector-updater-pod' of CronJob 'neuvector-updater-pod' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'neuvector-enforcer-pod' of DaemonSet 'neuvector-enforcer-pod' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'init' of Deployment 'neuvector-controller-pod' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'neuvector-controller-pod' of Deployment 'neuvector-controller-pod' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-manager-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'neuvector-manager-pod' of Deployment 'neuvector-manager-pod' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-scanner-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'neuvector-scanner-pod' of Deployment 'neuvector-scanner-pod' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'alloy' of DaemonSet 'alloy' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'config-reloader' of DaemonSet 'alloy' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cortex-tenant",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'cortex-tenant' of Deployment 'cortex-tenant' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-loki",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'proxy' of Deployment 'grafana-tenant-proxy-loki' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-mimir",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'proxy' of Deployment 'grafana-tenant-proxy-mimir' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-filer",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-filer' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-master",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-master' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-volume",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-volume' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/security-dashboard-scheduled-scans",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'trigger' of CronJob 'security-dashboard-scheduled-scans' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'security-dashboard' of Deployment 'security-dashboard' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0012",
+       "Title": "Runs as root user",
+       "Message": "Container 'seed-data' of Deployment 'security-dashboard' should set 'securityContext.runAsNonRoot' to true",
+       "Resolution": "Set 'containers[].securityContext.runAsNonRoot' to true.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.1",
+   "Name": "Immutable container file systems",
+   "Description": "Check that container root file system is immutable",
+   "Severity": "LOW",
+   "Results": [
+    {
+     "Target": "Deployment/registry",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'registry' of Deployment 'registry' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/ingress-nginx-controller",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'controller' of Deployment 'ingress-nginx-controller' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'apply-sysctl-overwrites' of DaemonSet 'cilium' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'clean-cilium-state' of DaemonSet 'cilium' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'config' of DaemonSet 'cilium' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'install-cni-binaries' of DaemonSet 'cilium' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'mount-bpf-fs' of DaemonSet 'cilium' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'mount-cgroup' of DaemonSet 'cilium' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'cilium-envoy' of DaemonSet 'cilium-envoy' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'kube-proxy' of DaemonSet 'kube-proxy' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cilium-operator",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'cilium-operator' of Deployment 'cilium-operator' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/etcd-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'etcd' of Pod 'etcd-lab-obs-01' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'kube-apiserver' of Pod 'kube-apiserver-lab-obs-01' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-controller-manager-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'kube-controller-manager' of Pod 'kube-controller-manager-lab-obs-01' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-scheduler-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'kube-scheduler' of Pod 'kube-scheduler-lab-obs-01' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/local-path-provisioner",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'local-path-provisioner' of Deployment 'local-path-provisioner' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/minio",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'minio' of Deployment 'minio' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/kps-grafana",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'grafana' of Deployment 'kps-grafana' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/kps-grafana",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'grafana-sc-dashboard' of Deployment 'kps-grafana' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/kps-grafana",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'grafana-sc-datasources' of Deployment 'kps-grafana' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/kps-grafana",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'init-chown-data' of Deployment 'kps-grafana' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-cert-upgrader-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'neuvector-cert-upgrader-pod' of CronJob 'neuvector-cert-upgrader-pod' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-updater-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'neuvector-updater-pod' of CronJob 'neuvector-updater-pod' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'neuvector-enforcer-pod' of DaemonSet 'neuvector-enforcer-pod' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'init' of Deployment 'neuvector-controller-pod' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'neuvector-controller-pod' of Deployment 'neuvector-controller-pod' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-manager-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'neuvector-manager-pod' of Deployment 'neuvector-manager-pod' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-scanner-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'neuvector-scanner-pod' of Deployment 'neuvector-scanner-pod' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'alloy' of DaemonSet 'alloy' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'config-reloader' of DaemonSet 'alloy' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cortex-tenant",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'cortex-tenant' of Deployment 'cortex-tenant' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-filer",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-filer' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-master",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-master' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-volume",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-volume' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/security-dashboard-scheduled-scans",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'trigger' of CronJob 'security-dashboard-scheduled-scans' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'security-dashboard' of Deployment 'security-dashboard' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0014",
+       "Title": "Root file system is not read-only",
+       "Message": "Container 'seed-data' of Deployment 'security-dashboard' should set 'securityContext.readOnlyRootFilesystem' to true",
+       "Resolution": "Change 'containers[].securityContext.readOnlyRootFilesystem' to 'true'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.2",
+   "Name": "Preventing privileged containers",
+   "Description": "Controls whether Pods can run privileged containers",
+   "Severity": "HIGH",
+   "Results": [
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0017",
+       "Title": "Privileged",
+       "Message": "Container 'mount-bpf-fs' of DaemonSet 'cilium' should set 'securityContext.privileged' to false",
+       "Resolution": "Change 'containers[].securityContext.privileged' to 'false'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0017",
+       "Title": "Privileged",
+       "Message": "Container 'kube-proxy' of DaemonSet 'kube-proxy' should set 'securityContext.privileged' to false",
+       "Resolution": "Change 'containers[].securityContext.privileged' to 'false'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0017",
+       "Title": "Privileged",
+       "Message": "Container 'neuvector-enforcer-pod' of DaemonSet 'neuvector-enforcer-pod' should set 'securityContext.privileged' to false",
+       "Resolution": "Change 'containers[].securityContext.privileged' to 'false'.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.3",
+   "Name": "Share containers process namespaces",
+   "Description": "Controls whether containers can share process namespaces",
+   "Severity": "HIGH",
+   "Results": null
+  },
+  {
+   "ID": "1.4",
+   "Name": "Share host process namespaces",
+   "Description": "Controls whether share host process namespaces",
+   "Severity": "HIGH",
+   "Results": [
+    {
+     "Target": "Deployment/ingress-nginx-controller",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "Deployment 'ingress-nginx-controller' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "DaemonSet 'cilium' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "DaemonSet 'cilium-envoy' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "DaemonSet 'kube-proxy' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cilium-operator",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "Deployment 'cilium-operator' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/etcd-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "Pod 'etcd-lab-obs-01' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "Pod 'kube-apiserver-lab-obs-01' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-controller-manager-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "Pod 'kube-controller-manager-lab-obs-01' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-scheduler-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "Pod 'kube-scheduler-lab-obs-01' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kps-prometheus-node-exporter",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0009",
+       "Title": "Access to host network",
+       "Message": "DaemonSet 'kps-prometheus-node-exporter' should not set 'spec.template.spec.hostNetwork' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostNetwork' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.5",
+   "Name": "Use the host network",
+   "Description": "Controls whether containers can use the host network",
+   "Severity": "HIGH",
+   "Results": [
+    {
+     "Target": "DaemonSet/kps-prometheus-node-exporter",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0010",
+       "Title": "Access to host PID",
+       "Message": "DaemonSet 'kps-prometheus-node-exporter' should not set 'spec.template.spec.hostPID' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostPID' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0010",
+       "Title": "Access to host PID",
+       "Message": "DaemonSet 'neuvector-enforcer-pod' should not set 'spec.template.spec.hostPID' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostPID' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0010",
+       "Title": "Access to host PID",
+       "Message": "Deployment 'security-dashboard' should not set 'spec.template.spec.hostPID' to true",
+       "Resolution": "Do not set 'spec.template.spec.hostPID' to true.",
+       "Severity": "HIGH",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.6",
+   "Name": "Run with root privileges or with root group membership",
+   "Description": "Controls whether container applications can run with root privileges or with root group membership",
+   "Severity": "LOW",
+   "Results": null
+  },
+  {
+   "ID": "1.7",
+   "Name": "Restricts escalation to root privileges",
+   "Description": "Control check restrictions escalation to root privileges",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "Deployment/registry",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'registry' of Deployment 'registry' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'apply-sysctl-overwrites' of DaemonSet 'cilium' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'cilium-agent' of DaemonSet 'cilium' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'clean-cilium-state' of DaemonSet 'cilium' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'config' of DaemonSet 'cilium' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'install-cni-binaries' of DaemonSet 'cilium' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'mount-bpf-fs' of DaemonSet 'cilium' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'mount-cgroup' of DaemonSet 'cilium' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'cilium-envoy' of DaemonSet 'cilium-envoy' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'kube-proxy' of DaemonSet 'kube-proxy' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/etcd-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'etcd' of Pod 'etcd-lab-obs-01' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'kube-apiserver' of Pod 'kube-apiserver-lab-obs-01' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-controller-manager-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'kube-controller-manager' of Pod 'kube-controller-manager-lab-obs-01' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Pod/kube-scheduler-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'kube-scheduler' of Pod 'kube-scheduler-lab-obs-01' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/local-path-provisioner",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'local-path-provisioner' of Deployment 'local-path-provisioner' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/minio",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'minio' of Deployment 'minio' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kps-prometheus-node-exporter",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'node-exporter' of DaemonSet 'kps-prometheus-node-exporter' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/kps-grafana",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'init-chown-data' of Deployment 'kps-grafana' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-cert-upgrader-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'neuvector-cert-upgrader-pod' of CronJob 'neuvector-cert-upgrader-pod' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-updater-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'neuvector-updater-pod' of CronJob 'neuvector-updater-pod' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'neuvector-enforcer-pod' of DaemonSet 'neuvector-enforcer-pod' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'init' of Deployment 'neuvector-controller-pod' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'neuvector-controller-pod' of Deployment 'neuvector-controller-pod' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-manager-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'neuvector-manager-pod' of Deployment 'neuvector-manager-pod' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-scanner-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'neuvector-scanner-pod' of Deployment 'neuvector-scanner-pod' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'alloy' of DaemonSet 'alloy' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'config-reloader' of DaemonSet 'alloy' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cortex-tenant",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'cortex-tenant' of Deployment 'cortex-tenant' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-filer",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-filer' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-master",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-master' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-volume",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'seaweedfs' of StatefulSet 'seaweedfs-volume' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/security-dashboard-scheduled-scans",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'trigger' of CronJob 'security-dashboard-scheduled-scans' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'security-dashboard' of Deployment 'security-dashboard' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0001",
+       "Title": "Can elevate its own privileges",
+       "Message": "Container 'seed-data' of Deployment 'security-dashboard' should set 'securityContext.allowPrivilegeEscalation' to false",
+       "Resolution": "Set 'set containers[].securityContext.allowPrivilegeEscalation' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.8",
+   "Name": "Sets the SELinux context of the container",
+   "Description": "Control checks if pod sets the SELinux context of the container",
+   "Severity": "MEDIUM",
+   "Results": null
+  },
+  {
+   "ID": "1.9",
+   "Name": "Restrict a container's access to resources with AppArmor",
+   "Description": "Control checks the restriction of containers access to resources with AppArmor",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "Deployment/registry",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/coredns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/local-path-provisioner",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/minio",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kps-prometheus-node-exporter",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-cert-upgrader-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-updater-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-manager-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-scanner-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cortex-tenant",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-loki",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-mimir",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/loki-read",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-backend",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-backend",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-chunks-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-chunks-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-results-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-results-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-write",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-filer",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-master",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-volume",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/security-dashboard-scheduled-scans",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.10",
+   "Name": "Sets the seccomp profile used to sandbox containers.",
+   "Description": "Control checks the sets the seccomp profile used to sandbox containers",
+   "Severity": "LOW",
+   "Results": [
+    {
+     "Target": "Deployment/registry",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/coredns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/local-path-provisioner",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/minio",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kps-prometheus-node-exporter",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-cert-upgrader-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/neuvector-updater-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/neuvector-enforcer-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-controller-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-manager-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/neuvector-scanner-pod",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/alloy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cortex-tenant",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-loki",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/grafana-tenant-proxy-mimir",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/loki-read",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-backend",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-backend",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-chunks-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-chunks-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-results-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-results-cache",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/loki-write",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-filer",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-master",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "StatefulSet/seaweedfs-volume",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "CronJob/security-dashboard-scheduled-scans",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/security-dashboard",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0030",
+       "Title": "Runtime/Default Seccomp profile not set",
+       "Message": "Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'",
+       "Resolution": "Set 'spec.securityContext.seccompProfile.type', 'spec.containers[*].securityContext.seccompProfile' and 'spec.initContainers[*].securityContext.seccompProfile' to 'RuntimeDefault' or undefined.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "1.11",
+   "Name": "Protecting Pod service account tokens",
+   "Description": "Control check whether disable secret token been mount ,automountServiceAccountToken: false",
+   "Severity": "MEDIUM",
+   "Results": null
+  },
+  {
+   "ID": "1.12",
+   "Name": "Namespace kube-system should not be used by users",
+   "Description": "Control check whether Namespace kube-system is not be used by users",
+   "DefaultStatus": "FAIL",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "DaemonSet/cilium",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "DaemonSet 'cilium' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "DaemonSet 'cilium-envoy' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "DaemonSet/kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "DaemonSet 'kube-proxy' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/cilium-operator",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Deployment 'cilium-operator' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/coredns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Deployment 'coredns' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Deployment/metrics-server",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Deployment 'metrics-server' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/cilium-envoy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'cilium-envoy' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/hubble-peer",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'hubble-peer' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/kps-kube-prometheus-stack-coredns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'kps-kube-prometheus-stack-coredns' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/kps-kube-prometheus-stack-kube-controller-manager",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'kps-kube-prometheus-stack-kube-controller-manager' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/kps-kube-prometheus-stack-kube-etcd",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'kps-kube-prometheus-stack-kube-etcd' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/kps-kube-prometheus-stack-kube-proxy",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'kps-kube-prometheus-stack-kube-proxy' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/kps-kube-prometheus-stack-kube-scheduler",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'kps-kube-prometheus-stack-kube-scheduler' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/kps-kube-prometheus-stack-kubelet",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'kps-kube-prometheus-stack-kubelet' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/kube-dns",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'kube-dns' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    },
+    {
+     "Target": "Service/metrics-server",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KSV-0037",
+       "Title": "User resources should not be placed in kube-system namespace",
+       "Message": "Service 'metrics-server' should not be set with 'kube-system' namespace",
+       "Resolution": "Deploy the user resources into a designated namespace which is not kube-system.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "2.0",
+   "Name": "Pod and/or namespace Selectors usage",
+   "Description": "Control check validate the pod and/or namespace Selectors usage",
+   "DefaultStatus": "FAIL",
+   "Severity": "MEDIUM",
+   "Results": null
+  },
+  {
+   "ID": "3.0",
+   "Name": "Use CNI plugin that supports NetworkPolicy API (Manual)",
+   "Description": "Control check whether check cni plugin installed",
+   "DefaultStatus": "FAIL",
+   "Severity": "CRITICAL",
+   "Results": null
+  },
+  {
+   "ID": "4.0",
+   "Name": "Use ResourceQuota policies to limit resources",
+   "Description": "Control check the use of ResourceQuota policy to limit aggregate resource usage within namespace",
+   "DefaultStatus": "FAIL",
+   "Severity": "MEDIUM",
+   "Results": null
+  },
+  {
+   "ID": "4.1",
+   "Name": "Use LimitRange policies to limit resources",
+   "Description": "Control check the use of LimitRange policy limit resource usage for namespaces or nodes",
+   "DefaultStatus": "FAIL",
+   "Severity": "MEDIUM",
+   "Results": null
+  },
+  {
+   "ID": "5.0",
+   "Name": "Control plan disable insecure port (Manual)",
+   "Description": "Control check whether control plan disable insecure port",
+   "DefaultStatus": "FAIL",
+   "Severity": "CRITICAL",
+   "Results": null
+  },
+  {
+   "ID": "5.1",
+   "Name": "Encrypt etcd communication",
+   "Description": "Control check whether etcd communication is encrypted",
+   "Severity": "CRITICAL",
+   "Results": [
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KCV-0030",
+       "Title": "Ensure that the --encryption-provider-config argument is set as appropriate",
+       "Message": "Ensure that the --encryption-provider-config argument is set as appropriate",
+       "Resolution": "Follow the Kubernetes documentation and configure a EncryptionConfig file. Then, edit the API server pod specification file /etc/kubernetes/manifests/kube-apiserver.yaml on the master node and set the --encryption-provider-config parameter to the path of that file",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "6.0",
+   "Name": "Ensure kube config file permission (Manual)",
+   "Description": "Control check whether kube config file permissions",
+   "DefaultStatus": "FAIL",
+   "Severity": "CRITICAL",
+   "Results": null
+  },
+  {
+   "ID": "6.1",
+   "Name": "Check that encryption resource has been set",
+   "Description": "Control checks whether encryption resource has been set",
+   "Severity": "CRITICAL",
+   "Results": null
+  },
+  {
+   "ID": "6.2",
+   "Name": "Check encryption provider",
+   "Description": "Control checks whether encryption provider has been set",
+   "Severity": "CRITICAL",
+   "Results": null
+  },
+  {
+   "ID": "7.0",
+   "Name": "Make sure anonymous-auth is unset",
+   "Description": "Control checks whether anonymous-auth is unset",
+   "Severity": "CRITICAL",
+   "Results": [
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KCV-0001",
+       "Title": "Ensure that the --anonymous-auth argument is set to false",
+       "Message": "Ensure that the --anonymous-auth argument is set to false",
+       "Resolution": "Set '--anonymous-auth' to 'false'.",
+       "Severity": "MEDIUM",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "7.1",
+   "Name": "Make sure -authorization-mode=RBAC",
+   "Description": "Control check whether RBAC permission is in use",
+   "Severity": "CRITICAL",
+   "Results": null
+  },
+  {
+   "ID": "8.0",
+   "Name": "Audit policy is configure (Manual)",
+   "Description": "Control check whether audit policy is configure",
+   "DefaultStatus": "FAIL",
+   "Severity": "HIGH",
+   "Results": null
+  },
+  {
+   "ID": "8.1",
+   "Name": "Audit log path is configure",
+   "Description": "Control check whether audit log path is configure",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KCV-0019",
+       "Title": "Ensure that the --audit-log-path argument is set",
+       "Message": "Ensure that the --audit-log-path argument is set",
+       "Resolution": "Edit the API server pod specification file /etc/kubernetes/manifests/kube-apiserver.yaml on the Control Plane node and set the --audit-log-path parameter.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ID": "8.2",
+   "Name": "Audit log aging",
+   "Description": "Control check whether audit log aging is configure",
+   "Severity": "MEDIUM",
+   "Results": [
+    {
+     "Target": "Pod/kube-apiserver-lab-obs-01",
+     "Class": "config",
+     "Type": "kubernetes",
+     "MisconfSummary": {
+      "Successes": 0,
+      "Failures": 1
+     },
+     "Misconfigurations": [
+      {
+       "ID": "KCV-0020",
+       "Title": "Ensure that the --audit-log-maxage argument is set to 30 or as appropriate",
+       "Message": "Ensure that the --audit-log-maxage argument is set to 30 or as appropriate",
+       "Resolution": "Edit the API server pod specification file /etc/kubernetes/manifests/kube-apiserver.yaml on the Control Plane node and set the --audit-log-maxage parameter to 30 or as an appropriate number of days.",
+       "Severity": "LOW",
+       "Status": "FAIL"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

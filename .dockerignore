@@ -1,5 +1,22 @@
 .git
+.claude
+.vscode
+old
 **/node_modules
 **/dist
 **/__pycache__
-security-dashboard/venv
+**/*.py[cod]
+**/venv
+**/.venv
+**/.env
+**/.env.*
+
+# Runtime state the backend writes into its cwd (security-dashboard/backend when run via start-app.sh).
+# registries.json / git_config.json hold credentials; never bake them into the image.
+**/registries.json
+**/git_config.json
+**/full_scan.json
+**/suppressions.json
+**/reports
+new
+**/*.log

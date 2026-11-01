@@ -1,11 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-import os
-import json
 from models import ScanResult, ReportListItem, ErrorResponse
+from services import runs_store
 
 router = APIRouter()
-REPORTS_DIR = "security-dashboard/backend/reports"
 
 @router.get(
     "/",
@@ -30,33 +28,14 @@ REPORTS_DIR = "security-dashboard/backend/reports"
     },
     tags=["reports"]
 )
-async def list_reports():
+async def list_reports(cluster: str = "local"):
     """
     Get a list of all scan reports with summary information.
 
     This endpoint is useful for displaying a report history or
     allowing users to select a specific report to view in detail.
     """
-    if not os.path.exists(REPORTS_DIR):
-        return []
-
-    reports = []
-    files = sorted(os.listdir(REPORTS_DIR), reverse=True)
-    for filename in files:
-        if filename.endswith(".json"):
-            try:
-                with open(os.path.join(REPORTS_DIR, filename), "r") as f:
-                    data = json.load(f)
-                    # Return summary info
-                    reports.append({
-                        "id": data.get("id"),
-                        "timestamp": data.get("timestamp"),
-                        "scan_type": data.get("request", {}).get("scan_type"),
-                        "status": "completed" # derived
-                    })
-            except Exception:
-                continue
-    return reports
+    return runs_store.list_runs(cluster)
 
 @router.get(
     "/{report_id}",
@@ -116,17 +95,7 @@ async def get_report(report_id: str):
     if not re.match(r'^[a-zA-Z0-9\-]+$', report_id):
         raise HTTPException(status_code=400, detail="Invalid report ID format")
 
-    filepath = os.path.join(REPORTS_DIR, f"{report_id}.json")
-
-    # Ensure the resolved path is still within REPORTS_DIR
-    if not os.path.abspath(filepath).startswith(os.path.abspath(REPORTS_DIR)):
-        raise HTTPException(status_code=403, detail="Access denied")
-
-    if not os.path.exists(filepath):
+    report = runs_store.get_run(report_id)
+    if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
-
-    try:
-        with open(filepath, "r") as f:
-            return json.load(f)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return report
