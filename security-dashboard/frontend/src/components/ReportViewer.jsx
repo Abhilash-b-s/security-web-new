@@ -7,7 +7,9 @@ import LogViewer, { RemoteLogViewer, lineStyle } from './LogViewer';
 const statusBadge = (status) => (
     status === 'completed'
         ? <span className="badge badge-ok">Completed</span>
-        : <span className="badge badge-crit">{status ? status[0].toUpperCase() + status.slice(1) : 'Failed'}</span>
+        : status === 'cancelled'
+            ? <span className="badge badge-mute">Cancelled</span>
+            : <span className="badge badge-crit">{status ? status[0].toUpperCase() + status.slice(1) : 'Failed'}</span>
 );
 
 // live: the scan started from this browser, if any: { scanId, type, label, logs, isScanning, startedAt, endedAt }

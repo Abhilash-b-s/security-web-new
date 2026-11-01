@@ -78,11 +78,11 @@ async def terminal_websocket(websocket: WebSocket):
             argv, reason = parse_command(command_line.strip())
             if argv is None:
                 logger.info(f"Rejected: {command_line}")
-                audit.log_event(actor, "terminal.blocked", detail=command_line.strip(), ip=ip)
+                audit.log_event(actor, "terminal.blocked", detail=command_line.strip(), ip=ip, cluster="local")
                 await websocket.send_text(f"Error: {reason}\n")
                 continue
             logger.info(f"Executing: {shlex.join(argv)}")
-            audit.log_event(actor, "terminal.command", detail=command_line.strip(), ip=ip)
+            audit.log_event(actor, "terminal.command", detail=command_line.strip(), ip=ip, cluster="local")
 
             try:
                 process = await asyncio.create_subprocess_exec(

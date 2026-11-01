@@ -26,19 +26,20 @@ export default function AuditLog() {
             {error && <div className="text-xs" style={{ color: 'var(--viz-crit)' }}>Could not load the audit log: {error}</div>}
             <section className="sheet overflow-auto">
                 <table className="ctable">
-                    <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Target</th><th>Detail</th><th>IP</th></tr></thead>
+                    <thead><tr><th>Time</th><th>User</th><th>Cluster</th><th>Action</th><th>Target</th><th>Detail</th><th>IP</th></tr></thead>
                     <tbody>
                         {rows.map(r => (
                             <tr key={r.id}>
                                 <td className="num whitespace-nowrap">{new Date(r.ts).toLocaleString()}</td>
                                 <td>{r.actor}</td>
+                                <td>{r.cluster || '—'}</td>
                                 <td>{r.action}</td>
                                 <td>{r.target}</td>
                                 <td>{r.detail}</td>
                                 <td className="num">{r.ip}</td>
                             </tr>
                         ))}
-                        {!rows.length && !error && <tr><td colSpan={6} style={{ color: 'var(--mute)' }}>No events.</td></tr>}
+                        {!rows.length && !error && <tr><td colSpan={7} style={{ color: 'var(--mute)' }}>No events.</td></tr>}
                     </tbody>
                 </table>
             </section>

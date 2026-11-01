@@ -15,7 +15,7 @@ export const SCAN_TYPES = [
 ];
 
 // Scans that can run against a registered (non-local) cluster; the rest inspect the dashboard's own host/network or are cluster independent.
-const REMOTE_SCANS = ['trivy-image', 'trivy-sbom', 'kyverno', 'trivy-cluster'];
+const REMOTE_SCANS = ['trivy-image', 'trivy-sbom', 'kyverno', 'trivy-cluster', 'trivy-compliance', 'nmap'];
 
 const PlayIcon = () => (
     <svg width="8" height="8" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l6 4-6 4z" fill="currentColor" /></svg>

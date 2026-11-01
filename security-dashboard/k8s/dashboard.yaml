@@ -135,7 +135,9 @@ spec:
             claimName: security-dashboard-data
         - name: tmp
           emptyDir:
-            sizeLimit: 4Gi
+            # Trivy cache (the vulnerability DBs alone are ~1.6Gi) plus the image layers it downloads during a full scan.
+            # 4Gi was exceeded within minutes of a full scan on a fresh pod and the kubelet evicted the pod.
+            sizeLimit: 16Gi
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -159,44 +161,5 @@ spec:
                 name: security-dashboard
                 port:
                   number: 8000
----
-# Runs every scan (scan_type "all", sequential) twice a day through the dashboard API.
-# The scans execute inside the dashboard pod; this job only triggers them.
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: security-dashboard-scheduled-scans
-  namespace: security-ops
-spec:
-  schedule: "0 2,14 * * *" # 02:00 and 14:00 in the controller's timezone (UTC unless spec.timeZone is set)
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      backoffLimit: 2
-      template:
-        spec:
-          restartPolicy: OnFailure
-          containers:
-            - name: trigger
-              image: quay.io/abhilash_bs1/security-dashboard:latest
-              imagePullPolicy: IfNotPresent
-              # SUPERUSER_PASSWORD comes from the auth Secret; the trigger logs in for a token.
-              envFrom:
-                - secretRef:
-                    name: security-dashboard-auth
-              command:
-                - sh
-                - -c
-                - |
-                  set -e
-                  API=http://security-dashboard.security-ops.svc:8000/api
-                  # Scans are superuser-gated now: authenticate, then call with a Bearer token.
-                  BODY=$(jq -nc --arg u superuser --arg p "$SUPERUSER_PASSWORD" '{username:$u,password:$p}')
-                  TOKEN=$(curl -sf -X POST "$API/login" -H 'Content-Type: application/json' -d "$BODY" | jq -r .token)
-                  if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "Login failed"; exit 1; fi
-                  AUTH="Authorization: Bearer $TOKEN"
-                  # Skip if scans are already running: the same scan twice would overwrite its output files.
-                  if [ "$(curl -sf -H "$AUTH" "$API/scans/active" | tr -d ' ')" != "[]" ]; then echo "Scans already running, skipping"; exit 0; fi
-                  curl -sf -X POST -H "$AUTH" "$API/scans/start" -H 'Content-Type: application/json' -d '{"scan_type":"all"}'
+# Scheduled scans are now run by the dashboard itself, with a separate schedule per cluster
+# (Settings > Schedule). The former CronJob "security-dashboard-scheduled-scans" is removed by build_and_deploy.sh.

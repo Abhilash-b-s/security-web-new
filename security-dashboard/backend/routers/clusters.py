@@ -38,9 +38,9 @@ def add_cluster(body: ClusterCreate, request: Request, actor: str = Depends(supe
     try:
         clusters.add(body.name, body.kubeconfig, body.context.strip())
     except ValueError as e:
-        audit.log_event(actor, "cluster.add.fail", body.name, str(e), _ip(request))
+        audit.log_event(actor, "cluster.add.fail", body.name, str(e), _ip(request), body.name)
         raise HTTPException(status_code=400, detail=str(e))
-    audit.log_event(actor, "cluster.add", body.name, "", _ip(request))
+    audit.log_event(actor, "cluster.add", body.name, "", _ip(request), body.name)
     return {"name": body.name, "status": "added"}
 
 
@@ -50,7 +50,7 @@ def delete_cluster(name: str, request: Request, actor: str = Depends(superuser))
         raise HTTPException(status_code=400, detail="The local cluster cannot be removed")
     if not clusters.remove(name):
         raise HTTPException(status_code=404, detail="Unknown cluster")
-    audit.log_event(actor, "cluster.delete", name, "", _ip(request))
+    audit.log_event(actor, "cluster.delete", name, "", _ip(request), name)
     return {"name": name, "status": "deleted"}
 
 
@@ -59,5 +59,5 @@ def test_cluster(name: str, request: Request, actor: str = Depends(superuser)):
     if not clusters.exists(name):
         raise HTTPException(status_code=404, detail="Unknown cluster")
     err = clusters.test(name)
-    audit.log_event(actor, "cluster.test", name, err or "ok", _ip(request))
+    audit.log_event(actor, "cluster.test", name, err or "ok", _ip(request), name)
     return {"name": name, "ok": not err, "error": err}

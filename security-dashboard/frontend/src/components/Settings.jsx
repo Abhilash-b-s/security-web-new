@@ -4,6 +4,7 @@ import PageHead from './PageHead';
 import PasswordInput from './PasswordInput';
 import { SCAN_TYPES } from './ScanControl';
 import ClustersSettings from './ClustersSettings';
+import SchedulesSettings from './SchedulesSettings';
 
 export default function Settings({ initialSection = null }) {
     const [registries, setRegistries] = useState([]);
@@ -169,7 +170,8 @@ export default function Settings({ initialSection = null }) {
                 setPassword('');
                 setEditingId(null);
             } else {
-                setError(editingId ? 'Failed to update registry' : 'Failed to add registry');
+                const body = await response.json().catch(() => ({}));
+                setError(typeof body.detail === 'string' ? body.detail : (editingId ? 'Failed to update registry' : 'Failed to add registry'));
             }
         } catch (err) {
             setError(editingId ? 'Error updating registry' : 'Error adding registry');
@@ -212,6 +214,7 @@ export default function Settings({ initialSection = null }) {
     const navItems = [
         { id: 'registry', label: 'Container registries', count: registries.length || null },
         { id: 'clusters', label: 'Clusters' },
+        { id: 'schedule', label: 'Schedule' },
         { id: 'git', label: 'Git repositories' },
         { id: 'fullscan', label: 'Full scan', count: fullScan.length ? `${fullScan.length}/${SCAN_TYPES.length}` : null },
         { id: 'suppressions', label: 'Suppressions', count: suppressions.length || null },
@@ -342,6 +345,8 @@ export default function Settings({ initialSection = null }) {
                 )}
 
                 {activeSection === 'clusters' && <ClustersSettings />}
+
+                {activeSection === 'schedule' && <SchedulesSettings />}
 
                 {activeSection === 'fullscan' && (
                     <section className="sheet max-w-3xl">

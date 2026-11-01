@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Copy, Check, Download } from 'lucide-react';
+import StopScanButton from './StopScanButton';
 
 // Colour per line, same rules as before.
 export const lineLevel = (line) => (line.startsWith('Error') || line.includes('Failed') ? 'error' : line.includes('⚠') || line.includes('WARN') ? 'warn' : 'info');
@@ -63,6 +64,7 @@ export default function LogViewer({ logs, isScanning, scanLabel, scanId, started
                     : <span className="badge badge-mute">Finished</span>}
                 {startedAt && <span className="meta num">started {new Date(startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} · {elapsed(startedAt, isScanning ? null : endedAt)}</span>}
                 <div className="flex-1" />
+                {isScanning && scanId && <StopScanButton scanId={scanId} />}
                 <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: 'var(--ink-2)' }}>
                     <input type="checkbox" checked={follow} onChange={e => setFollow(e.target.checked)} /> Follow output
                 </label>

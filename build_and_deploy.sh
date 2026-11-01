@@ -59,6 +59,8 @@ kubectl apply -f "$K8S_DIR/dashboard-rbac.yaml"
 kubectl apply -f "$K8S_DIR/dashboard-admission-policy.yaml"
 # Older deployments bound the SA to cluster-admin; apply does not remove bindings dropped from the manifest.
 kubectl delete clusterrolebinding security-dashboard-admin-binding --ignore-not-found
+# Scheduled scans are run by the dashboard itself now (per-cluster times); the old CronJob would run them a second time.
+kubectl delete cronjob security-dashboard-scheduled-scans -n "$NAMESPACE" --ignore-not-found
 kubectl rollout restart deployment/"$DEPLOYMENT" -n "$NAMESPACE"
 
 echo "[4/4] Waiting for Rollout..."

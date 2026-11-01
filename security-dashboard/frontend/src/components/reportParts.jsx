@@ -9,13 +9,14 @@ const BADGE = {
 export const Badge = ({ value }) => <span className={`badge ${BADGE[value] || 'badge-mute'}`}>{value}</span>;
 
 // Report types shown under "Scan reports" in the left panel.
+// localOnly: the scan only runs against the local cluster (not in ScanControl's REMOTE_SCANS), so the report is hidden for others.
 export const REPORT_TABS = [
   { id: 'image', label: 'Image Vulnerability', key: 'trivyImage' },
   { id: 'sbom', label: 'SBOM Reports', key: 'trivySbom' },
   { id: 'kyverno', label: 'Policy Scan Report', key: 'kyverno' },
   { id: 'nmap', label: 'Network Nmap Scan', key: 'nmap' },
-  { id: 'cis', label: 'CIS Benchmark', key: 'kubebench' },
-  { id: 'trivy-repo', label: 'Git Repository', key: 'trivyRepo' },
+  { id: 'cis', label: 'CIS Benchmark', key: 'kubebench', localOnly: true },
+  { id: 'trivy-repo', label: 'Git Repository', key: 'trivyRepo', localOnly: true },
   { id: 'cluster', label: 'Cluster Scan', key: 'cluster' },
   { id: 'compliance', label: 'Compliance', key: 'compliance' },
 ];

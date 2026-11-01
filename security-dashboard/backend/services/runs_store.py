@@ -38,8 +38,11 @@ def has_run(run_id: str) -> bool:
 
 def list_runs(cluster: str = "local") -> list:
     """Summaries, newest first (same fields the reports list endpoint always returned)."""
-    rows = db.conn().execute("SELECT id, ts, scan_type FROM scan_runs WHERE cluster=? ORDER BY ts DESC", (cluster,))
-    return [{"id": r["id"], "timestamp": r["ts"], "scan_type": r["scan_type"], "status": "completed"} for r in rows]
+    # The list always said "completed"; only a run the user stopped (a "cancelled" result) is reported differently.
+    rows = db.conn().execute(
+        "SELECT id, ts, scan_type, EXISTS (SELECT 1 FROM json_each(report, '$.results') WHERE json_extract(value, '$.status') = 'cancelled') AS cancelled "
+        "FROM scan_runs WHERE cluster=? ORDER BY ts DESC", (cluster,))
+    return [{"id": r["id"], "timestamp": r["ts"], "scan_type": r["scan_type"], "status": "cancelled" if r["cancelled"] else "completed"} for r in rows]
 
 
 def reports_since(since_iso: str, cluster: str = "local") -> list:

@@ -10,10 +10,10 @@ def client_ip(request: Request) -> str:
     return xff.split(",")[0].strip() if xff else (request.client.host if request.client else "?")
 
 
-def record(request: Request, action: str, target: str = "", detail: str = "", actor: str = None) -> None:
+def record(request: Request, action: str, target: str = "", detail: str = "", actor: str = None, cluster: str = "") -> None:
     """Actor defaults to the JWT subject. Never pass secrets in target/detail."""
     if actor is None:
         header = request.headers.get("authorization", "")
         claims = decode_token(header[7:] if header.lower().startswith("bearer ") else None) or {}
         actor = claims.get("sub", "-")
-    audit.log_event(actor, action, target, detail, client_ip(request))
+    audit.log_event(actor, action, target, detail, client_ip(request), cluster)

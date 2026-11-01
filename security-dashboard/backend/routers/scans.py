@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket, BackgroundTasks, HTTPException, Request
 from models import ScanRequest, ScanType, ScanStartResponse, ErrorResponse
-from services import scanner, audit_hook, clusters
+from services import scanner, audit_hook, clusters, scan_guard
 from auth import decode_token
 import re
 import uuid
@@ -69,9 +69,12 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks, ht
     if not _SCAN_ID_RE.match(scan_id):
         raise HTTPException(status_code=400, detail="Invalid scan_id")
     clusters.check_scan_target(request.cluster, request.scan_type.value)
+    busy = scan_guard.conflict([r["scan_type"] for r in scanner.manager.list_runs()], request.scan_type.value)
+    if busy:
+        raise HTTPException(status_code=409, detail=busy)
     # Register the run now so it is listed as active before the background task starts.
     scanner.manager.start_run(scan_id, request.scan_type.value)
-    audit_hook.record(http_request, "scan.start", request.scan_type.value, f"scan_id={scan_id} cluster={getattr(request, 'cluster', 'local')}")
+    audit_hook.record(http_request, "scan.start", request.scan_type.value, f"scan_id={scan_id}", cluster=request.cluster)
     background_tasks.add_task(scanner.run_scan_task, scan_id, request)
     return {"scan_id": scan_id, "status": "initiated"}
 
@@ -84,6 +87,21 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks, ht
 )
 async def active_scans():
     return scanner.manager.list_runs()
+
+
+@router.post(
+    "/{scan_id}/stop",
+    summary="Stop a running scan",
+    description="Stops the scan's processes (and, for a full scan, the scans still waiting to run). The report is saved with status `cancelled`.",
+    tags=["scans"],
+)
+async def stop_scan(scan_id: str, request: Request):
+    if not _SCAN_ID_RE.match(scan_id) or scan_id not in scanner.manager.runs:
+        raise HTTPException(status_code=404, detail="No running scan with that id")
+    run = scanner.manager.runs[scan_id]
+    audit_hook.record(request, "scan.stop", run["scan_type"], f"scan_id={scan_id}")
+    await scanner.scan_control.stop(scan_id)
+    return {"status": "stopping", "scan_id": scan_id}
 
 
 @router.websocket("/ws/{scan_id}")

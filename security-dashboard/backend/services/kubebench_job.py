@@ -10,6 +10,7 @@ Usage (called by 4_run_kube_bench.sh):
 Honours KUBECONFIG (kubectl) and DASHBOARD_IMAGE. Self-check: python3 kubebench_job.py --demo
 """
 import argparse
+import signal
 import json
 import os
 import secrets
@@ -114,4 +115,5 @@ if __name__ == "__main__":
     if a.demo:
         demo()
     else:
+        signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))  # Stop button: unwind so the finally below deletes the Job
         sys.exit(run(a.output, a.version))

@@ -6,6 +6,7 @@ import WebTerminal from './components/WebTerminal';
 import PolicyReports from './components/PolicyReports';
 import ComplianceReport from './components/ComplianceReport';
 import SelectReport from './components/SelectReport';
+import StopScanButton from './components/StopScanButton';
 import Settings from './components/Settings';
 import AuditLog from './components/AuditLog';
 import DashboardCharts from './components/DashboardCharts';
@@ -52,7 +53,9 @@ function App() {
     const location = useLocation();
     const { tab: parsedTab, view: parsedView } = parsePath(location.pathname);
     const activeTab = (parsedTab && user && tabAllowed(parsedTab, user.role, features)) ? parsedTab : defaultTab(user?.role);
-    const reportView = parsedView; // null on /policy: no report type is preselected
+    const reportTabs = REPORT_TABS.filter(t => cluster === 'local' || !t.localOnly);
+    // null on /policy: no report type is preselected; a local-only report on another cluster falls back to /policy
+    const reportView = reportTabs.some(t => t.id === parsedView) ? parsedView : null;
     const [logs, setLogs] = useState([]);
 
     // Sidebar width, dragged via the separator; remembered per browser.
@@ -322,6 +325,23 @@ function App() {
                     <span className="text-[17px]" style={{ color: 'var(--header-mute)' }}>Security Console</span>
                 </button>
 
+                {clusters.length > 1 && (
+                    <>
+                    <div className="w-px h-[18px]" style={{ background: 'var(--header-line)' }} />
+                    <label className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: 'var(--header-ink)' }}>
+                        Cluster
+                        <select
+                            className="hdr-select"
+                            value={cluster}
+                            onChange={(e) => setCluster(e.target.value)}
+                            aria-label="Cluster"
+                        >
+                            {clusters.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                        </select>
+                    </label>
+                    </>
+                )}
+
                 {apiUp === false && (
                     <>
                         <div className="w-px h-[18px]" style={{ background: 'var(--header-line)' }} />
@@ -340,6 +360,7 @@ function App() {
                             <span className="w-1.5 h-1.5 animate-pulse" style={{ background: '#7FA3D6' }} />
                             {SCAN_LABELS[remoteRun.scan_type] ?? remoteRun.scan_type} running{serverRuns.length > 1 ? ` (+${serverRuns.length - 1})` : ''}… <span style={{ color: 'var(--header-mute)' }}>View progress</span>
                         </button>
+                        <StopScanButton scanId={remoteRun.scan_id} />
                     </>
                 )}
 
@@ -351,25 +372,11 @@ function App() {
                             <span className="w-1.5 h-1.5 animate-pulse" style={{ background: '#7FA3D6' }} />
                             {SCAN_LABELS[activeScanType] ?? activeScanType} running… <span style={{ color: 'var(--header-mute)' }}>View progress</span>
                         </button>
+                        {liveScan?.scanId && <StopScanButton scanId={liveScan.scanId} />}
                     </>
                 )}
 
                 <div className="flex-1" />
-
-                {clusters.length > 1 && (
-                    <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--header-mute)' }}>
-                        Cluster
-                        <select
-                            className="h-[26px] px-1.5 text-xs"
-                            style={{ background: 'transparent', color: 'var(--header-ink)', border: '1px solid var(--header-line)' }}
-                            value={cluster}
-                            onChange={(e) => setCluster(e.target.value)}
-                            aria-label="Cluster"
-                        >
-                            {clusters.map(c => <option key={c.name} value={c.name} style={{ color: '#000' }}>{c.name}</option>)}
-                        </select>
-                    </label>
-                )}
 
                 <button
                     type="button"
@@ -421,6 +428,7 @@ function App() {
                                         <div className="subnav-inner" aria-label="Report type">
                                             {REPORT_TABS.map(t => {
                                                 const on = activeTab === 'policy' && reportView === t.id;
+                                                const off = !reportTabs.includes(t);
                                                 return (
                                                     <button
                                                         key={t.id}
@@ -428,6 +436,8 @@ function App() {
                                                         tabIndex={activeTab === 'policy' && reportsOpen ? 0 : -1}
                                                         className={`subnav-item ${on ? 'on' : ''}`}
                                                         aria-current={on ? 'page' : undefined}
+                                                        disabled={off}
+                                                        title={off ? 'This scan only runs against the local cluster' : undefined}
                                                         onClick={() => navigate(`/policy/${t.id}`)}
                                                     >
                                                         <span className="truncate">{t.label}</span>

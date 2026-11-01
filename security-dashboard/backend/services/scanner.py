@@ -3,12 +3,21 @@ from collections import deque
 import json
 import os
 from datetime import datetime
-from routers.settings import load_registries
+from routers.settings import load_registries, trivy_login
 import uuid
 from fastapi import WebSocket
 from models import ScanRequest, ScanType, ScanStatus, ScanResult
+
+# Scan types that run Trivy against images or cluster workloads and so need registry logins.
+IMAGE_SCANS = {ScanType.TRIVY_IMAGE, ScanType.TRIVY_CLUSTER, ScanType.TRIVY_SBOM, ScanType.TRIVY_COMPLIANCE}
+
+
+def registry_host(url: str) -> str:
+    """Saved registry URL -> host as it appears in image refs (https://quay.io/ -> quay.io)."""
+    host = (url or "").split("://", 1)[-1].split("/", 1)[0].lower()
+    return "docker.io" if host in ("index.docker.io", "registry-1.docker.io") else host
 from services.history import record_snapshot
-from services import runs_store, clusters
+from services import runs_store, clusters, scan_control
 from services.cluster_context import LOCAL, REMOTE_SCANS, scan_env
 import logging
 
@@ -102,8 +111,10 @@ async def _run_command(command: list, scan_id: str, accum_output: list, cwd: str
             env=env,
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT
+            stderr=asyncio.subprocess.STDOUT,
+            start_new_session=True,  # own process group, so Stop can kill the script and its children
         )
+        scan_control.register(scan_id, process)
 
         # Read line by line for smoother output
         buffer = ""
@@ -130,6 +141,7 @@ async def _run_command(command: list, scan_id: str, accum_output: list, cwd: str
             accum_output.append(buffer)
 
         await process.wait()
+        scan_control.unregister(scan_id, process)
         return process.returncode
     except FileNotFoundError:
         err = f"Error: Command not found: {command[0]}\n"
@@ -216,46 +228,35 @@ async def run_single_scan(scan_type: ScanType, scan_id: str, request: ScanReques
     
     # env is already initialized at the top
     
-    # Multi-Registry Login
-    # Iterate through all configured registries and attempt login
-    # Login commands are executed via _run_command so output is visible to user
-    stored_regs = load_registries()
-    if stored_regs:
+    # Scans that pull images log in to every saved registry first. Each registry is independent:
+    # images from registries that logged in are scanned; images from a failed one are skipped.
+    if scan_type in IMAGE_SCANS and (stored_regs := load_registries()):
         await manager.broadcast("--- Authenticating with configured registries ---\n", scan_id)
+        failed = []
         for reg in stored_regs:
-            r_url = reg.get("url")
-            r_user = reg.get("username")
-            r_pass = reg.get("password")
-            
-            if r_url and r_user and r_pass:
-                # Construct safe command for logging (mask password)
-                login_cmd = ["trivy", "registry", "login", r_url, "--username", r_user, "--password", r_pass]
-                
-                # We need to run this but masking the password in logs might be tricky with _run_command default logging.
-                # _run_command broadcasts everything. 
-                # Ideally, we should mask the password in the broadcast.
-                # For now, let's just run it. Trivy might not output the password, but the command string itself 
-                # isn't logged by _run_command (I commented it out in previous edits).
-                
-                # Using a separate accum_output for login to avoid polluting the main results if needed,
-                # but user wants to see it.
-                await manager.broadcast(f"Logging into {r_url} as {r_user}...\n", scan_id)
-                ret = await _run_command(login_cmd, scan_id, accum_output, cwd=cwd, env=env)
-                if ret != 0:
-                     await manager.broadcast(f"WARNING: Failed to login to {r_url}\n", scan_id)
-                else:
-                     await manager.broadcast(f"Success: Logged into {r_url}\n", scan_id)
-        
+            r_url, r_user = reg.get("url"), reg.get("username")
+            ok, msg = await trivy_login(r_url, r_user, reg.get("password"), env)
+            line = f"Logged into {r_url} as {r_user}" if ok else f"FAILED: login to {r_url} as {r_user}: {msg}"
+            await manager.broadcast(line + "\n", scan_id)
+            accum_output.append(line + "\n")
+            if not ok:
+                failed.append(registry_host(r_url))
+        if failed:
+            env["FAILED_REGISTRIES"] = " ".join(failed)
+            note = (f"Images from {', '.join(failed)} will be skipped; other registries continue.\n"
+                    if scan_type == ScanType.TRIVY_IMAGE else
+                    f"Images from {', '.join(failed)} cannot be pulled; expect errors for them in this scan.\n")
+            await manager.broadcast(note, scan_id)
+            accum_output.append(note)
         await manager.broadcast("---------------------------------------------\n", scan_id)
-
-    # We NO LONGER set TRIVY_REGISTRY_USER/PASSWORD env vars for the main script
-    # because credentials are now handled by the docker config generated by the logins above.
-
 
     await manager.broadcast(f"--- Starting {scan_type.value} scan ---\n", scan_id)
     ret_code = await _run_command(command, scan_id, accum_output, cwd=cwd, env=env)
     
-    status = ScanStatus.COMPLETED if ret_code == 0 else ScanStatus.FAILED
+    if scan_control.is_cancelled(scan_id):
+        status = ScanStatus.CANCELLED
+    else:
+        status = ScanStatus.COMPLETED if ret_code == 0 else ScanStatus.FAILED
     await manager.broadcast(f"--- {scan_type.value} scan finished with status: {status.value} ---\n", scan_id)
     
     return {
@@ -287,6 +288,8 @@ async def run_scan_task(scan_id: str, request: ScanRequest):
                 scans_to_run.remove(ScanType.TRIVY_REPO)
                 await manager.broadcast("Skipping source code scan: Git repositories are not configured in Settings.\n", scan_id)
             for s_type in scans_to_run:
+                if scan_control.is_cancelled(scan_id):
+                    break
                 res = await run_single_scan(s_type, scan_id, request)
                 results.append(res)
         else:
@@ -306,9 +309,13 @@ async def run_scan_task(scan_id: str, request: ScanRequest):
 
         # Record a history snapshot for the Overview charts before telling clients the scan is done.
         overall = "completed" if results and all(str(getattr(r["status"], "value", r["status"])) == "completed" for r in results) else "failed"
+        if scan_control.is_cancelled(scan_id):
+            overall = "cancelled"
         clusters.touch(request.cluster, overall)
-        await record_snapshot(scan_id, request.scan_type.value, overall, cluster)
+        if overall != "cancelled":  # a stopped scan leaves partial output: no history snapshot from it
+            await record_snapshot(scan_id, request.scan_type.value, overall, cluster)
 
         await manager.broadcast("__EOF__", scan_id)
     finally:
         manager.end_run(scan_id)
+        scan_control.clear(scan_id)

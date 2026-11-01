@@ -238,7 +238,7 @@ The backend exposes a comprehensive REST API with OpenAPI documentation.
 | `trivy-repo` | Git repository vulnerability scanning | Git repository URL |
 | `kube-bench` | CIS Kubernetes Benchmark compliance | Current cluster |
 | `kyverno` | Kubernetes policy validation | Current cluster |
-| `nmap` | Network port scanning | Target IP/hostname |
+| `nmap` | Network port scanning | Cluster services (non-local clusters: from a temporary pod inside the target cluster) |
 | `all` | Execute all scans sequentially | All targets |
 
 ### WebSocket Communication

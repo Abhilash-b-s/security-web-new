@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
-from routers import clusters, scans, reports, files, settings, dashboard, suppressions, features, compliance, auth as auth_router_mod
+from routers import schedules, clusters, scans, reports, files, settings, dashboard, suppressions, features, compliance, auth as auth_router_mod
 from routers import audit as audit_router, findings as findings_router
-from services import migrate
+from services import migrate, scheduler
 from services import terminal
 import auth
 import ratelimit
@@ -61,6 +61,7 @@ app = FastAPI(
         "name": "Apache 2.0",
         "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
     },
+    lifespan=scheduler.lifespan,
     docs_url="/docs" if _docs_enabled else None,
     redoc_url="/redoc" if _docs_enabled else None,
     openapi_url="/openapi.json" if _docs_enabled else None,
@@ -143,6 +144,7 @@ app.include_router(terminal.router, prefix="/api/terminal", tags=["terminal"])
 app.include_router(features.router, prefix="/api/features", tags=["features"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(clusters.router, prefix="/api/clusters", tags=["clusters"])
+app.include_router(schedules.router, prefix="/api/schedules", tags=["schedules"])
 app.include_router(suppressions.router, prefix="/api/suppressions", tags=["suppressions"])
 app.include_router(findings_router.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(audit_router.router, prefix="/api/audit", tags=["audit"])

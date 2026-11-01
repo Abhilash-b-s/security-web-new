@@ -131,6 +131,15 @@ scan_namespace() {
     safe_name=$(sanitize "$image")
     out_file="$ns_out_dir/${safe_name}.json"
     
+    local ref host
+    ref=$(normalize_image "$image"); host=${ref%%/*}
+    # FAILED_REGISTRIES (space-separated hosts) is set by the backend when a registry login failed.
+    if [[ " ${FAILED_REGISTRIES:-} " == *" $host "* ]]; then
+      echo "SKIPPED (registry login failed for $host): $image"
+      SKIPPED=$((SKIPPED + 1))
+      continue
+    fi
+
     echo "   Scanning ${image}"
     echo -n "     • Scanning In Progress: "
     
@@ -138,7 +147,7 @@ scan_namespace() {
     local err_log=$(mktemp)
     # Images are pulled from their registry (no access to the node's containerd store);
     # credentials come from the docker config written by the Settings registry logins.
-    trivy image $TRIVY_FLAGS --image-src remote -o "$out_file" "$(normalize_image "$image")" >"$err_log" 2>&1 &
+    trivy image $TRIVY_FLAGS --image-src remote -o "$out_file" "$ref" >"$err_log" 2>&1 &
     local pid=$!
     
     while kill -0 $pid 2>/dev/null; do

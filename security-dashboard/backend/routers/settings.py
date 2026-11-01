@@ -2,8 +2,10 @@ from fastapi import APIRouter, HTTPException, Request
 from models import (RegistryCredential, GitConfig, RegistryDeleteResponse, ErrorResponse,
                      RegistryCredentialResponse, GitConfigResponse, FullScanConfig, ScanType)
 from typing import List
+import asyncio
 import json
 import os
+import tempfile
 import uuid
 from services import audit_hook
 
@@ -12,6 +14,40 @@ router = APIRouter()
 STATE_DIR = os.getenv("STATE_DIR", ".")
 os.makedirs(STATE_DIR, exist_ok=True)
 REGISTRIES_FILE = os.path.join(STATE_DIR, "registries.json")
+
+
+async def trivy_login(url: str, username: str, password: str, env: dict) -> tuple:
+    """Run `trivy registry login` (password via stdin). Returns (ok, message).
+    Writes to the docker config under env's HOME/DOCKER_CONFIG on success."""
+    if not password:
+        return False, "no password saved; re-enter it in Settings"
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "trivy", "registry", "login", url, "--username", username, "--password-stdin",
+            stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT, env=env)
+        out, _ = await asyncio.wait_for(proc.communicate(password.encode()), timeout=30)
+    except FileNotFoundError:
+        return False, "trivy is not installed"
+    except asyncio.TimeoutError:
+        proc.kill()
+        return False, "login timed out"
+    if proc.returncode != 0:
+        lines = [l for l in out.decode(errors="replace").splitlines() if l.strip()]
+        return False, lines[-1].split("Fatal error", 1)[-1].strip() if lines else "unknown error"
+    return True, "ok"
+
+
+async def verify_registry_login(url: str, username: str, password: str):
+    """Raise 400 unless the credentials log in. Uses a throwaway HOME/DOCKER_CONFIG
+    so the scan's real docker config is untouched."""
+    if not password:
+        raise HTTPException(status_code=400, detail="Password is required")
+    with tempfile.TemporaryDirectory() as tmp:
+        ok, msg = await trivy_login(url, username, password,
+                                    {**os.environ, "HOME": tmp, "DOCKER_CONFIG": os.path.join(tmp, ".docker")})
+    if not ok:
+        raise HTTPException(status_code=400, detail=f"Login to {url} failed: {msg}")
 
 def load_registries():
     if not os.path.exists(REGISTRIES_FILE):
@@ -87,6 +123,7 @@ async def get_registries():
 )
 async def add_registry(credential: RegistryCredential, request: Request):
     """Add a new container registry credential."""
+    await verify_registry_login(credential.url, credential.username, credential.password)
     registries = load_registries()
     if not credential.id:
         credential.id = str(uuid.uuid4())
@@ -94,7 +131,8 @@ async def add_registry(credential: RegistryCredential, request: Request):
     # Check for duplicates? For now, allow multiple.
 
     # Convert model to dict
-    reg_dict = credential.dict()
+    # password is exclude=True on the model (keeps it out of responses), so dict() drops it; add it back
+    reg_dict = {**credential.dict(), "password": credential.password}
     registries.append(reg_dict)
     save_registries(registries)
     audit_hook.record(request, "registry.add", credential.url, f"username={credential.username}")
@@ -178,6 +216,8 @@ async def update_registry(reg_id: str, credential: RegistryCredential, request: 
     new_password = credential.password
     if not new_password:
          new_password = existing.get("password", "")
+
+    await verify_registry_login(credential.url, credential.username, new_password)
 
     updated_registry = {
         "id": reg_id,

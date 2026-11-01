@@ -210,7 +210,8 @@ users: [{name: u, user: {token: t}}]
     check_scan_target("lab", "kyverno")
     check_scan_target("lab", "all")
     check_scan_target("local", "nmap")
-    for st in ("nmap", "kube-bench", "trivy-repo"):
+    check_scan_target("lab", "nmap")
+    for st in ("kube-bench", "trivy-repo"):
         try:
             check_scan_target("lab", st)
             raise SystemExit("allowed " + st)

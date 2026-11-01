@@ -81,7 +81,9 @@ async def list_files(subpath: str = Query(..., description="Subdirectory to list
 
     try:
         files = []
-        for root, _, filenames in os.walk(target_dir):
+        for root, dirs, filenames in os.walk(target_dir):
+            if os.path.abspath(root) == os.path.abspath(base):
+                dirs[:] = [d for d in dirs if d != "clusters"]  # other clusters' reports are not part of this one's listing
             for f in filenames:
                 if f.endswith(".json"):
                     # Create relative path from target_dir

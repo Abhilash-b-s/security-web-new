@@ -48,7 +48,8 @@ scan_service() {
   # run nmap and capture output silently for parsing
   tmp=$(mktemp)
   ( set +e
-    nmap -sV --script ssl-enum-ciphers -p "$port" "$fqdn" --host-timeout "$HOST_TIMEOUT" --max-retries "$MAX_RETRIES" > "$tmp" 2>&1
+    ${NMAP_EXEC:-} nmap -sV --script ssl-enum-ciphers -p "$port" "$fqdn" --host-timeout "$HOST_TIMEOUT" --max-retries "$MAX_RETRIES" > "$tmp" 2>&1
+    true  # kubectl exec can return non-zero (nmap error, exec hiccup); never abort the whole scan
   )
   raw_output=$(cat "$tmp")
 

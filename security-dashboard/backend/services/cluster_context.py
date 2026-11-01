@@ -8,8 +8,8 @@ from fastapi import HTTPException
 
 LOCAL = "local"
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,30}$")
-# Scan types that work against a remote cluster; trivy-repo is cluster independent, kube-bench and nmap inspect the pod's own host/network.
-REMOTE_SCANS = ("trivy-cluster", "trivy-sbom", "kyverno", "trivy-image")
+# Scan types that work against a remote cluster; trivy-repo is cluster independent, kube-bench inspects the pod's own host. nmap runs from a temporary pod inside the target cluster (scripts/nmap_pod.sh).
+REMOTE_SCANS = ("trivy-cluster", "trivy-sbom", "kyverno", "trivy-image", "trivy-compliance", "nmap")
 
 
 def state_dir() -> Path:
@@ -39,7 +39,7 @@ def scan_env(env: dict, cluster: str) -> dict:
         return env
     out = cluster_dir(cluster)
     out.mkdir(parents=True, exist_ok=True)
-    return {**env, "KUBECONFIG": str(kubeconfig_path(cluster)), "OUTPUT_DIR": str(out)}
+    return {**env, "KUBECONFIG": str(kubeconfig_path(cluster)), "OUTPUT_DIR": str(out), "SCAN_REMOTE": "1"}
 
 
 def demo():

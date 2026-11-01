@@ -198,6 +198,13 @@ body {
   .inp::placeholder { color: var(--faint); opacity: .5; }
   .inp:focus { outline: 2px solid var(--accent-text); outline-offset: -1px; border-color: var(--accent-text); }
   .inp:disabled { background: var(--panel-head); color: var(--mute); cursor: not-allowed; }
+  /* Dropdown in the (always dark) app header: dark field, light text, own chevron, dark option list in both themes. */
+  .hdr-select { appearance: none; -webkit-appearance: none; color-scheme: dark; height: 30px; padding: 0 28px 0 10px; font: inherit; font-size: 13px; font-weight: 500; color: var(--header-ink); background-color: var(--header-field); border: 1px solid var(--header-line); border-radius: 3px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23C9CDD2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 9px center; }
+  .hdr-select:hover { border-color: #6B7077; }
+  .hdr-select:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
+  .hdr-select option { background: var(--header-field); color: var(--header-ink); }
   textarea.inp { height: auto; padding: 8px 9px; line-height: 19px; }
   .inp.mono { font-family: 'Fira Code', ui-monospace, monospace; font-size: 12px; }
   /* Settings forms: roomier fields */
@@ -229,6 +236,7 @@ body {
   .subnav-item { display: flex; align-items: center; gap: 8px; width: 100%; margin: 2px 0; padding: 5px 8px; font: inherit; font-size: 15.5px; text-align: left; color: var(--ink-2); background: transparent; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
   .subnav-item:hover { background: var(--btn-hover); border-color: var(--btn-line); color: var(--ink); }
   .subnav-item.on { background: var(--panel); border-color: var(--btn-line); color: var(--accent-text); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent-text); }
+  .subnav-item:disabled, .subnav-item:disabled:hover { opacity: .5; cursor: not-allowed; background: transparent; border-color: transparent; color: var(--ink-2); }
   .subnav-item .num { color: var(--mute-2); }
   .subnav-item.on .num { color: var(--accent-text); }
   .subnav-inner.flat { margin-left: 0; padding: 6px 0 2px; border-left: 0; }

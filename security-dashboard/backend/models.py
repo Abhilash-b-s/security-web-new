@@ -21,6 +21,7 @@ class ScanStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 class ScanRequest(BaseModel):
     """Request to initiate a security scan."""
