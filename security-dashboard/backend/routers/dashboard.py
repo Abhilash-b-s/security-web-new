@@ -16,7 +16,7 @@ def load_cluster_report(cluster: str = "local"):
     """The Trivy cluster report: cluster.json if present, otherwise the cluster.zip the scan script leaves."""
     import zipfile
     base = cluster_dir(cluster) / "trivy-cluster-report"
-    if (base / "cluster.json").exists():
+    if (base / "cluster.json").exists() and (base / "cluster.json").stat().st_size > 0:  # an empty file is a scan that was cut short
         return json.loads((base / "cluster.json").read_text())
     if (base / "cluster.zip").exists():
         with zipfile.ZipFile(base / "cluster.zip") as z:

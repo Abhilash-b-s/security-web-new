@@ -12,7 +12,7 @@ import main
 c = TestClient(main.app)
 h = {"Authorization": "Bearer " + auth.make_token("superuser", "superuser")}
 for url in ("/api/features", "/api/clusters", "/api/schedules", "/api/audit", "/api/compliance", "/api/dashboard/stats",
-            "/api/dashboard/findings-age", "/api/dashboard/history?days=7", "/api/reports/", "/api/suppressions/"):
+            "/api/dashboard/history?days=7", "/api/reports/", "/api/suppressions/"):
     r = c.get(url, headers=h, follow_redirects=False)
     assert r.status_code == 200, f"{url} -> {r.status_code}"
 print("routes ok")

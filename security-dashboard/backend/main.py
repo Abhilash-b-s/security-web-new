@@ -4,7 +4,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
 from routers import schedules, clusters, scans, reports, files, settings, dashboard, suppressions, features, compliance, auth as auth_router_mod
-from routers import audit as audit_router, findings as findings_router
+from routers import audit as audit_router
 from services import migrate, scheduler
 from services import terminal
 import auth
@@ -146,7 +146,6 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"]
 app.include_router(clusters.router, prefix="/api/clusters", tags=["clusters"])
 app.include_router(schedules.router, prefix="/api/schedules", tags=["schedules"])
 app.include_router(suppressions.router, prefix="/api/suppressions", tags=["suppressions"])
-app.include_router(findings_router.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(audit_router.router, prefix="/api/audit", tags=["audit"])
 app.include_router(compliance.router, prefix="/api/compliance", tags=["compliance"])
 

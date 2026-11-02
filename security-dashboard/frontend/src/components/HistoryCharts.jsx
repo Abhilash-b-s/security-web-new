@@ -149,23 +149,56 @@ function ChartCard({ title, meta, legend, table, children, className = '' }) {
     );
 }
 
-function Sparkline({ cur, prev, compare, w = 96, h = 22 }) {
+// Hover wrapper for small charts: maps the pointer to a data index, draws a dot on the line and a tooltip.
+// y(v) is the chart's own y scale in px; padL/padR match the chart's x inset.
+function HoverArea({ values, y, color, padL = 0, padR = 0, tip, children }) {
+    const [s, setS] = useState(null);
+    const n = values.length;
+    const onMove = (e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const i = Math.round(((e.clientX - r.left - padL) / Math.max(1, r.width - padL - padR)) * (n - 1));
+        setS({ i: Math.max(0, Math.min(n - 1, i)), w: r.width });
+    };
+    const v = s ? values[s.i] : null;
+    const x = s ? padL + s.i * (s.w - padL - padR) / Math.max(1, n - 1) : 0;
+    return (
+        <div className="relative" onMouseMove={onMove} onMouseLeave={() => setS(null)}>
+            {children}
+            {s && v != null && (
+                <>
+                    <span className="absolute pointer-events-none rounded-full" style={{ left: x - 3.5, top: y(v) - 3.5, width: 7, height: 7, background: color, border: '1.5px solid var(--panel)' }} />
+                    <Tooltip x={Math.max(0, x - 45)} y={-50}>{tip(s.i)}</Tooltip>
+                </>
+            )}
+        </div>
+    );
+}
+
+function Sparkline({ cur, prev, compare, dates = [], prevDates = [], unit = '', w = 96, h = 22 }) {
     const all = [...cur, ...(compare ? prev : [])].filter(v => v != null);
     if (all.length === 0) return <svg width={w} height={h} aria-hidden="true" />;
     const lo = Math.min(...all), hi = Math.max(...all);
     const x = (i) => 2 + i * (w - 6) / Math.max(1, cur.length - 1);
     const y = (v) => 3 + (h - 6) - ((v - lo) / ((hi - lo) || 1)) * (h - 6);
     const li = cur.map((v, i) => (v != null ? i : -1)).filter(i => i >= 0).pop();
+    const u = unit === '%' ? '%' : '';
     return (
-        <svg width={w} height={h} aria-hidden="true">
+        <HoverArea values={cur} y={y} color="var(--accent-text)" padL={2} padR={4} tip={(i) => (
+            <>
+                <TipRow color="var(--accent-text)" value={`${fmt(cur[i])}${u}`} label={dates[i] ? dayLabel(dates[i]) : ''} />
+                {compare && prev[i] != null && <TipRow color="var(--viz-prev)" value={`${fmt(prev[i])}${u}`} label={prevDates[i] ? dayLabel(prevDates[i]) : 'previous'} />}
+            </>
+        )}>
+        <svg width={w} height={h} aria-hidden="true" className="block">
             {compare && <path d={linePath(prev, x, y)} fill="none" stroke="var(--viz-prev)" strokeWidth="1.5" />}
             <path d={linePath(cur, x, y)} fill="none" stroke="var(--accent-text)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
             {li != null && <circle cx={x(li)} cy={y(cur[li])} r="3" fill="var(--accent-text)" stroke="var(--panel)" strokeWidth="1.5" />}
         </svg>
+        </HoverArea>
     );
 }
 
-function Tile({ label, cur, prev, unit, goodUp, compare, range, color }) {
+function Tile({ label, cur, prev, dates, prevDates, unit, goodUp, compare, range, color }) {
     const now = lastVal(cur), before = lastVal(prev);
     const d = now != null && before != null ? now - before : null;
     const good = d == null || d === 0 ? null : goodUp ? d > 0 : d < 0;
@@ -178,7 +211,7 @@ function Tile({ label, cur, prev, unit, goodUp, compare, range, color }) {
                 {now != null && <span className="text-xs" style={{ color: 'var(--mute)' }}>{unit}</span>}
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-                <Sparkline cur={cur} prev={prev} compare={compare} />
+                <Sparkline cur={cur} prev={prev} compare={compare} dates={dates} prevDates={prevDates} unit={unit} />
                 {compare && d != null && (
                     <span className="num text-[11px]" style={{ color: good == null ? 'var(--mute-2)' : good ? 'var(--ok)' : 'var(--crit)' }}>
                         {d > 0 ? '+' : d < 0 ? '−' : '±'}{fmt(Math.abs(d))}{isPct ? ' pt' : ''}
@@ -190,7 +223,7 @@ function Tile({ label, cur, prev, unit, goodUp, compare, range, color }) {
     );
 }
 
-function SevPanel({ sev, values, days }) {
+function SevPanel({ sev, values, dates, days }) {
     const w = 160, h = 72;
     const vals = values.filter(v => v != null);
     const lo = vals.length ? Math.min(...vals) * 0.92 : 0, hi = vals.length ? Math.max(...vals) * 1.04 || 1 : 1;
@@ -209,12 +242,16 @@ function SevPanel({ sev, values, days }) {
                 <span className="text-[22px] font-semibold">{fmt(now)}</span>
                 {d != null && vals.length > 1 && <span className="num text-[11px]" style={{ color: d > 0 ? 'var(--crit)' : d < 0 ? 'var(--ok)' : 'var(--mute-2)' }}>{d > 0 ? '+' : d < 0 ? '−' : '±'}{fmt(Math.abs(d))} in {days}d</span>}
             </div>
-            <svg viewBox={`0 0 ${w} ${h + 12}`} className="w-full mt-1.5 block overflow-visible" preserveAspectRatio="none" style={{ height: h + 12 }} aria-label={`${sev.label} over time`}>
+            <div className="mt-1.5">
+            <HoverArea values={values} y={y} color={sev.color} tip={(i) => <TipRow color={sev.color} value={fmt(values[i])} label={`${sev.label} · ${dates[i] ? dayLabel(dates[i]) : ''}`} />}>
+            <svg viewBox={`0 0 ${w} ${h + 12}`} className="w-full block overflow-visible" preserveAspectRatio="none" style={{ height: h + 12 }} aria-label={`${sev.label} over time`}>
                 <line x1="0" y1={h - 6} x2={w} y2={h - 6} stroke="var(--viz-axis)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
                 {p && vals.length > 1 && <path d={`${p} L${x(li).toFixed(1)},${h - 6} L${x(values.findIndex(v => v != null)).toFixed(1)},${h - 6} Z`} fill={sev.color} fillOpacity="0.12" />}
                 {p && <path d={p} fill="none" stroke={sev.color} strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />}
                 {vals.length === 1 && <circle cx={x(li)} cy={y(now)} r="4" fill={sev.color} stroke="var(--panel)" strokeWidth="2" vectorEffect="non-scaling-stroke" />}
             </svg>
+            </HoverArea>
+            </div>
             <div className="num flex justify-between text-[10px]" style={{ color: 'var(--mute-2)' }}>
                 <span>{vals.length > 1 ? `${fmt(Math.min(...vals))}–${fmt(Math.max(...vals))}` : vals.length ? '1 day of data' : 'no data'}</span><span>today</span>
             </div>
@@ -381,7 +418,7 @@ function Heatmap({ days }) {
 
 // ── Section ────────────────────────────────────────────────────────────────
 
-export default function HistoryCharts() {
+export default function HistoryCharts({ children }) {
     const { cluster } = useCluster();
     const [range, setRange] = useState(7);
     const [compare, setCompare] = useState(true);
@@ -402,7 +439,7 @@ export default function HistoryCharts() {
         const cur = data.series.slice(range), prev = data.series.slice(0, range);
         const pick = (list, f) => list.map(d => f(d.stats));
         return {
-            cur, prev, dates: cur.map(d => d.date),
+            cur, prev, dates: cur.map(d => d.date), prevDates: prev.map(d => d.date),
             observed: cur.filter(d => d.observed).length,
             score: [pick(cur, computeSecurityScore), pick(prev, computeSecurityScore)],
             crit: [pick(cur, s => sevTotal(s, 'CRITICAL')), pick(prev, s => sevTotal(s, 'CRITICAL'))],
@@ -446,18 +483,18 @@ export default function HistoryCharts() {
                     )}
 
                     <div className="sheet grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 [&>*:first-child]:border-l-0">
-                        <Tile label="Security score" cur={view.score[0]} prev={view.score[1]} unit="/ 100" goodUp compare={compare} range={range} />
-                        <Tile label="Critical findings" cur={view.crit[0]} prev={view.crit[1]} unit="open" compare={compare} range={range} color={lastVal(view.crit[0]) ? 'var(--crit)' : undefined} />
-                        <Tile label="High findings" cur={view.high[0]} prev={view.high[1]} unit="open" compare={compare} range={range} />
-                        <Tile label="Policy pass rate" cur={view.pol[0]} prev={view.pol[1]} unit="%" goodUp compare={compare} range={range} />
-                        <Tile label="CIS pass rate" cur={view.cis[0]} prev={view.cis[1]} unit="%" goodUp compare={compare} range={range} />
+                        <Tile dates={view.dates} prevDates={view.prevDates} label="Security score" cur={view.score[0]} prev={view.score[1]} unit="/ 100" goodUp compare={compare} range={range} />
+                        <Tile dates={view.dates} prevDates={view.prevDates} label="Critical findings" cur={view.crit[0]} prev={view.crit[1]} unit="open" compare={compare} range={range} color={lastVal(view.crit[0]) ? 'var(--crit)' : undefined} />
+                        <Tile dates={view.dates} prevDates={view.prevDates} label="High findings" cur={view.high[0]} prev={view.high[1]} unit="open" compare={compare} range={range} />
+                        <Tile dates={view.dates} prevDates={view.prevDates} label="Policy pass rate" cur={view.pol[0]} prev={view.pol[1]} unit="%" goodUp compare={compare} range={range} />
+                        <Tile dates={view.dates} prevDates={view.prevDates} label="CIS pass rate" cur={view.cis[0]} prev={view.cis[1]} unit="%" goodUp compare={compare} range={range} />
                     </div>
 
                     <div className="grid grid-cols-1 2xl:grid-cols-[1.9fr_1fr] gap-[18px]">
                         <ChartCard title="Open findings by severity" meta="Each panel has its own scale · image, SBOM, repo and cluster"
                             table={{ cols: ['Day', ...SEVERITIES.map(s => s.label)], rows: view.dates.map((d, i) => [dayLabel(d), ...view.sev.map(v => fmt(v[i]))]).reverse() }}>
                             <div className="grid grid-cols-2 lg:grid-cols-4 [&>*:first-child]:border-l-0">
-                                {SEVERITIES.map((s, k) => <SevPanel key={s.key} sev={s} values={view.sev[k]} days={range} />)}
+                                {SEVERITIES.map((s, k) => <SevPanel key={s.key} sev={s} dates={view.dates} values={view.sev[k]} days={range} />)}
                             </div>
                         </ChartCard>
                         <ChartCard title="New vs resolved" meta="Findings per day, compared with the previous scan"
@@ -485,7 +522,13 @@ export default function HistoryCharts() {
                                 dates={view.dates} yMax={100} unit="%" target={90} />
                         </ChartCard>
                     </div>
+                </div>
+            )}
 
+            {children}
+
+            {view && (
+                <div style={{ opacity: data.days === range ? 1 : 0.5 }}>
                     <ChartCard title="Scan activity" meta="Runs per scanner per day · darker = more runs"
                         legend={<>
                             <span className="text-[11px]" style={{ color: 'var(--mute)' }}>0</span>

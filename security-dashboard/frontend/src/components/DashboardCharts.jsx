@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageHead from './PageHead';
-import FindingsAge from './FindingsAge';
 import { useCluster, apiUrl } from '../cluster';
 import HistoryCharts from './HistoryCharts';
 
@@ -133,7 +132,6 @@ export default function DashboardCharts() {
             <div className="flex flex-col gap-3.5">
                 {head}
                 <HistoryCharts />
-                <FindingsAge />
                 <section className="sheet">
                     <div className="phead"><h2>No scan data yet</h2></div>
                     <p className="px-3.5 py-3 m-0 text-[13px] max-w-xl" style={{ color: 'var(--mute)' }}>
@@ -200,138 +198,140 @@ export default function DashboardCharts() {
                 <button type="button" className="btn" onClick={exportSummary}><Download className="w-3 h-3" /> Export summary</button>
             </PageHead>
 
-            <HistoryCharts />
-            <FindingsAge />
-
-            <div className="flex items-baseline gap-3 mt-2 pt-4" style={{ borderTop: '1px solid var(--line)' }}>
-                <h2 className="m-0 text-[15px] font-semibold">Latest reports</h2>
-                <span className="page-sub">Current numbers from the most recent report of each scanner</span>
-            </div>
-
-            {/* Vulnerabilities by scanner */}
-            <section className="sheet">
-                <div className="phead flex-wrap">
-                    <h2>Vulnerabilities by scanner <span className="count">{availableVuln.reduce((a, r) => a + r.total, 0)}</span></h2>
-                    <span className="meta">Findings in the latest report of each scanner</span>
-                    <div className="flex-1" />
-                    <Legend />
+            {/* Scan activity is the last panel of HistoryCharts: it comes after these sections */}
+            <HistoryCharts>
+                <div className="flex flex-col gap-[18px]">
+                <div className="flex items-baseline gap-3 mt-2 pt-4" style={{ borderTop: '1px solid var(--line)' }}>
+                    <h2 className="m-0 text-[15px] font-semibold">Latest reports</h2>
+                    <span className="page-sub">Current numbers from the most recent report of each scanner</span>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="ctable">
-                        <thead><tr>
-                            <th>Scanner</th>
-                            <th className="r w-[80px]">Critical</th><th className="r w-[64px]">High</th><th className="r w-[72px]">Medium</th><th className="r w-[56px]">Low</th><th className="r w-[80px]">Unknown</th><th className="r w-[64px]">Total</th>
-                            <th className="w-[212px] !pl-4">Distribution</th><th className="w-[110px]">Result</th>
-                        </tr></thead>
-                        <tbody>
-                            {vulnRows.map(r => (
-                                <tr key={r.key}>
-                                    <td className="whitespace-nowrap"><Link to={`/policy/${r.view}`} className="font-medium hover:underline" style={{ color: 'inherit' }} title={`Open the ${r.name} report`}>{r.name}</Link></td>
-                                    {r.available ? (
-                                        <>
-                                            {SEV.map(s => <td key={s.key} className="r num" style={sevCell(r.c[s.key] || 0, s.key)}>{r.c[s.key] || 0}</td>)}
-                                            <td className="r num" style={{ color: 'var(--mute)' }}>{r.c.UNKNOWN || 0}</td>
-                                            <td className="r num font-semibold">{r.total}</td>
-                                            <td className="!pl-4"><StackBar parts={r.parts} width={196} /></td>
-                                            <td>{(r.c.CRITICAL || 0) > 0
-                                                ? <span className="badge badge-crit">Critical</span>
-                                                : (r.c.HIGH || 0) > 0 ? <span className="badge badge-warn">High</span>
-                                                    : <span className="badge badge-ok">Clean</span>}</td>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td>
-                                            <td className="!pl-4"><StackBar parts={[]} width={196} /></td>
-                                            <td><span className="badge badge-mute">No report</span></td>
-                                        </>
-                                    )}
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot><tr>
-                            <td>Total <span className="font-normal" style={{ color: 'var(--mute)' }}>· {availableVuln.length} of {vulnRows.length} scanners</span></td>
-                            {SEV.map(s => <td key={s.key} className="r num" style={s.key === 'CRITICAL' && totalCritical ? { color: 'var(--crit)' } : undefined}>{sumSev(s.key)}</td>)}
-                            <td className="r num">{sumSev('UNKNOWN')}</td>
-                            <td className="r num">{availableVuln.reduce((a, r) => a + r.total, 0)}</td>
-                            <td /><td />
-                        </tr></tfoot>
-                    </table>
-                </div>
-            </section>
 
-            <div className="grid grid-cols-1 xl:grid-cols-[1.55fr_1fr] gap-[18px]">
-                {/* Compliance */}
+                {/* Vulnerabilities by scanner */}
                 <section className="sheet">
-                    <div className="phead">
-                        <h2>Compliance checks</h2>
-                        <span className="meta">Policies, CIS benchmark and network ciphers</span>
+                    <div className="phead flex-wrap">
+                        <h2>Vulnerabilities by scanner <span className="count">{availableVuln.reduce((a, r) => a + r.total, 0)}</span></h2>
+                        <span className="meta">Findings in the latest report of each scanner</span>
+                        <div className="flex-1" />
+                        <Legend />
                     </div>
                     <div className="overflow-x-auto">
                         <table className="ctable">
                             <thead><tr>
-                                <th>Check</th><th className="r">Pass</th><th className="r">Warn</th><th className="r">Fail</th><th className="r">Other</th><th className="r">Total</th><th className="w-[170px]">Pass rate</th>
+                                <th>Scanner</th>
+                                <th className="r w-[80px]">Critical</th><th className="r w-[64px]">High</th><th className="r w-[72px]">Medium</th><th className="r w-[56px]">Low</th><th className="r w-[80px]">Unknown</th><th className="r w-[64px]">Total</th>
+                                <th className="w-[212px] !pl-4">Distribution</th><th className="w-[110px]">Result</th>
                             </tr></thead>
                             <tbody>
-                                {compRows.map(r => {
-                                    const rate = r.available ? pct(r.pass, r.total) : null;
-                                    return (
-                                        <tr key={r.name}>
-                                            <td className="whitespace-nowrap"><Link to={`/policy/${r.view}`} className="font-medium hover:underline" style={{ color: 'inherit' }} title={`Open the ${r.name} report`}>{r.name}</Link></td>
-                                            {r.available ? (
-                                                <>
-                                                    <td className="r num" style={{ color: 'var(--ok)' }}>{r.pass}</td>
-                                                    <td className="r num" style={r.warn ? { color: 'var(--warn)' } : { color: 'var(--faint)' }}>{r.warn === null ? '—' : r.warn}</td>
-                                                    <td className="r num" style={r.fail ? { color: 'var(--crit)', background: 'var(--crit-tint)', fontWeight: 600 } : { color: 'var(--faint)' }}>{r.fail}</td>
-                                                    <td className="r num" style={{ color: 'var(--mute)' }} title={r.otherLabel}>{r.other === null ? '—' : r.other}</td>
-                                                    <td className="r num font-semibold" title={r.unit}>{r.total}</td>
-                                                    <td>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-2 w-[110px]" style={{ background: 'var(--line-soft)' }}>
-                                                                <div className="h-full" style={{ width: `${rate || 0}%`, background: rateColor(rate) }} />
-                                                            </div>
-                                                            <span className="num text-xs" style={{ color: rateColor(rate) }}>{rate}%</span>
-                                                        </div>
-                                                    </td>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td>
-                                                    <td><span className="badge badge-mute">No report</span></td>
-                                                </>
-                                            )}
-                                        </tr>
-                                    );
-                                })}
+                                {vulnRows.map(r => (
+                                    <tr key={r.key}>
+                                        <td className="whitespace-nowrap"><Link to={`/policy/${r.view}`} className="font-medium hover:underline" style={{ color: 'inherit' }} title={`Open the ${r.name} report`}>{r.name}</Link></td>
+                                        {r.available ? (
+                                            <>
+                                                {SEV.map(s => <td key={s.key} className="r num" style={sevCell(r.c[s.key] || 0, s.key)}>{r.c[s.key] || 0}</td>)}
+                                                <td className="r num" style={{ color: 'var(--mute)' }}>{r.c.UNKNOWN || 0}</td>
+                                                <td className="r num font-semibold">{r.total}</td>
+                                                <td className="!pl-4"><StackBar parts={r.parts} width={196} /></td>
+                                                <td>{(r.c.CRITICAL || 0) > 0
+                                                    ? <span className="badge badge-crit">Critical</span>
+                                                    : (r.c.HIGH || 0) > 0 ? <span className="badge badge-warn">High</span>
+                                                        : <span className="badge badge-ok">Clean</span>}</td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td>
+                                                <td className="!pl-4"><StackBar parts={[]} width={196} /></td>
+                                                <td><span className="badge badge-mute">No report</span></td>
+                                            </>
+                                        )}
+                                    </tr>
+                                ))}
                             </tbody>
+                            <tfoot><tr>
+                                <td>Total <span className="font-normal" style={{ color: 'var(--mute)' }}>· {availableVuln.length} of {vulnRows.length} scanners</span></td>
+                                {SEV.map(s => <td key={s.key} className="r num" style={s.key === 'CRITICAL' && totalCritical ? { color: 'var(--crit)' } : undefined}>{sumSev(s.key)}</td>)}
+                                <td className="r num">{sumSev('UNKNOWN')}</td>
+                                <td className="r num">{availableVuln.reduce((a, r) => a + r.total, 0)}</td>
+                                <td /><td />
+                            </tr></tfoot>
                         </table>
                     </div>
                 </section>
 
-                {/* Recent activity */}
-                <section className="sheet">
-                    <div className="phead">
-                        <h2>Recent activity <span className="count">{recent.length}</span></h2>
-                        <span className="meta">Latest reports</span>
-                    </div>
-                    {recent.length === 0 ? (
-                        <p className="m-0 px-3.5 py-3 text-xs" style={{ color: 'var(--mute)' }}>No reports yet.</p>
-                    ) : (
-                        <ol className="m-0 px-3.5 pt-1 pb-1.5 list-none">
-                            {recent.map(r => {
-                                const ok = r.status === 'completed';
-                                return (
-                                    <li key={r.id} className="grid grid-cols-[52px_12px_1fr_auto] items-center gap-2.5 py-[5px] text-[13px]" style={{ borderBottom: '1px dotted var(--line)' }}>
-                                        <span className="num text-xs" style={{ color: 'var(--mute-2)' }}>{timeAgo(r.timestamp)}</span>
-                                        <span className="w-[7px] h-[7px]" style={{ background: ok ? 'var(--ok)' : 'var(--crit)' }} />
-                                        <span className="truncate">{r.scan_type === 'all' ? 'Full scan' : r.scan_type || 'Unknown scan'}</span>
-                                        <span className="text-xs font-medium" style={{ color: ok ? 'var(--ok)' : 'var(--crit)' }}>{r.status || '—'}</span>
-                                    </li>
-                                );
-                            })}
-                        </ol>
-                    )}
-                </section>
-            </div>
+                <div className="grid grid-cols-1 xl:grid-cols-[1.55fr_1fr] gap-[18px]">
+                    {/* Compliance */}
+                    <section className="sheet">
+                        <div className="phead">
+                            <h2>Compliance checks</h2>
+                            <span className="meta">Policies, CIS benchmark and network ciphers</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="ctable">
+                                <thead><tr>
+                                    <th>Check</th><th className="r">Pass</th><th className="r">Warn</th><th className="r">Fail</th><th className="r">Other</th><th className="r">Total</th><th className="w-[170px]">Pass rate</th>
+                                </tr></thead>
+                                <tbody>
+                                    {compRows.map(r => {
+                                        const rate = r.available ? pct(r.pass, r.total) : null;
+                                        return (
+                                            <tr key={r.name}>
+                                                <td className="whitespace-nowrap"><Link to={`/policy/${r.view}`} className="font-medium hover:underline" style={{ color: 'inherit' }} title={`Open the ${r.name} report`}>{r.name}</Link></td>
+                                                {r.available ? (
+                                                    <>
+                                                        <td className="r num" style={{ color: 'var(--ok)' }}>{r.pass}</td>
+                                                        <td className="r num" style={r.warn ? { color: 'var(--warn)' } : { color: 'var(--faint)' }}>{r.warn === null ? '—' : r.warn}</td>
+                                                        <td className="r num" style={r.fail ? { color: 'var(--crit)', background: 'var(--crit-tint)', fontWeight: 600 } : { color: 'var(--faint)' }}>{r.fail}</td>
+                                                        <td className="r num" style={{ color: 'var(--mute)' }} title={r.otherLabel}>{r.other === null ? '—' : r.other}</td>
+                                                        <td className="r num font-semibold" title={r.unit}>{r.total}</td>
+                                                        <td>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-2 w-[110px]" style={{ background: 'var(--line-soft)' }}>
+                                                                    <div className="h-full" style={{ width: `${rate || 0}%`, background: rateColor(rate) }} />
+                                                                </div>
+                                                                <span className="num text-xs" style={{ color: rateColor(rate) }}>{rate}%</span>
+                                                            </div>
+                                                        </td>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td><td className="r num">{dash}</td>
+                                                        <td><span className="badge badge-mute">No report</span></td>
+                                                    </>
+                                                )}
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    {/* Recent activity */}
+                    <section className="sheet">
+                        <div className="phead">
+                            <h2>Recent activity <span className="count">{recent.length}</span></h2>
+                            <span className="meta">Latest reports</span>
+                        </div>
+                        {recent.length === 0 ? (
+                            <p className="m-0 px-3.5 py-3 text-xs" style={{ color: 'var(--mute)' }}>No reports yet.</p>
+                        ) : (
+                            <ol className="m-0 px-3.5 pt-1 pb-1.5 list-none">
+                                {recent.map(r => {
+                                    const ok = r.status === 'completed';
+                                    return (
+                                        <li key={r.id} className="grid grid-cols-[52px_12px_1fr_auto] items-center gap-2.5 py-[5px] text-[13px]" style={{ borderBottom: '1px dotted var(--line)' }}>
+                                            <span className="num text-xs" style={{ color: 'var(--mute-2)' }}>{timeAgo(r.timestamp)}</span>
+                                            <span className="w-[7px] h-[7px]" style={{ background: ok ? 'var(--ok)' : 'var(--crit)' }} />
+                                            <span className="truncate">{r.scan_type === 'all' ? 'Full scan' : r.scan_type || 'Unknown scan'}</span>
+                                            <span className="text-xs font-medium" style={{ color: ok ? 'var(--ok)' : 'var(--crit)' }}>{r.status || '—'}</span>
+                                        </li>
+                                    );
+                                })}
+                            </ol>
+                        )}
+                    </section>
+                </div>
+                </div>
+            </HistoryCharts>
         </div>
     );
 }
