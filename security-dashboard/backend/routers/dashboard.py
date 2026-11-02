@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any
+import asyncio
 import os
 import json
 import pandas as pd
@@ -43,7 +44,18 @@ def load_cluster_report(cluster: str = "local"):
 )
 async def get_dashboard_stats(cluster: str = "local"):
     """
-    Extract and aggregate statistics from all available security scan reports.
+    Stats from the snapshot saved after the last scan (a single DB read). Clusters with no
+    snapshot yet are computed from the report files, off the event loop.
+    """
+    cluster_dir(cluster)  # validates the cluster name (400 on a bad one)
+    from services import history_store
+    snap = await asyncio.to_thread(history_store.latest_stats, cluster)
+    return snap if snap else await asyncio.to_thread(compute_dashboard_stats, cluster)
+
+
+def compute_dashboard_stats(cluster: str = "local"):
+    """
+    Extract and aggregate statistics from all available security scan reports (slow: parses the files).
     """
     NEW_DIR = cluster_dir(cluster)
     stats = {
@@ -129,7 +141,8 @@ async def get_dashboard_stats(cluster: str = "local"):
                     crit = set(fixable[fixable[sev_col] == 'CRITICAL']['Artifact'])
                     high = set(fixable[fixable[sev_col] == 'HIGH']['Artifact']) - crit
                     stats["trivyImage"].update({
-                        "images": int(df['Artifact'].nunique()),
+                        # images = report files (the xlsx only lists images that have vulnerabilities, clean ones count too)
+                        "images": len({p.name for p in (NEW_DIR / "trivy-reports").glob("*/*.json")}) or int(df['Artifact'].nunique()),
                         "imagesFixableCritical": len(crit),
                         "imagesFixableHigh": len(high),
                     })

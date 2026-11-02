@@ -38,11 +38,14 @@ def has_run(run_id: str) -> bool:
 
 def list_runs(cluster: str = "local") -> list:
     """Summaries, newest first (same fields the reports list endpoint always returned)."""
-    # The list always said "completed"; only a run the user stopped (a "cancelled" result) is reported differently.
+    # cancelled: the user stopped it; failed: a scan in it ended with another status than completed (as the heatmap counts).
     rows = db.conn().execute(
-        "SELECT id, ts, scan_type, EXISTS (SELECT 1 FROM json_each(report, '$.results') WHERE json_extract(value, '$.status') = 'cancelled') AS cancelled "
+        "SELECT id, ts, scan_type, "
+        "EXISTS (SELECT 1 FROM json_each(report, '$.results') WHERE json_extract(value, '$.status') = 'cancelled') AS cancelled, "
+        "EXISTS (SELECT 1 FROM json_each(report, '$.results') WHERE json_extract(value, '$.status') NOT IN ('completed', 'cancelled')) AS failed "
         "FROM scan_runs WHERE cluster=? ORDER BY ts DESC", (cluster,))
-    return [{"id": r["id"], "timestamp": r["ts"], "scan_type": r["scan_type"], "status": "cancelled" if r["cancelled"] else "completed"} for r in rows]
+    return [{"id": r["id"], "timestamp": r["ts"], "scan_type": r["scan_type"],
+             "status": "cancelled" if r["cancelled"] else "failed" if r["failed"] else "completed"} for r in rows]
 
 
 def reports_since(since_iso: str, cluster: str = "local") -> list:

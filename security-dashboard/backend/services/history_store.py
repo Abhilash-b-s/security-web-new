@@ -27,6 +27,12 @@ def add(line: dict, cluster: str = "local") -> None:
                    line.get("new", 0), line.get("resolved", 0), json.dumps(line.get("stats"))))
 
 
+def latest_stats(cluster: str = "local"):
+    """Stats of the newest snapshot, or None if the cluster has none."""
+    r = db.conn().execute("SELECT stats FROM history WHERE cluster=? ORDER BY id DESC LIMIT 1", (cluster,)).fetchone()
+    return json.loads(r["stats"]) if r else None
+
+
 def load(cluster: str = "local") -> list:
     """All snapshots, oldest first (insertion order, like the append-only file)."""
     rows = db.conn().execute("SELECT * FROM history WHERE cluster=? ORDER BY id", (cluster,))

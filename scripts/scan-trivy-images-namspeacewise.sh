@@ -115,12 +115,14 @@ scan_namespace() {
   echo -e "${BOLD}[ Namespace: ${ns} — Now Start Scanning ]${RESET}"
   echo
 
-  mapfile -t images < <(
-    kubectl get pods -n "$ns" --field-selector=status.phase=Running \
-      -o jsonpath='{range .items[*]}{range .spec.containers[*]}{.image}{"\n"}{end}{range .spec.initContainers[*]}{.image}{"\n"}{end}{range .spec.ephemeralContainers[*]}{.image}{"\n"}{end}{end}' \
-    | awk 'NF' \
-    | sort -u
-  )
+  local pods
+  if ! pods=$(kubectl get pods -n "$ns" --field-selector=status.phase=Running \
+      -o jsonpath='{range .items[*]}{range .spec.containers[*]}{.image}{"\n"}{end}{range .spec.initContainers[*]}{.image}{"\n"}{end}{range .spec.ephemeralContainers[*]}{.image}{"\n"}{end}{end}'); then
+    echo "WARNING: could not list the pods of namespace $ns; its existing reports are kept"
+    echo "$ns" >> "$KEEP_NS"
+    return 0
+  fi
+  mapfile -t images < <(printf '%s\n' "$pods" | awk 'NF' | sort -u)
 
   if [ ${#images[@]} -eq 0 ]; then
     return 0
@@ -130,6 +132,7 @@ scan_namespace() {
     local safe_name out_file
     safe_name=$(sanitize "$image")
     out_file="$ns_out_dir/${safe_name}.json"
+    echo "$out_file" >> "$KEEP_FILES"   # an image that runs now keeps its report even if this scan could not refresh it
     
     local ref host
     ref=$(normalize_image "$image"); host=${ref%%/*}
@@ -147,7 +150,8 @@ scan_namespace() {
     local err_log=$(mktemp)
     # Images are pulled from their registry (no access to the node's containerd store);
     # credentials come from the docker config written by the Settings registry logins.
-    trivy image $TRIVY_FLAGS --image-src remote -o "$out_file" "$ref" >"$err_log" 2>&1 &
+    # Write to a temp file: a failed re-scan must not delete the report of an image that is still running.
+    trivy image $TRIVY_FLAGS --image-src remote -o "$out_file.part" "$ref" >"$err_log" 2>&1 &
     local pid=$!
     
     while kill -0 $pid 2>/dev/null; do
@@ -159,13 +163,14 @@ scan_namespace() {
     
     # echo "" removed to preventing blank line in UI
     if [ $ret -eq 0 ]; then
+      mv -f "$out_file.part" "$out_file"
       echo -e "     ${GREEN}✔${RESET} scanning completed"
       SCANNED=$((SCANNED + 1))
     else
       echo -e "     ${BOLD}✘${RESET} scanning failed"
       echo "SKIPPED (could not pull or scan): $image"
       SKIPPED=$((SKIPPED + 1))
-      rm -f "$out_file"
+      rm -f "$out_file.part"   # the previous report of this image, if any, stays
       echo -e "${DIM}Error details:${RESET}"
       cat "$err_log"
     fi
@@ -175,6 +180,26 @@ scan_namespace() {
 
 SCANNED=0
 SKIPPED=0
+
+# Reports of images that no longer run are removed at the end of a complete scan (see prune_stale).
+KEEP_FILES=$(mktemp); KEEP_NS=$(mktemp)
+trap 'rm -f "$KEEP_FILES" "$KEEP_NS"' EXIT
+
+# $1 = directory to clean. Deletes *.json reports there that were not listed for an image running now,
+# except in namespaces whose pods could not be listed. Only called after every namespace was processed:
+# a scan that is stopped or fails halfway never reaches it, so it cannot leave the report folder empty.
+prune_stale() {
+  local dir="$1" f ns removed=0
+  while IFS= read -r f; do
+    ns=$(basename "$(dirname "$f")")
+    grep -qxF "$f" "$KEEP_FILES" && continue
+    grep -qxF "$ns" "$KEEP_NS" && continue
+    rm -f "$f" && removed=$((removed + 1)) && echo "Removed report of an image that is no longer running: ${f#"$OUTPUT_DIR"/}"
+  done < <(find "$dir" -mindepth 2 -type f -name '*.json')
+  find "$dir" -type f -name '*.json.part' -delete 2>/dev/null   # leftovers of a scan that was stopped
+  find "$dir" -mindepth 1 -type d -empty -delete 2>/dev/null
+  echo "Stale reports removed: $removed"
+}
 
 # Entry
 if [[ "${NAMESPACE^^}" == "ALL" ]]; then
@@ -187,8 +212,14 @@ if [[ "${NAMESPACE^^}" == "ALL" ]]; then
   echo "Trivy image scanning for: ALL namespaces"
   echo
   for ns in "${namespaces[@]}"; do
+    [[ "$ns" == sec-nmap-* ]] && continue   # the network scan's own temporary namespace, not part of the cluster
     scan_namespace "$ns"
   done
+  if [ $((SCANNED + SKIPPED)) -gt 0 ]; then
+    prune_stale "$OUTPUT_DIR"
+  else
+    echo "No running images found: old reports are left as they are."  # e.g. the API was unreachable
+  fi
 else
   echo
   echo "Trivy image scanning for: ${NAMESPACE}"

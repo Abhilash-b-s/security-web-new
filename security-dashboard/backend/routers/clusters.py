@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import auth
-from services import audit, clusters
+from services import audit, cluster_data, clusters, scanner
 from services.cluster_context import LOCAL
 
 router = APIRouter()
@@ -44,14 +44,17 @@ def add_cluster(body: ClusterCreate, request: Request, actor: str = Depends(supe
     return {"name": body.name, "status": "added"}
 
 
-@router.delete("/{name}", summary="Remove a cluster (its scan data is kept)")
-def delete_cluster(name: str, request: Request, actor: str = Depends(superuser)):
+@router.delete("/{name}", summary="Remove a cluster; its scan data is kept unless delete_data=true")
+def delete_cluster(name: str, request: Request, delete_data: bool = False, actor: str = Depends(superuser)):
     if name == LOCAL:
         raise HTTPException(status_code=400, detail="The local cluster cannot be removed")
+    if delete_data and scanner.manager.list_runs():  # a running scan would write its output back after the purge
+        raise HTTPException(status_code=409, detail="A scan is running. Stop it or wait for it to finish, then delete the cluster with its data.")
     if not clusters.remove(name):
         raise HTTPException(status_code=404, detail="Unknown cluster")
-    audit.log_event(actor, "cluster.delete", name, "", _ip(request), name)
-    return {"name": name, "status": "deleted"}
+    removed = cluster_data.purge(name) if delete_data else None
+    audit.log_event(actor, "cluster.delete", name, "scan data deleted" if delete_data else "scan data kept", _ip(request), name)
+    return {"name": name, "status": "deleted", "data_deleted": delete_data, "removed": removed}
 
 
 @router.post("/{name}/test", summary="Check that a cluster is reachable")

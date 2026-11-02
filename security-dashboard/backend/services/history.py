@@ -22,13 +22,14 @@ NEW_DIR = Path(os.getenv("NEW_DIR", "/app/new"))
 _SEVERITY = {}
 
 
-def _vuln_keys(path: Path, prefix: str) -> set:
-    """Keys for Trivy vulnerabilities/secrets in one JSON report."""
+def _vuln_keys(path: Path, prefix: str):
+    """Keys for Trivy vulnerabilities/secrets in one JSON report, or None if the file is empty or unreadable
+    (that is not "no findings": treating it so would resolve every finding and reopen them at the next scan)."""
     keys = set()
     try:
         data = json.loads(path.read_text())
     except Exception:
-        return keys
+        return None
     for res in data.get("Results", data.get("results", [])) or []:
         target = res.get("Target", "")
         for v in res.get("Vulnerabilities", []) or []:
@@ -42,15 +43,16 @@ def _vuln_keys(path: Path, prefix: str) -> set:
     return keys
 
 
-def _cluster_keys(cluster: str = "local") -> set:
+def _cluster_keys(cluster: str = "local"):
+    """Keys of the Trivy cluster report, or None when there is no readable report."""
     keys = set()
     try:
         from routers.dashboard import load_cluster_report
         data = load_cluster_report(cluster)
     except Exception:
-        return keys
+        return None
     if data is None:
-        return keys
+        return None
     groups = (data.get("Findings") or data.get("findings") or []) + (data.get("Resources") or data.get("resources") or [])
     for g in groups:
         where = f"{g.get('Namespace', '')}/{g.get('Kind', '')}/{g.get('Name', '')}"
@@ -66,38 +68,53 @@ def _cluster_keys(cluster: str = "local") -> set:
     return keys
 
 
+def _union(files, prefix_of):
+    """Keys of several report files, or None if any of them is unreadable."""
+    keys = set()
+    for f in files:
+        k = _vuln_keys(f, prefix_of(f))
+        if k is None:
+            return None
+        keys |= k
+    return keys
+
+
 def collect_finding_keys(cluster: str = "local") -> dict:
-    """Current finding keys per source. A source with no report is left out."""
-    out = {}
+    """Current finding keys per source. A source with no report, or with an unreadable one, is left out:
+    its findings are neither resolved nor reopened by this snapshot."""
+    found = {}
     _SEVERITY.clear()
     base = cluster_dir(cluster)
     img_dir = base / "trivy-reports"
     if img_dir.exists():
-        keys = set()
-        for f in img_dir.rglob("*.json"):
-            keys |= _vuln_keys(f, f"image|{f.relative_to(img_dir)}")
-        out["image"] = keys
+        found["image"] = _union(img_dir.rglob("*.json"), lambda f: f"image|{f.relative_to(img_dir)}")
     sbom = base / "trivy-sbom" / "sbom.json"
     if sbom.exists():
-        out["sbom"] = _vuln_keys(sbom, "sbom")
+        found["sbom"] = _vuln_keys(sbom, "sbom")
     repo_dir = NEW_DIR / "trivy_repo_scan"  # source-code scans are cluster independent: local only
     if cluster == "local" and repo_dir.exists() and any(repo_dir.glob("*.json")):
-        keys = set()
-        for f in repo_dir.glob("*.json"):
-            keys |= _vuln_keys(f, f"repo|{f.name}")
-        out["repo"] = keys
+        found["repo"] = _union(repo_dir.glob("*.json"), lambda f: f"repo|{f.name}")
     report_dir = base / "trivy-cluster-report"
     if (report_dir / "cluster.json").exists() or (report_dir / "cluster.zip").exists():
-        out["cluster"] = _cluster_keys(cluster)
-    return out
+        found["cluster"] = _cluster_keys(cluster)
+    for source in [s for s, k in found.items() if k is None]:
+        logger.warning(f"Finding tracking: the {source} report of '{cluster}' is empty or unreadable, left unchanged")
+    return {s: k for s, k in found.items() if k is not None}
+
+
+# Which finding sources a scan can have changed. A snapshot must only look at those: after a scan of another
+# kind the other reports may be half written (a stopped scan) and would be read as "everything resolved/new".
+SOURCES_BY_SCAN = {"trivy-image": ("image",), "trivy-sbom": ("sbom",), "trivy-cluster": ("cluster",),
+                   "trivy-repo": ("repo",), "all": ("image", "sbom", "repo", "cluster")}
 
 
 async def record_snapshot(scan_id: str, scan_type: str, status: str, cluster: str = "local"):
     """Store one history snapshot. Never raises: history must not break a scan."""
     try:
-        from routers.dashboard import get_dashboard_stats
-        stats = await get_dashboard_stats(cluster)
+        from routers.dashboard import compute_dashboard_stats
+        stats = await asyncio.to_thread(compute_dashboard_stats, cluster)
         keys = await asyncio.to_thread(collect_finding_keys, cluster)
+        keys = {s: k for s, k in keys.items() if s in SOURCES_BY_SCAN.get(scan_type, ())}
         new, resolved = await asyncio.to_thread(findings.apply, keys, dict(_SEVERITY), cluster)
         line = {"ts": datetime.now().isoformat(timespec="seconds"), "scan_id": scan_id, "scan_type": scan_type,
                 "status": status, "new": new, "resolved": resolved, "stats": stats}
@@ -114,10 +131,14 @@ def _load_runs(since: datetime, cluster: str = "local") -> list:
             ts = datetime.fromisoformat(r["timestamp"])
             results = r.get("results") or []
             scan_type = (r.get("request") or {}).get("scan_type", "unknown")
+            cancelled = lambda x: str(x.get("status")) == "cancelled"  # a scan the user stopped did not run to completion: not activity
             if scan_type == "all" and results:
-                # A full scan (e.g. the CronJob) counts as one run for each scanner it ran.
+                # A full scan (e.g. the scheduler) counts as one run for each scanner it ran.
                 for x in results:
-                    runs.append({"ts": ts, "scan_type": x.get("scan_type", "unknown"), "failed": str(x.get("status")) not in ("completed", "cancelled")})
+                    if not cancelled(x):
+                        runs.append({"ts": ts, "scan_type": x.get("scan_type", "unknown"), "failed": str(x.get("status")) != "completed"})
+                continue
+            if results and all(cancelled(x) for x in results):
                 continue
             failed = any(str(x.get("status")) not in ("completed", "cancelled") for x in results) or not results
             runs.append({"ts": ts, "scan_type": scan_type, "failed": failed})

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCluster } from '../cluster';
+import DeleteClusterDialog from './DeleteClusterDialog';
 
 const detail = async (res) => (await res.json().catch(() => ({}))).detail || res.statusText;
 
@@ -55,15 +56,21 @@ export default function ClustersSettings() {
         }
     };
 
-    const remove = async (c) => {
-        if (!window.confirm(`Remove cluster ${c}? Its stored kubeconfig is deleted; its scan data is kept.`)) return;
+    const [toDelete, setToDelete] = useState(null); // cluster name while its confirmation dialog is open
+    const [deleting, setDeleting] = useState(false);
+
+    const remove = async (c, deleteData) => {
+        setDeleting(true);
         try {
-            const res = await fetch(`/api/clusters/${encodeURIComponent(c)}`, { method: 'DELETE' });
+            const res = await fetch(`/api/clusters/${encodeURIComponent(c)}?delete_data=${deleteData}`, { method: 'DELETE' });
             if (!res.ok) throw new Error(await detail(res));
-            setMsg({ ok: true, text: `Cluster ${c} removed.` });
+            setMsg({ ok: true, text: deleteData ? `Cluster ${c} and its scan data removed.` : `Cluster ${c} removed; its scan data is kept.` });
             load();
         } catch (err) {
             setMsg({ ok: false, text: err.message });
+        } finally {
+            setDeleting(false);
+            setToDelete(null);
         }
     };
 
@@ -80,7 +87,7 @@ export default function ClustersSettings() {
                         <tbody>
                             {list.map((c) => (
                                 <tr key={c.name}>
-                                    <td className="num text-xs">{c.name}</td>
+                                    <td><span className="cname">{c.name}</span></td>
                                     <td>{c.kind === 'local' ? 'Local (ServiceAccount)' : 'Kubeconfig'}</td>
                                     <td className="num text-xs">{c.last_scan_at ? new Date(c.last_scan_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : <span style={{ color: 'var(--faint)' }}>Never</span>}</td>
                                     <td>{c.last_status ? <span style={{ color: c.last_status === 'completed' ? 'var(--ok)' : 'var(--crit)' }}>{c.last_status}</span> : <span style={{ color: 'var(--faint)' }}>—</span>}</td>
@@ -89,7 +96,7 @@ export default function ClustersSettings() {
                                             <>
                                                 <button type="button" className="lnk" onClick={() => test(c.name)}>Test</button>
                                                 <span className="mx-1.5" style={{ color: 'var(--line-strong)' }}>·</span>
-                                                <button type="button" className="lnk del" onClick={() => remove(c.name)}>Delete</button>
+                                                <button type="button" className="lnk del" onClick={() => setToDelete(c.name)}>Delete</button>
                                             </>
                                         )}
                                     </td>
@@ -126,6 +133,7 @@ export default function ClustersSettings() {
                     </div>
                 </form>
             </section>
+            {toDelete && <DeleteClusterDialog name={toDelete} busy={deleting} onCancel={() => setToDelete(null)} onConfirm={(withData) => remove(toDelete, withData)} />}
         </div>
     );
 }

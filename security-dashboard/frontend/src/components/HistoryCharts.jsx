@@ -198,9 +198,11 @@ function Sparkline({ cur, prev, compare, dates = [], prevDates = [], unit = '', 
     );
 }
 
-function Tile({ label, cur, prev, dates, prevDates, unit, goodUp, compare, range, color }) {
+function Tile({ label, cur, prev, prevOk, dates, prevDates, unit, goodUp, compare, range, color }) {
     const now = lastVal(cur), before = lastVal(prev);
-    const d = now != null && before != null ? now - before : null;
+    // Only compare with the previous period when it has data (at least half of its days were scanned);
+    // otherwise "vs previous N days" would be a comparison with a mostly empty period.
+    const d = prevOk && now != null && before != null ? now - before : null;
     const good = d == null || d === 0 ? null : goodUp ? d > 0 : d < 0;
     const isPct = unit === '%';
     return (
@@ -233,6 +235,7 @@ function SevPanel({ sev, values, dates, days }) {
     const now = lastVal(values), start = firstVal(values);
     const d = now != null && start != null ? now - start : null;
     const li = values.map((v, i) => (v != null ? i : -1)).filter(i => i >= 0).pop();
+    const covered = values.findIndex(v => v != null) < 0 ? 0 : values.length - values.findIndex(v => v != null); // days since the first data in this window
     return (
         <div className="px-3.5 pt-3 pb-2.5" style={{ borderLeft: '1px solid var(--line-soft)' }}>
             <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--ink-2)' }}>
@@ -240,7 +243,7 @@ function SevPanel({ sev, values, dates, days }) {
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-[22px] font-semibold">{fmt(now)}</span>
-                {d != null && vals.length > 1 && <span className="num text-[11px]" style={{ color: d > 0 ? 'var(--crit)' : d < 0 ? 'var(--ok)' : 'var(--mute-2)' }}>{d > 0 ? '+' : d < 0 ? '−' : '±'}{fmt(Math.abs(d))} in {days}d</span>}
+                {d != null && vals.length > 1 && <span className="num text-[11px]" style={{ color: d > 0 ? 'var(--crit)' : d < 0 ? 'var(--ok)' : 'var(--mute-2)' }}>{d > 0 ? '+' : d < 0 ? '−' : '±'}{fmt(Math.abs(d))} in {covered}d</span>}
             </div>
             <div className="mt-1.5">
             <HoverArea values={values} y={y} color={sev.color} tip={(i) => <TipRow color={sev.color} value={fmt(values[i])} label={`${sev.label} · ${dates[i] ? dayLabel(dates[i]) : ''}`} />}>
@@ -440,6 +443,7 @@ export default function HistoryCharts({ children }) {
         const pick = (list, f) => list.map(d => f(d.stats));
         return {
             cur, prev, dates: cur.map(d => d.date), prevDates: prev.map(d => d.date),
+            prevOk: prev.filter(d => d.observed).length * 2 >= range,
             observed: cur.filter(d => d.observed).length,
             score: [pick(cur, computeSecurityScore), pick(prev, computeSecurityScore)],
             crit: [pick(cur, s => sevTotal(s, 'CRITICAL')), pick(prev, s => sevTotal(s, 'CRITICAL'))],
@@ -483,11 +487,11 @@ export default function HistoryCharts({ children }) {
                     )}
 
                     <div className="sheet grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 [&>*:first-child]:border-l-0">
-                        <Tile dates={view.dates} prevDates={view.prevDates} label="Security score" cur={view.score[0]} prev={view.score[1]} unit="/ 100" goodUp compare={compare} range={range} />
-                        <Tile dates={view.dates} prevDates={view.prevDates} label="Critical findings" cur={view.crit[0]} prev={view.crit[1]} unit="open" compare={compare} range={range} color={lastVal(view.crit[0]) ? 'var(--crit)' : undefined} />
-                        <Tile dates={view.dates} prevDates={view.prevDates} label="High findings" cur={view.high[0]} prev={view.high[1]} unit="open" compare={compare} range={range} />
-                        <Tile dates={view.dates} prevDates={view.prevDates} label="Policy pass rate" cur={view.pol[0]} prev={view.pol[1]} unit="%" goodUp compare={compare} range={range} />
-                        <Tile dates={view.dates} prevDates={view.prevDates} label="CIS pass rate" cur={view.cis[0]} prev={view.cis[1]} unit="%" goodUp compare={compare} range={range} />
+                        <Tile prevOk={view.prevOk} dates={view.dates} prevDates={view.prevDates} label="Security score" cur={view.score[0]} prev={view.score[1]} unit="/ 100" goodUp compare={compare} range={range} />
+                        <Tile prevOk={view.prevOk} dates={view.dates} prevDates={view.prevDates} label="Critical findings" cur={view.crit[0]} prev={view.crit[1]} unit="open" compare={compare} range={range} color={lastVal(view.crit[0]) ? 'var(--crit)' : undefined} />
+                        <Tile prevOk={view.prevOk} dates={view.dates} prevDates={view.prevDates} label="High findings" cur={view.high[0]} prev={view.high[1]} unit="open" compare={compare} range={range} />
+                        <Tile prevOk={view.prevOk} dates={view.dates} prevDates={view.prevDates} label="Policy pass rate" cur={view.pol[0]} prev={view.pol[1]} unit="%" goodUp compare={compare} range={range} />
+                        <Tile prevOk={view.prevOk} dates={view.dates} prevDates={view.prevDates} label="CIS pass rate" cur={view.cis[0]} prev={view.cis[1]} unit="%" goodUp compare={compare} range={range} />
                     </div>
 
                     <div className="grid grid-cols-1 2xl:grid-cols-[1.9fr_1fr] gap-[18px]">
