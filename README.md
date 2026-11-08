@@ -1,405 +1,206 @@
 # DevSecOps Security Dashboard
 
-## Overview
-The Security Dashboard is a comprehensive, containerized security management platform designed for Kubernetes environments. It unifies multiple industry-standard security tools into a single, intuitive interface, providing real-time visibility into the security posture of your infrastructure, applications, and source code.
+A web dashboard that runs security scans against Kubernetes clusters, container images and Git repositories, and shows the results in one place. It wraps [Trivy](https://trivy.dev), [kube-bench](https://github.com/aquasecurity/kube-bench), [Kyverno](https://kyverno.io) and Nmap behind a React UI and a FastAPI backend, and ships as a single container.
 
-This platform enables security teams, DevOps engineers, and developers to perform continuous security assessments, track compliance, and remediate vulnerabilities efficiently.
+![Overview](docs/screenshots/dashboard.png)
 
-<img width="2752" height="1536" alt="image" src="https://github.com/user-attachments/assets/3be9a86a-8e65-4ec4-9006-3af96ad865a5" />
+## Features
 
-## Key Features
+- **Eight scanners** from one sidebar, or all at once with *Run all scans*: image vulnerabilities, SBOM, policy compliance (Kyverno), network exposure (Nmap), source code (Trivy repo), CIS benchmark (kube-bench), cluster risks and compliance (NSA / Pod Security Standards).
+- **Multiple clusters.** Scan the cluster the dashboard runs in (`local`) and any cluster you register with a kubeconfig. Switch with the *Cluster* selector in the header.
+- **Scheduled scans.** Daily scan times per cluster (UTC, up to 6 per cluster).
+- **Overview page.** Security score, open findings by severity, new vs resolved findings and pass rates, with 7/30/90 day trends built from a snapshot saved after every scan.
+- **Report viewers** with filtering, search, sorting and export (CSV / XLSX / TXT).
+- **Suppressions** to hide accepted findings.
+- **Live scan output** over WebSocket, plus a stored log for every run (*Event logs*).
+- **Roles and audit log.** Two roles (`superuser`, `user`) and an audit trail of logins, scans and settings changes.
+- **Optional web terminal** with `kubectl` (off by default).
 
-### 🛡️ Unified Security Operations
-- **Centralized Dashboard**: Monitor system status and latest security events at a glance
-- **Integrated Scanning**: Trigger and manage scans from multiple tools directly via the UI
-- **Web Terminal**: Built-in web-based terminal for direct command-line access with kubectl integration
-- **Theme Support**: Persistent Light/Dark mode toggle with high-contrast optimization
-- **Real-time Updates**: WebSocket-based live scan progress and event streaming
-- **Authentication**: Login system for secure access to the dashboard
+## Screenshots
 
-### 🔍 Comprehensive Scanning Capabilities
-The dashboard integrates the following security tools:
+| | |
+|---|---|
+| ![Image vulnerabilities](docs/screenshots/image-vulnerabilities.png) | ![CIS benchmark](docs/screenshots/cis-benchmark.png) |
+| Image vulnerabilities (Trivy) | CIS benchmark (kube-bench) |
+| ![Compliance](docs/screenshots/compliance.png) | ![Event logs](docs/screenshots/events.png) |
+| Compliance (NSA / Pod Security Standards) | Event logs |
 
-#### Source Code Security
-- **Trivy Repo Scan**: Scans remote Git repositories for vulnerabilities, misconfigurations, and secrets
-- **SBOM Inventory**: Generates Software Bill of Materials (SBOM) for your artifacts
+## Quick start
 
-#### Container & Cluster Security
-- **Image Vulnerabilities**: Scans container images for CVEs using Trivy
-- **Cluster Risks**: Identifies misconfigurations and security risks in the Kubernetes cluster
-- **Policy Compliance**: Visualizes Kyverno policy reports and violations with status tracking
-- **CIS Benchmarks**: Runs Kube-Bench to check compliance with CIS Kubernetes Benchmarks
+### 1. Run on Kubernetes (recommended)
 
-#### Network Security
-- **Nmap Scan**: Performs network discovery, port scanning, and service detection
+Requirements: `docker`, `kubectl` access to the target cluster, a registry you can push to, and an nginx ingress controller.
 
-### 📊 Detailed Reporting
-- **Interactive Reports**: Filterable and searchable HTML reports for all scan types
-- **Visual Analytics**: Charts and graphs to visualize vulnerability distributions and severity levels
-- **Export Capabilities**: Download reports in multiple formats (JSON, HTML, ZIP archives)
-- **Git Integration**: Securely configure and manage Git credentials for private repository scanning
-- **Registry Management**: Configure multiple container registry credentials for private image scanning
-- **Report History**: Access historical scan results and track security posture over time
-
-## Technology Stack
-
-### Frontend
-- **Framework**: React 18.2
-- **Build Tool**: Vite 5.1
-- **Styling**: Tailwind CSS 3.4, PostCSS, Autoprefixer
-- **Icons**: Lucide React 0.344
-- **Utilities**: clsx, tailwind-merge for dynamic styling
-- **Archive Support**: JSZip 3.10 for report compression
-
-### Backend
-- **Framework**: FastAPI (Python 3.12)
-- **Server**: Uvicorn with WebSocket support
-- **API Documentation**: OpenAPI (Swagger UI), ReDoc
-- **Architecture**: RESTful API with real-time WebSocket endpoints
-
-### Security Tools (Integrated)
-- **Trivy** v0.74.0 - Vulnerability scanner for containers, code, and IaC
-- **Kube-Bench** v0.16.0 - CIS Kubernetes Benchmark checker
-- **Kyverno CLI** v1.19.1 - Kubernetes policy validation
-- **Nmap** - Network scanning and security auditing
-- **Kubectl** - Kubernetes command-line tool (latest stable)
-
-### Infrastructure
-- **Containerization**: Multi-stage Docker build (Node 24 + Python 3.12)
-- **Orchestration**: Kubernetes (tested with Minikube, Kind, managed clusters)
-- **Registry**: Supports any OCI-compliant registry (Docker Hub, Quay.io, etc.)
-
-## Architecture
-
-### Directory Structure
-
-```
-security-web/
-├── security-dashboard/
-│   ├── frontend/           # React application
-│   │   ├── src/
-│   │   │   ├── components/ # UI components
-│   │   │   ├── App.jsx     # Main app component
-│   │   │   └── main.jsx    # Entry point
-│   │   ├── package.json
-│   │   └── vite.config.js
-│   └── backend/            # FastAPI application
-│       ├── routers/        # API route handlers
-│       │   ├── scans.py    # Scan endpoints
-│       │   ├── reports.py  # Report endpoints
-│       │   ├── files.py    # File serving
-│       │   └── settings.py # Configuration
-│       ├── services/       # Business logic
-│       │   ├── scanner.py  # Scan orchestration
-│       │   └── terminal.py # WebSocket terminal
-│       ├── models.py       # Data models
-│       ├── main.py         # FastAPI app entry
-│       └── requirements.txt
-├── scripts/                # Utility scripts
-│   ├── kyvernopolicy/      # Kyverno policy files
-│   └── *.py                # Report processing scripts
-├── new/                    # Generated reports directory
-├── Dockerfile              # Multi-stage build definition
-├── build_and_deploy.sh     # Automated deployment script
-├── start-app.sh            # Local development startup
-└── *_run_*.sh              # Individual scan scripts
+```bash
+# Edit REPO and INGRESS_IP at the top of the script first
+./build_and_deploy.sh        # add -y to skip the confirmation prompt
 ```
 
-## Getting Started
+The script builds and pushes the image, applies the manifests in [security-dashboard/k8s/](security-dashboard/k8s/), and **creates the auth Secret only if it does not exist**. On first run it prints the generated `superuser` and `user` passwords once. Save them.
 
-### Prerequisites
+The dashboard is then available at:
 
-#### For Kubernetes Deployment:
-- Docker Engine (20.10+)
-- Kubernetes Cluster (Minikube, Kind, K3s, or managed cloud provider)
-- `kubectl` configured to communicate with your cluster
-- Container registry access (Docker Hub, Quay.io, etc.)
+- the ingress host `http://security-dashboard.<INGRESS_IP>.nip.io`, and
+- NodePort `30095` on any node.
 
-#### For Local Development:
-- Docker Engine OR:
-  - Node.js 18+ and npm
-  - Python 3.12+
-  - Security tools (Trivy, Nmap, Kubectl)
+To apply the manifests by hand instead:
 
-### Installation & Deployment
+```bash
+cd security-dashboard/k8s
+kubectl apply -f dashboard.yaml
+kubectl apply -f dashboard-rbac.yaml
+kubectl apply -f dashboard-admission-policy.yaml
+# Create the auth Secret yourself (it is not in dashboard.yaml):
+kubectl create secret generic security-dashboard-auth -n security-ops \
+  --from-literal=SUPERUSER_PASSWORD='<password>' \
+  --from-literal=USER_PASSWORD='<password>' \
+  --from-literal=AUTH_SECRET="$(openssl rand -hex 32)"
+```
 
-#### Option 1: Automated Kubernetes Deployment (Recommended)
+Update the `image:` and `DASHBOARD_IMAGE` values in `dashboard.yaml` to your own registry, and the ingress host to match your cluster. See [dashboard-secret.example.yaml](security-dashboard/k8s/dashboard-secret.example.yaml) for the Secret shape.
 
-The project provides an automated script to build, push, and deploy to Kubernetes.
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd security-web
-   ```
-
-2. **Configure the deployment script**:
-   Edit `build_and_deploy.sh` to set your registry and deployment details:
-   ```bash
-   IMAGE="your-registry/security-dashboard:latest"
-   DEPLOYMENT="security-dashboard"
-   NAMESPACE="security-ops"
-   ```
-
-3. **Build and Deploy**:
-   ```bash
-   chmod +x build_and_deploy.sh
-   ./build_and_deploy.sh
-   ```
-
-   This script will:
-   - Build the Docker image using multi-stage build
-   - Push to your configured container registry
-   - Push an extra immutable `:<git-short-sha>` tag
-   - Prompt for confirmation (skip with `-y` or `YES=1`)
-   - Apply the manifests, RBAC and kube-bench admission policy
-   - Create the `security-dashboard-auth` Secret with random credentials only if it does not exist (passwords printed once, never overwritten)
-   - Restart the Kubernetes deployment
-   - Wait for rollout completion
-
-#### Option 2: Manual Kubernetes Deployment
-
-1. **Build the Docker Image**:
-   ```bash
-   docker build -t your-registry/security-dashboard:latest .
-   ```
-
-2. **Push to Registry**:
-   ```bash
-   docker push your-registry/security-dashboard:latest
-   ```
-
-3. **Create Kubernetes resources**:
-   ```bash
-   kubectl create namespace security-ops
-   kubectl apply -f security-dashboard/k8s/dashboard.yaml
-   # Create the auth Secret first if missing (see k8s/dashboard-secret.example.yaml)
-   kubectl apply -f security-dashboard/k8s/dashboard-rbac.yaml
-   kubectl apply -f security-dashboard/k8s/dashboard-admission-policy.yaml
-   ```
-
-   The pod runs non-root with a read-only cluster role (no Secrets access), no hostPID and no hostPath mounts.
-   kube-bench runs as a short-lived Job (the admission policy only lets the dashboard create that fixed Job).
-
-4. **Access the dashboard**:
-   ```bash
-   # Get the NodePort assigned to the service
-   kubectl get svc -n security-ops
-
-   # Access the dashboard at:
-   # http://<node-ip>:<node-port>
-   # For Minikube: minikube service security-dashboard -n security-ops --url
-   ```
-
-5. **Verify deployment**:
-   ```bash
-   kubectl get pods -n security-ops
-   kubectl logs -f deployment/security-dashboard -n security-ops
-   ```
-
-#### Option 3: Docker Deployment
-
-Run as a standalone container:
+### 2. Run with Docker
 
 ```bash
 docker build -t security-dashboard:latest .
-docker run -d \
-  --name security-dashboard \
-  -p 8000:8000 \
-  -v ~/.kube:/root/.kube:ro \
-  -v /var/run/docker.sock:/var/run/docker.sock \
+docker run -d -p 8000:8000 \
+  -e SUPERUSER_PASSWORD='<password>' \
+  -e USER_PASSWORD='<password>' \
+  -e AUTH_SECRET="$(openssl rand -hex 32)" \
+  -e KUBECONFIG=/kube/config -v ~/.kube/config:/kube/config:ro \
   security-dashboard:latest
 ```
 
-Access the dashboard at `http://localhost:8000`
+Open http://localhost:8000. The container runs as UID 10001, so the kubeconfig must be readable by that user (`chmod 644`, or use a copy).
 
-## API Documentation
+### 3. Run locally for development
 
-### API Endpoints
+Requirements: Python 3.12, Node 18+, and `trivy`, `kubectl`, `nmap` on your `PATH` if you want to run scans.
 
-The backend exposes a comprehensive REST API with OpenAPI documentation.
-
-#### Base URL
-- Production: `http://<dashboard-url>:8000`
-- Local Development: `http://localhost:8000`
-
-#### Interactive Documentation
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-- **OpenAPI Spec**: `http://localhost:8000/openapi.json`
-
-### Scan Types
-
-| Scan Type | Description | Target |
-|-----------|-------------|--------|
-| `trivy-image` | Container image vulnerability scanning | Image name/tag |
-| `trivy-sbom` | Generate Software Bill of Materials | Image/Repository |
-| `trivy-cluster` | Kubernetes cluster-wide security scan | Current cluster |
-| `trivy-repo` | Git repository vulnerability scanning | Git repository URL |
-| `kube-bench` | CIS Kubernetes Benchmark compliance | Current cluster |
-| `kyverno` | Kubernetes policy validation | Current cluster |
-| `nmap` | Network port scanning | Cluster services (non-local clusters: from a temporary pod inside the target cluster) |
-| `all` | Execute all scans sequentially | All targets |
-
-### WebSocket Communication
-
-The dashboard uses WebSockets for real-time updates:
-
-**Scan Progress** (`/api/scans/ws/{scan_id}`)
-- Streams live scan output
-- Progress updates
-- Error messages
-- Completion notifications
-
-**Interactive Terminal** (`/api/terminal/ws`)
-- Execute kubectl commands
-- Real-time command output
-- Persistent shell session
-
-## Dashboard User Guide
-
-### 1. 🔐 Login
-- Access the dashboard and enter credentials
-- Theme preference persists across sessions
-
-### 2. ⚙️ Settings (CRITICAL Setup)
-**Most Important Step:** Before running any **Source Code** or **Image** scans, you must configure your environment here.
-
-#### Git Configuration
-- **Username**: Your Git username
-- **Personal Access Token (PAT)**: Token with repo access permissions
-- Required for private repository scanning
-- Used by Trivy Repo Scan
-
-#### Registry Credentials
-- Configure multiple container registries
-- Format: Registry URL, Username, Password/Token
-- Required for scanning private container images
-- Supports Docker Hub, Quay.io, GCR, ECR, etc.
-
-**Security Note**: Credentials are stored in the container and not persisted beyond the pod lifecycle.
-
-### 3. 🚀 Scan Control
-Start security scans from the dashboard:
-
-#### Scan Options:
-- **SBOM (Software Bill of Materials)**: Generate inventory of dependencies
-- **Image Scan**: Scan container images for vulnerabilities
-- **Repository Scan**: Scan Git repositories for vulnerabilities and secrets
-- **Network Scan**: Perform Nmap port and service discovery
-- **CIS Benchmark**: Run Kube-Bench compliance checks
-- **Kyverno Policies**: Validate Kubernetes resources against policies
-- **Cluster Risks**: Trivy cluster-wide security assessment
-- **Run All Scans**: Execute all scans sequentially
-
-#### Usage:
-1. Select scan type
-2. Enter required parameters (image name, repo URL, etc.)
-3. Click "Start Scan"
-4. Monitor progress in Event Logs
-5. View results in Scan Reports
-
-### 4. 📋 Scan Reports
-The central hub for analyzing security data. Navigate through tabs to view specific reports:
-
-#### Report Types:
-- **Policy Compliance**: Kyverno policy validation results with PASS/FAIL/ERROR/SKIP statuses
-- **SBOM Inventory**: Software Bill of Materials with dependency tree
-- **Source Code**: Vulnerability and secret findings from Git repositories
-- **Image Vulnerabilities**: CVE details with severity ratings and fix recommendations
-- **Network Security**: Nmap scan results showing open ports and services
-- **CIS Benchmarks**: Detailed compliance checks with remediation guidance
-- **Cluster Risks**: Kubernetes misconfigurations and security risks
-
-#### Features:
-- **Filters**: Filter by severity, status, category
-- **Search**: Full-text search across findings
-- **Export**: Download reports as JSON, HTML, or ZIP archives
-- **Visual Analytics**: Charts showing vulnerability distribution by severity
-- **Remediation Guidance**: Actionable recommendations for fixing issues
-
-### 5. 📜 Event Logs
-Monitor real-time feedback from the scanning engine:
-- **Live Progress**: Watch scans execute in real-time
-- **Debug Information**: Detailed logs for troubleshooting
-- **Error Messages**: Clear error reporting with context
-- **Completion Status**: Success/failure notifications
-- **Performance Metrics**: Scan duration and resource usage
-
-### 6. 💻 Terminal
-**Off by default.** Set `ENABLE_TERMINAL=true` on the Deployment to enable it (superuser only; every command is audit-logged).
-
-Direct shell access to the security container:
-- **Kubectl Integration**: Run kubectl commands directly
-- **Cluster Inspection**: View pods, deployments, services
-- **Manual Verification**: Execute custom security commands
-- **Tool Access**: Direct access to Trivy, Nmap, Kyverno CLI
-- **Persistent Session**: Maintain context across commands
-
-#### Example Commands:
 ```bash
-kubectl get pods --all-namespaces
-kubectl describe pod <pod-name>
-trivy image --severity HIGH,CRITICAL nginx:latest
-nmap -sV -p 80,443 target.example.com
-kyverno version
+export SUPERUSER_PASSWORD=admin USER_PASSWORD=viewer AUTH_SECRET=dev-secret-change-me
+./start-app.sh
+# UI:  http://localhost:5173
+# API: http://localhost:8000   (Swagger at /docs when ENABLE_DOCS=true)
 ```
+
+Scripts are run from `APP_HOME` and write results under `new/` relative to it, so scan from a scratch directory if you do not want results in your checkout.
+
+## Using the dashboard
+
+### 1. Sign in
+
+![Sign in](docs/screenshots/login.png)
+
+| Role | Can do |
+|---|---|
+| `superuser` | Everything: run scans, change settings, view the audit log, use the terminal (if enabled). |
+| `user` | Read-only: Overview and Scan reports. |
+
+Tokens last 12 hours. Login attempts are rate limited.
+
+### 2. Configure Settings (superuser)
+
+**Container registries.** Add credentials for private registries. Trivy logs in to each registry before scanning images. Without them, image scans of private images fail.
+
+**Clusters.** `local` is the cluster the dashboard pod runs in, using its ServiceAccount. To scan another cluster, add a name and paste its kubeconfig (optionally a context). The kubeconfig is stored on the server and never returned by the API. Use *Test* to check reachability. Removing a cluster keeps its scan data unless you choose to delete it.
+
+**Schedule.** Pick up to 6 daily UTC times per cluster. Each run starts the *Full scan* list. Trivy scans never overlap: a run that has to wait starts as soon as the running scan finishes.
+
+**Git repositories.** Needed for the *Source code* scan. Enter a username, a personal access token and one repository URL per line. The token is write-only.
+
+**Full scan.** Choose which scanners *Run all scans* and scheduled runs include.
+
+**Suppressions.** Findings you have accepted. Suppressed findings are excluded from counts and can be shown with the *Suppressed* filter.
+
+### 3. Run a scan (superuser)
+
+Use **Start scanning** in the sidebar. Scanners that need setup show **Set up** and link to the right settings page.
+
+| Scanner | Tool | Needs |
+|---|---|---|
+| Image vulnerabilities | `trivy image` | Registry credentials for private images |
+| SBOM inventory | `trivy sbom` | Same as above |
+| Policy compliance | Kyverno policy reports | Kyverno installed in the cluster |
+| Network exposure | `nmap` | Permission to run a temporary pod in the target cluster |
+| Source code | `trivy repo` | Git repositories configured |
+| CIS benchmark | kube-bench Job | Local cluster only |
+| Cluster risks | `trivy k8s` | Cluster access |
+| Compliance | `trivy k8s --compliance` | Cluster access |
+
+Output streams live while the scan runs. Use the stop button to cancel. Image scans pull images from the registry (`--image-src remote`) and the log ends with `scanned=N skipped=M`.
+
+### 4. Read the results
+
+- **Overview** shows the score, severity totals, trends and the latest result per scanner. Use *Export summary* to download it.
+- **Scan reports** has one view per scanner. Filter by severity, namespace or target, search by CVE or package, and export.
+- **Event logs** lists every run with its captured output and a download link.
+- **Audit log** (superuser) shows the 500 most recent events.
+
+![Image vulnerabilities](docs/screenshots/image-vulnerabilities.png)
 
 ## Configuration
 
-### Environment Variables
+Environment variables read by the backend:
 
-The application supports the following environment variables:
+| Variable | Default | Purpose |
+|---|---|---|
+| `SUPERUSER_PASSWORD`, `USER_PASSWORD` | none (login fails if unset) | Account passwords. Plain text, or `pbkdf2_sha256$<iter>$<salt_b64>$<hash_b64>`. |
+| `AUTH_SECRET` | random per start | Signs login tokens. Set it, or every restart logs everyone out. |
+| `ENABLE_TERMINAL` | `false` | Enables the interactive `kubectl` terminal tab. Commands are audit logged. |
+| `ENABLE_DOCS` | `false` | Serves Swagger UI at `/docs`. |
+| `STATE_DIR` | `.` | Database, registry/Git credentials and cluster data. Keep it on a persistent volume. |
+| `NEW_DIR` | `/app/new` | Scan results for the `local` cluster. |
+| `APP_HOME` | `/app` | Where the scan scripts live and run from. |
+| `STATIC_DIR` | `/app/static` | Built React app served by FastAPI. |
+| `DASHBOARD_IMAGE` | see `kubebench_job.py` | Image used for the kube-bench Job. Set it to your own image. |
+| `LOGIN_RATE_MAX`, `LOGIN_RATE_WINDOW` | `10`, `300` | Login attempts allowed per window (seconds). |
+
+Tool versions are Docker build args: `TRIVY_VERSION`, `KUBE_BENCH_VERSION`, `KYVERNO_VERSION`.
+
+## Security model
+
+- The pod runs as UID 10001 with all capabilities dropped, `seccomp: RuntimeDefault` and a read-only root filesystem.
+- The ClusterRole is read-only and has no access to Secrets. A namespaced Role in `security-ops` allows Jobs, pods and pod logs.
+- kube-bench runs as a short-lived Job with `hostPID` and read-only host paths. [dashboard-admission-policy.yaml](security-dashboard/k8s/dashboard-admission-policy.yaml) limits the dashboard ServiceAccount to creating only that fixed Job.
+- API routes `/api/scans`, `/api/settings`, `/api/terminal` and `/api/audit` require the `superuser` role.
+- Registry and Git credentials are stored in `STATE_DIR` on the server. Treat that volume as sensitive.
+- Put the dashboard behind TLS if you expose it beyond a trusted network. The default ingress is plain HTTP.
+
+## Project layout
+
+```
+.
+├── Dockerfile                  # Multi-stage build: React app + FastAPI + scan tools
+├── build_and_deploy.sh         # Build, push, apply manifests, create Secret
+├── start-app.sh                # Local dev: backend :8000 + frontend :5173
+├── [1-8]_run_*.sh              # One script per scanner, run by the backend
+└── security-dashboard/
+    ├── backend/                # FastAPI: routers/, services/, models.py, auth.py, db.py
+    ├── frontend/               # React + Vite + Tailwind
+    └── k8s/                    # Deployment, RBAC, admission policy, Secret example
+```
+
+## API
+
+The API is under `/api` and uses `Authorization: Bearer <token>` from `POST /api/login`. Set `ENABLE_DOCS=true` for the full OpenAPI reference at `/docs`.
 
 ```bash
-# Backend Configuration
-STATIC_DIR=/app/static          # Frontend static files directory
-NEW_DIR=/app/new                # Reports output directory
-APP_HOME=/app                   # Application home directory
-PYTHONPATH=/app/security-dashboard/backend
+TOKEN=$(curl -s localhost:8000/api/login -H 'content-type: application/json' \
+  -d '{"username":"superuser","password":"<password>"}' | jq -r .token)
 
-# Scan Tool Versions (Build-time)
-TRIVY_VERSION=0.74.0
-KUBE_BENCH_VERSION=0.16.0
-KYVERNO_VERSION=1.19.1
+# Start a scan, then follow it on WS /api/scans/ws/{scan_id}
+curl -s localhost:8000/api/scans/start -H "Authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"scan_type":"trivy-cluster","cluster":"local"}'
 ```
 
-### Volume Mounts
+Scan types: `trivy-image`, `trivy-sbom`, `trivy-cluster`, `trivy-compliance`, `trivy-repo`, `kube-bench`, `kyverno`, `nmap`, `all`.
 
-For Kubernetes deployment, mount these volumes:
+## Troubleshooting
 
-```yaml
-volumes:
-  - name: kubeconfig
-    hostPath:
-      path: /root/.kube
-  - name: docker-socket
-    hostPath:
-      path: /var/run/docker.sock
-  - name: reports
-    emptyDir: {}
-
-volumeMounts:
-  - name: kubeconfig
-    mountPath: /root/.kube
-    readOnly: true
-  - name: docker-socket
-    mountPath: /var/run/docker.sock
-  - name: reports
-    mountPath: /app/new
-```
-
-### Ports
-
-| Port | Service | Description |
-|------|---------|-------------|
-| 8000 | Backend API | FastAPI + Frontend SPA |
-| 5173 | Dev Frontend | Vite dev server (local only) |
-
-## License
-
-Proprietary / Internal Use
-
-## Support
-
-For issues, questions, or feature requests, please contact the Security Dashboard Team or create an issue in the project repository.
+- **Everyone gets logged out after a restart.** `AUTH_SECRET` is not set.
+- **Cannot log in.** `SUPERUSER_PASSWORD` or `USER_PASSWORD` is unset or empty.
+- **A scanner shows "Set up".** Add the missing registry or Git credentials under Settings.
+- **Terminal tab is missing.** Set `ENABLE_TERMINAL=true`.
+- **CIS benchmark or Source code is missing for a cluster.** These are available for the `local` cluster only.
+- **Settings are lost on redeploy.** `STATE_DIR` is not on a persistent volume.
