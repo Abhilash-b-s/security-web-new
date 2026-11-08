@@ -18,12 +18,36 @@ A web dashboard that runs security scans against Kubernetes clusters, container 
 
 ## Screenshots
 
-| | |
-|---|---|
-| ![Image vulnerabilities](docs/screenshots/image-vulnerabilities.png) | ![CIS benchmark](docs/screenshots/cis-benchmark.png) |
-| Image vulnerabilities (Trivy) | CIS benchmark (kube-bench) |
-| ![Compliance](docs/screenshots/compliance.png) | ![Event logs](docs/screenshots/events.png) |
-| Compliance (NSA / Pod Security Standards) | Event logs |
+### Scan reports
+
+Each scanner has its own report view under **Scan reports**.
+
+#### Image vulnerabilities (Trivy)
+![Image vulnerabilities](docs/screenshots/image-vulnerabilities.png)
+
+#### SBOM reports
+![SBOM reports](docs/screenshots/sbom.png)
+
+#### Policy scan report (Kyverno)
+![Policy scan report](docs/screenshots/policy-scan.png)
+
+#### Network scan (Nmap)
+![Network Nmap scan](docs/screenshots/nmap.png)
+
+#### CIS benchmark (kube-bench)
+![CIS benchmark](docs/screenshots/cis-benchmark.png)
+
+#### Git repository (Trivy)
+![Git repository](docs/screenshots/git-repository.png)
+
+#### Cluster scan (Trivy)
+![Cluster scan](docs/screenshots/cluster-scan.png)
+
+#### Compliance (NSA / Pod Security Standards)
+![Compliance](docs/screenshots/compliance.png)
+
+### Event logs
+![Event logs](docs/screenshots/events.png)
 
 ## Quick start
 
